@@ -1,0 +1,6 @@
+[jwt]
+jwt_secret = 'secret'
+
+[log]
+dir = "data/log"
+file = "app_log"
