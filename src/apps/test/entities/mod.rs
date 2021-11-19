@@ -2,5 +2,4 @@
 
 pub mod prelude;
 
-pub mod fruits;
-pub mod users;
+pub mod sys_user;

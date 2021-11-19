@@ -3,12 +3,12 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
-#[sea_orm(table_name = "users")]
+#[sea_orm(table_name = "sys_web_set")]
 pub struct Model {
-    #[sea_orm(primary_key)]
-    pub id: i32,
-    pub name: String,
-    pub email: String,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub web_id: String,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub web_content: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]

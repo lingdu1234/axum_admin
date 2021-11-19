@@ -1,7 +1,6 @@
-use crate::apps::tt::models;
 use poem::middleware::AddData;
-use poem::{listener::TcpListener, middleware::Cors, EndpointExt, Route, Server};
-use sea_orm::EntityTrait;
+use poem::{listener::TcpListener, middleware::Cors, EndpointExt, Result, Route, Server};
+use tracing_log::LogTracer;
 use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
 
 //将CFG导入全局
@@ -14,8 +13,7 @@ mod config;
 mod database;
 mod env;
 mod middleware;
-use crate::apps::tt::models::prelude::*;
-use crate::models::users;
+mod tests;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
@@ -24,15 +22,11 @@ async fn main() -> Result<(), std::io::Error> {
     if std::env::var_os("RUST_LOG").is_none() {
         std::env::set_var("RUST_LOG", "debug");
     }
+    LogTracer::init().unwrap(); //日志追踪 将log转换到Tracing统一输出
 
-    env_logger::init();
-    //  数据库联机
-    let db = database::db_connect().await;
-    let user_list: Vec<users::Model> = Users::find().all(&db).await.expect("查找失败");
-    println!("用户列表：{:?}", user_list);
-    println!("用户1：{:?}", user_list[0].name);
-    //  日志设置
-    let file_appender = tracing_appender::rolling::daily(&CFG.log.dir, &CFG.log.file);
+    let db = database::db_connect().await; //  数据库联机
+                                           //  日志设置
+    let file_appender = tracing_appender::rolling::daily(&CFG.log.dir, &CFG.log.file); //文件输出设置
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender); //文件输出
     let (std_non_blocking, _guard) = tracing_appender::non_blocking(std::io::stdout()); //标准控制台输出
     let collector = tracing_subscriber::registry()
@@ -42,17 +36,23 @@ async fn main() -> Result<(), std::io::Error> {
     tracing::collect::set_global_default(collector).expect("Unable to set a global collector");
     //  跨域
     let cors = Cors::new();
+    //  Swagger
+    let listener = TcpListener::bind("127.0.0.1:3000");
     // 启动app
-    let app = Route::new().nest(
+    let app = Route::new()
+    .nest(
         "/",
         apps::api()
             .with(PoemTracer)
-            .with(AddData::new(100))
-            .with(AddData::new(200_u32))
+            // .with(AddData::new(100))
+            // .with(AddData::new(200_u32))
             .with(AddData::new(db))
-            .with(cors),
+            .with(cors)
+            // .after(|res| async move {
+            //     println!("hahaha{:?}", res);
+            // }),
     );
-    let listener = TcpListener::bind("127.0.0.1:3000");
+
     let server = Server::new(listener).await?;
     tracing::info!("Server started");
     server.run(app).await

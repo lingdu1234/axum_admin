@@ -1,10 +1,10 @@
 use poem::Route;
 
 mod system;
-pub(crate) mod tt;
+pub mod test;
 
 pub fn api() -> Route {
     Route::new()
-        .nest("/tt", tt::api())
-        .nest("/system", system::api())
+        .nest("/test", test::api()) //测试模块
+        .nest("/system", system::api()) //系统管理模块
 }
