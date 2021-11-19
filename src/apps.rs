@@ -1,7 +1,7 @@
 use poem::Route;
 
 mod system;
-mod tt;
+pub(crate) mod tt;
 
 pub fn api() -> Route {
     Route::new()

@@ -2,6 +2,7 @@
 use poem::Route;
 
 mod api;
+pub mod models;
 mod service;
 
 pub fn api() -> Route {
