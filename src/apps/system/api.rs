@@ -1,20 +1,9 @@
 use crate::apps::system::service::sys_user;
-use poem::{get, Route};
-
-use super::service::{chacha, hello};
-
-pub fn chacha() -> Route {
-    Route::new()
-        .at("/chacha", get(chacha::say_chacha))
-        .at("chacha2", get(chacha::say_chacha2))
-}
-
-pub fn hello() -> Route {
-    Route::new()
-        .at("/:name", get(hello::say_hello))
-        .at("/", get(hello::say_hello2))
-}
+use poem::{get, post, Route};
 
 pub fn sys_user() -> Route {
-    Route::new().at("/", get(sys_user::add_user)) //添加用户
+    Route::new()
+        .at("/get", get(sys_user::get_user_list)) //获取全部用户
+        .at("/get_by_id", get(sys_user::get_user_by_id)) //按id获取用户
+        .at("/add", post(sys_user::add_user)) //添加用户
 }

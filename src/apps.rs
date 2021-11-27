@@ -1,6 +1,6 @@
 use poem::Route;
 
-mod system;
+pub mod system;
 pub mod test;
 
 pub fn api() -> Route {

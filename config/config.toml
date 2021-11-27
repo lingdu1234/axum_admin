@@ -1,6 +1,9 @@
 [jwt]
 jwt_secret = 'secret'
-
+[database]
+db_type = 'mysql'
+# link = 'mysql://root:lingdu515639@127.0.0.1:13306/wk_data'
+link = 'postgres://postgres:lingdu515639@127.0.0.1:25432/wk'
 [log]
 dir = "data/log"
 file = "app_log"

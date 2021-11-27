@@ -2,8 +2,8 @@ use poem::web::{Data, Json};
 use poem::{handler, web::Path};
 use sea_orm::{DatabaseConnection, EntityTrait};
 
-use super::super::entities::prelude::*;
-use super::super::entities::sys_user;
+use super::super::entities::prelude::SysUser;
+use super::super::entities::test_user;
 
 #[handler]
 pub fn say_hello(Path(name): Path<String>) -> String {
@@ -19,7 +19,7 @@ pub async fn say_hello2(
     println!("db==={:?}", data.0);
     // println!("data2==={:?}", data2.0);
     // println!("data3==={:?}", data3.0);
-    let user_list: Vec<sys_user::Model> = SysUser::find().all(data.0).await.expect("查找失败");
+    let user_list: Vec<test_user::Model> = SysUser::find().all(data.0).await.expect("查找失败");
     format!("用户1姓名是===》：{:?}", user_list[0].user_name);
     Json(serde_json::json!({
         "code": 0,
