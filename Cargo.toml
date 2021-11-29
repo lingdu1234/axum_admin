@@ -18,7 +18,7 @@ headers = "0.3.5"
 jsonwebtoken = "7.2.0"
 once_cell = "1.8"
 poem = "1"
-# sqlx-adapter = {version = "0.4.2", features = ["mysql"]}
+sqlx-adapter = {version = "0.4.2", features = ["postgres"]}
 # poem-openapi = "1"
 # 用于生成可排序的唯一id
 lazy_static = "1.4.0"
@@ -37,17 +37,21 @@ tracing-subscriber = {git = "https://github.com/tokio-rs/tracing.git", version =
 # tracing-log = "0.1.2"
 # tracing-subscriber = {version = "0.3.1", features = ["json", "env-filter"]}
 # async-trait = "0.1.51"
-# casbin = {version = "2.0.9", default-features = false}
+casbin = {version = "2.0.9", default-features = false}
+
+#  随机数
+md5 = "0.7.0"
+rand = "0.8.4"
 
 # sea-orm
 [dependencies.sea-orm]
 # path = "../../" # remove this line in your own project
 default-features = false
 features = ["macros", "runtime-tokio-native-tls"]
-version = "0.3.2"
+version = "0.4"
 
 [features]
-default = ["mysql", "postgres"]
+default = ["postgres", "mysql"]
 # default = ["sqlx-mysql"]
 mysql = ["sea-orm/sqlx-mysql"]
 postgres = ["sea-orm/sqlx-postgres"]

@@ -1,11 +1,11 @@
-use std::time::Duration;
-
+use casbin::{DefaultModel, Enforcer};
 use poem::middleware::AddData;
 use poem::{listener::TcpListener, middleware::Cors, EndpointExt, Result, Route, Server};
-use poem::{IntoResponse, Response};
+use sqlx_adapter::casbin::prelude::*;
+use sqlx_adapter::SqlxAdapter;
+use std::time::Duration;
 use tracing_log::LogTracer;
 use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
-
 // casbin
 // use sqlx_adapter::casbin::prelude::*;
 // // use sqlx_adapter::casbin::Result;
@@ -23,13 +23,12 @@ mod config;
 mod db;
 mod env;
 mod middleware;
-mod resp;
-mod tests;
+pub mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     if std::env::var_os("RUST_LOG").is_none() {
-        std::env::set_var("RUST_LOG", "debug");
+        std::env::set_var("RUST_LOG", &CFG.log.log_level);
     }
     //日志追踪 将log转换到Tracing统一输出
     LogTracer::init().unwrap();
@@ -37,15 +36,18 @@ async fn main() -> Result<(), std::io::Error> {
     env::setup();
     //  数据库联机
     let db = db::db_connect().await;
-    // let m = DefaultModel::from_file("config/rbac_model.conf")
-    //     .await
-    //     .unwrap();
-    // // mysql://root:lingdu515639@127.0.0.1:13306/wk_data
-    // // postgres://postgres:lingdu515639@127.0.0.1:25432/wk
-    // let adpt = SqlxAdapter::new("mysql://root:lingdu515639@127.0.0.1:13306/wk_data", 8)
-    //     .await
-    //     .unwrap();
-    // let mut e = Enforcer::new(m, adpt).await.unwrap();
+    let m = DefaultModel::from_file("config/casbin_conf/rbac_model.conf")
+        .await
+        .unwrap();
+    // mysql://root:lingdu515639@127.0.0.1:13306/wk_data
+    // postgres://postgres:lingdu515639@127.0.0.1:25432/wk
+    let adpt = SqlxAdapter::new("postgres://postgres:lingdu515639@127.0.0.1:25432/wk", 8)
+        .await
+        .unwrap();
+    let mut e = Enforcer::new(m, adpt).await.unwrap();
+    e.add_policies(vec![vec!["9999".to_string(), "9999".to_string()]])
+        .await
+        .unwrap();
     //  日志设置
     let file_appender = tracing_appender::rolling::daily(&CFG.log.dir, &CFG.log.file); //文件输出设置
                                                                                        //文件输出
@@ -64,7 +66,7 @@ async fn main() -> Result<(), std::io::Error> {
     //  跨域
     let cors = Cors::new();
     //  Swagger
-    let listener = TcpListener::bind("127.0.0.1:3000");
+    let listener = TcpListener::bind(&CFG.server.address);
     // 启动app
     let app = Route::new()
         .nest(
