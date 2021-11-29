@@ -1,0 +1,19 @@
+
+[server]
+name = "poem-admin"
+version = "0.1.0"
+# 服务器ip 端口
+address = "0.0.0.0:3000"
+[casbin]
+model_file = "config/casbin_conf/rbac_model.conf"
+policy_file = "config/casbin_conf/rbac_policy.csv"
+[log]
+dir = "data/log"
+file = "app_log"
+log_level = "DEBUG"
+[jwt]
+jwt_secret = 'secret'
+[database]
+db_type = 'mysql'
+link = 'mysql://root:lingdu515639@127.0.0.1:13306/wk_data'
+# link = 'postgres://postgres:lingdu515639@127.0.0.1:25432/wk'

@@ -1,0 +1,30 @@
+[package]
+edition = "2021"
+name = "SeaOrmCasbinAdapter"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-trait = "0.1.51"
+casbin = {version = "2.0.9", default-features = false}
+dotenv = {version = "0.15.0", default-features = false}
+scru128 = "0.2.0"
+serde = {version = "1.0", features = ["derive"]}
+serde_json = "1.0"
+# 运行时
+# actix-rt = {version = "2.2.0", default-features = false, optional = true}
+# async-std = {version = "1.10.0", default-features = false, optional = true}
+# tokio = {version = "1.13.0", default-features = false, optional = true}
+tokio = {version = "1.13.0", features = ["rt-multi-thread", "macros"]}
+[dependencies.sea-orm]
+default-features = false
+features = ["macros", "runtime-tokio-native-tls"]
+scru128 = "0.2.0"
+version = "0.3.2"
+
+[features]
+default = ["mysql", "postgres"]
+mysql = ["sea-orm/sqlx-mysql"]
+postgres = ["sea-orm/sqlx-postgres"]
+sqlite = ["sea-orm/sqlx-sqlite"]

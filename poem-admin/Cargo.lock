@@ -9,20 +9,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe438c63458706e03479442743baae6c88256498e6431708f6dfc520a26515d3"
 
 [[package]]
-name = "SeaOrmCasbinAdapter"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "casbin",
- "dotenv",
- "scru128",
- "sea-orm 0.3.2",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "ahash"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -767,17 +753,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c7d73b3f436185384286bd8098d17ec07c9a7d2388a6599f824d8502b529702a"
 
 [[package]]
-name = "libsqlite3-sys"
-version = "0.22.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "290b64917f8b0cb885d9de0f9959fe1f775d7fa12f1da2db9001c1c8ab60f89d"
-dependencies = [
- "cc",
- "pkg-config",
- "vcpkg",
-]
-
-[[package]]
 name = "lock_api"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1138,9 +1113,9 @@ checksum = "12295df4f294471248581bc09bef3c38a5e46f1e36d6a37353621a0c6c357e1f"
 
 [[package]]
 name = "poem"
-version = "1.0.31"
+version = "1.0.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f14e78cdd23b52381912a54f34b1b11cbfbfaefd8345f4d8090c34cf83dcdb03"
+checksum = "647cd21681126a66c634486d973f452379681cc6a690874aa50f855cac9a3385"
 dependencies = [
  "async-trait",
  "base64 0.13.0",
@@ -1172,7 +1147,6 @@ dependencies = [
 name = "poem-admin"
 version = "0.1.0"
 dependencies = [
- "casbin",
  "chrono",
  "env_logger",
  "headers",
@@ -1183,7 +1157,7 @@ dependencies = [
  "poem",
  "rand",
  "scru128",
- "sea-orm 0.4.0",
+ "sea-orm",
  "serde",
  "serde_json",
  "sqlx-adapter",
@@ -1501,29 +1475,6 @@ dependencies = [
 
 [[package]]
 name = "sea-orm"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "008887f4c2d0228891facd84a2c0bfdf175671a7a727798c63c14dfe04e343b2"
-dependencies = [
- "async-stream",
- "async-trait",
- "chrono",
- "futures",
- "futures-util",
- "ouroboros",
- "rust_decimal",
- "sea-orm-macros 0.3.2",
- "sea-query 0.18.2",
- "sea-strum",
- "serde",
- "serde_json",
- "sqlx",
- "url",
- "uuid",
-]
-
-[[package]]
-name = "sea-orm"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81fe39be57658b6c90f71cf4dcf050511fa832fee8bad97f4dba7704fa08f2c8"
@@ -1535,27 +1486,14 @@ dependencies = [
  "futures-util",
  "ouroboros",
  "rust_decimal",
- "sea-orm-macros 0.4.0",
- "sea-query 0.19.1",
+ "sea-orm-macros",
+ "sea-query",
  "sea-strum",
  "serde",
  "serde_json",
  "sqlx",
  "url",
  "uuid",
-]
-
-[[package]]
-name = "sea-orm-macros"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8d4da296bdf6ab25a89e09af3a0d80e94e18580575fae3f7fbe7314604e8c8c"
-dependencies = [
- "bae",
- "heck",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -1569,19 +1507,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "sea-query"
-version = "0.18.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ae0ce1a7c495076a9d6401c917b564fb75e77e05432e6c86084ca453b8256d7"
-dependencies = [
- "chrono",
- "rust_decimal",
- "sea-query-derive",
- "serde_json",
- "uuid",
 ]
 
 [[package]]
@@ -1676,9 +1601,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.72"
+version = "1.0.71"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0ffa0837f2dfa6fb90868c2b5468cad482e175f7dad97e7421951e663f2b527"
+checksum = "063bf466a64011ac24040a49009724ee60a57da1b437617ceb32e53ad61bfb19"
 dependencies = [
  "indexmap",
  "itoa",
@@ -1872,7 +1797,6 @@ dependencies = [
  "indexmap",
  "itoa",
  "libc",
- "libsqlite3-sys",
  "log",
  "md-5",
  "memchr",
@@ -2176,7 +2100,7 @@ dependencies = [
 [[package]]
 name = "tracing"
 version = "0.2.0"
-source = "git+https://github.com/tokio-rs/tracing.git#2d3a60763dfab6ad88b96cc84baf3ec93d9c2ed6"
+source = "git+https://github.com/tokio-rs/tracing.git#a36cb8f7ea1e8df2296d4d5694616d02cbbe8ea2"
 dependencies = [
  "cfg-if",
  "pin-project-lite",
@@ -2187,7 +2111,7 @@ dependencies = [
 [[package]]
 name = "tracing-appender"
 version = "0.2.0"
-source = "git+https://github.com/tokio-rs/tracing.git#2d3a60763dfab6ad88b96cc84baf3ec93d9c2ed6"
+source = "git+https://github.com/tokio-rs/tracing.git#a36cb8f7ea1e8df2296d4d5694616d02cbbe8ea2"
 dependencies = [
  "crossbeam-channel",
  "time 0.3.5",
@@ -2208,7 +2132,7 @@ dependencies = [
 [[package]]
 name = "tracing-attributes"
 version = "0.2.0"
-source = "git+https://github.com/tokio-rs/tracing.git#2d3a60763dfab6ad88b96cc84baf3ec93d9c2ed6"
+source = "git+https://github.com/tokio-rs/tracing.git#a36cb8f7ea1e8df2296d4d5694616d02cbbe8ea2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2227,7 +2151,7 @@ dependencies = [
 [[package]]
 name = "tracing-core"
 version = "0.2.0"
-source = "git+https://github.com/tokio-rs/tracing.git#2d3a60763dfab6ad88b96cc84baf3ec93d9c2ed6"
+source = "git+https://github.com/tokio-rs/tracing.git#a36cb8f7ea1e8df2296d4d5694616d02cbbe8ea2"
 dependencies = [
  "lazy_static",
 ]
@@ -2235,7 +2159,7 @@ dependencies = [
 [[package]]
 name = "tracing-log"
 version = "0.2.0"
-source = "git+https://github.com/tokio-rs/tracing.git#2d3a60763dfab6ad88b96cc84baf3ec93d9c2ed6"
+source = "git+https://github.com/tokio-rs/tracing.git#a36cb8f7ea1e8df2296d4d5694616d02cbbe8ea2"
 dependencies = [
  "lazy_static",
  "log",
@@ -2245,7 +2169,7 @@ dependencies = [
 [[package]]
 name = "tracing-serde"
 version = "0.2.0"
-source = "git+https://github.com/tokio-rs/tracing.git#2d3a60763dfab6ad88b96cc84baf3ec93d9c2ed6"
+source = "git+https://github.com/tokio-rs/tracing.git#a36cb8f7ea1e8df2296d4d5694616d02cbbe8ea2"
 dependencies = [
  "serde",
  "tracing-core 0.2.0",
@@ -2254,7 +2178,7 @@ dependencies = [
 [[package]]
 name = "tracing-subscriber"
 version = "0.3.0"
-source = "git+https://github.com/tokio-rs/tracing.git#2d3a60763dfab6ad88b96cc84baf3ec93d9c2ed6"
+source = "git+https://github.com/tokio-rs/tracing.git#a36cb8f7ea1e8df2296d4d5694616d02cbbe8ea2"
 dependencies = [
  "ansi_term",
  "lazy_static",
@@ -2447,9 +2371,9 @@ dependencies = [
 
 [[package]]
 name = "whoami"
-version = "1.2.1"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "524b58fa5a20a2fb3014dd6358b70e6579692a56ef6fce928834e488f42f65e8"
+checksum = "c33ac5ee236a4efbf2c98967e12c6cc0c51d93a744159a52957ba206ae6ef5f7"
 dependencies = [
  "wasm-bindgen",
  "web-sys",
