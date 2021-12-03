@@ -1,15 +1,17 @@
-use casbin::{DefaultModel, Enforcer};
+use poem::endpoint::Files;
 use poem::middleware::AddData;
 use poem::{listener::TcpListener, middleware::Cors, EndpointExt, Result, Route, Server};
-use sea_orm_casbin_adapter::{casbin::prelude::*, SeaOrmAdapter};
 use std::time::Duration;
+
+use sea_orm_casbin_adapter::{casbin::prelude::*, SeaOrmAdapter};
 use tracing_log::LogTracer;
 use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
 
 //导入全局
 pub use crate::config::CFG;
 //路由日志追踪
-use crate::middleware::PoemTracer;
+use crate::middleware::{Auth, PoemTracer};
+use crate::utils::casbin_service::CasbinService;
 
 mod apps;
 //  配置文件
@@ -47,31 +49,34 @@ async fn main() -> Result<(), std::io::Error> {
     tracing::collect::set_global_default(collector).expect("Unable to set a global collector");
     //  数据库联机
     let db = db::db_connect().await;
-    let m = DefaultModel::from_file("config/casbin_conf/rbac_model.conf")
+    //  casbin设置
+    let casbin_service = CasbinService::new(db.clone())
         .await
-        .unwrap();
-    // mysql://root:lingdu515639@127.0.0.1:13306/wk_data
-    // postgres://postgres:lingdu515639@127.0.0.1:25432/wk
-    // let adpt = SeaOrmAdapter::new(&CFG.database.link).await.unwrap();
-    let adpt2 = SeaOrmAdapter::new_with_pool(db.clone()).await.unwrap();
-    let mut e = Enforcer::new(m, adpt2).await.unwrap();
-    e.enable_log(true);
-    e.add_policies(vec![vec!["999789".to_string(), "999589".to_string()]])
-        .await
-        .unwrap();
+        .expect("casbin init error");
+    // let e = &casbin_service.enforcer;
+    // let e_result = e.enforce(("a", "b", "c")).unwrap();
+    // println!("e_result-----------{}", e_result);
+    // -------------------------------------------------------
+
     //  跨域
     let cors = Cors::new();
     //  Swagger
     let listener = TcpListener::bind(&CFG.server.address);
-    // 启动app
+    // 启动app  注意中间件顺序 最后的先执行，尤其AddData 顺序不对可能会导致数据丢失，无法在某些位置获取数据
+
     let app = Route::new()
         .nest(
-            "/",
+            "/api",
             apps::api()
                 .with(PoemTracer)
+                .with(Auth)
                 .with(AddData::new(db))
-                // .with(AddData::new(e))
+                .with(AddData::new(casbin_service.clone()))
                 .with(cors),
+        )
+        .nest(
+            "/",
+            Files::new(&CFG.web.dir).index_file(&CFG.web.index),
         )
         // .after(|mut resp| async move {
         //     if resp.status() != StatusCode::OK {

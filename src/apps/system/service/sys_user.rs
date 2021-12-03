@@ -1,8 +1,10 @@
+use casbin::CoreApi;
 use chrono::{Local, NaiveDateTime};
 use poem::{
     handler,
+    http::Extensions,
     web::{Data, Json, Query},
-    Result,
+    Request, Result,
 };
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
@@ -11,7 +13,8 @@ use sea_orm::{
 
 use crate::utils::{
     self,
-    jwt::{AuthBody, AuthPayload},
+    jwt::{AuthBody, AuthPayload, Claims},
+    CasbinService,
 };
 
 use super::super::entities::prelude::*;
@@ -71,9 +74,16 @@ pub async fn get_user_list(
 /// db 数据库连接 使用db.0
 #[handler]
 pub async fn get_user_by_id_or_name(
+    req: &Request,
     Data(db): Data<&DatabaseConnection>,
     Query(user_search_req): Query<UserSearchReq>,
 ) -> Result<Json<serde_json::Value>> {
+    let ee = req.extensions().get::<CasbinService>().unwrap();
+    let e = &ee.enforcer;
+
+    let e_result = e.enforce(("a", "b", "a")).unwrap();
+    println!("e_result-----------{}", e_result);
+
     let mut s = SysUser::find();
     if let Some(x) = user_search_req.user_id {
         s = s.filter(sys_user::Column::Id.eq(x));
@@ -160,8 +170,8 @@ pub async fn login(
     };
     // 注册JWT
     let claims = AuthPayload {
-        client_id: login_req.user_name.clone(),
-        client_secret: login_req.user_password.clone(),
+        id: user.id.clone(),               // 用户id
+        name: login_req.user_name.clone(), // 用户名
     };
 
     let token = utils::authorize(Json(claims)).await.unwrap();

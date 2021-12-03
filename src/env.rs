@@ -25,8 +25,8 @@ fn show_log() {
     //
     //     "#;
     println!("{}", logo);
-    println!("系统架构：{}", std::env::var("OS").unwrap().to_string());
-    println!("系统类型：{}", std::env::consts::ARCH);
-    println!("操作系统：{}", std::env::consts::FAMILY);
-    println!()
+    // println!("系统架构：{}", std::env::var("OS").unwrap().to_string());
+    // println!("系统类型：{}", std::env::consts::ARCH);
+    // println!("操作系统：{}", std::env::consts::FAMILY);
+    // println!()
 }

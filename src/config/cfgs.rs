@@ -5,6 +5,8 @@ use serde::Deserialize;
 pub struct Configs {
     /// 程序配置
     pub server: Server,
+    /// 静态网站配置
+    pub web: Web,
     /// Casbin配置
     pub casbin: Casbin,
     ///  数据库 配置
@@ -25,6 +27,18 @@ pub struct Server {
     pub address: String,
 }
 
+/// server 配置文件
+#[derive(Debug, Deserialize)]
+pub struct Web {
+    /// 静态网站根目录
+    pub dir: String,
+    /// 静态网站index文件名    
+    /// `index.html`
+    pub index: String,
+    /// 文件上传路径
+    pub upload_dir: String,
+}
+
 /// casbin 配置文件
 #[derive(Debug, Deserialize)]
 pub struct Casbin {
@@ -39,6 +53,8 @@ pub struct Casbin {
 pub struct Jwt {
     /// JWT 密钥
     pub jwt_secret: String,
+    /// JWT 过期时间
+    pub jwt_exp: i64,
 }
 
 /// 日志配置

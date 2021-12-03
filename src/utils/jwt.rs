@@ -1,3 +1,4 @@
+use chrono::{Duration, Utc};
 use headers::{authorization::Bearer, Authorization};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use once_cell::sync::Lazy;
@@ -11,15 +12,15 @@ use serde_json::json;
 
 use crate::CFG;
 
-static KEYS: Lazy<Keys> = Lazy::new(|| {
+pub static KEYS: Lazy<Keys> = Lazy::new(|| {
     let secret = &CFG.jwt.jwt_secret;
     Keys::new(secret.as_bytes())
 });
 
 #[derive(Debug)]
-struct Keys {
-    encoding: EncodingKey,
-    decoding: DecodingKey<'static>,
+pub struct Keys {
+    pub encoding: EncodingKey,
+    pub decoding: DecodingKey<'static>,
 }
 
 impl Keys {
@@ -33,20 +34,20 @@ impl Keys {
 
 #[derive(Debug, Deserialize)]
 pub struct AuthPayload {
-    pub client_id: String,
-    pub client_secret: String,
+    pub id: String,
+    pub name: String,
 }
 #[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    sub: String,
-    company: String,
-    exp: usize,
+pub struct Claims {
+    pub id: String,
+    pub name: String,
+    pub exp: i64,
 }
 
 #[poem::async_trait]
 impl<'a> FromRequest<'a> for Claims {
     type Error = AuthError;
-
+    /// 将用户信息注意request
     async fn from_request(req: &'a Request, body: &mut RequestBody) -> Result<Self, Self::Error> {
         // Extract the token from the authorization header
         let TypedHeader(Authorization(bearer)) =
@@ -62,20 +63,23 @@ impl<'a> FromRequest<'a> for Claims {
 }
 
 pub async fn authorize(Json(payload): Json<AuthPayload>) -> Result<Json<AuthBody>, AuthError> {
-    if payload.client_id.is_empty() || payload.client_secret.is_empty() {
+    if payload.id.is_empty() || payload.name.is_empty() {
         return Err(AuthError::MissingCredentials);
     }
+    println!("CFG.jwt.jwt_exp  == {:?}", CFG.jwt.jwt_exp);
+    let iat = Utc::now();
+    let exp = iat + Duration::minutes(CFG.jwt.jwt_exp);
     let claims = Claims {
-        sub: payload.client_id.to_owned(),
-        company: payload.client_secret.to_owned(),
-        exp: 10000000000,
+        id: payload.id.to_owned(),
+        name: payload.name.to_owned(),
+        exp: exp.timestamp(),
     };
     // Create the authorization token
     let token = encode(&Header::default(), &claims, &KEYS.encoding)
         .map_err(|_| AuthError::TokenCreation)?;
 
     // Send the authorized token
-    Ok(Json(AuthBody::new(token)))
+    Ok(Json(AuthBody::new(token, claims.exp)))
 }
 
 #[derive(Debug)]
@@ -104,12 +108,14 @@ impl IntoResponse for AuthError {
 pub struct AuthBody {
     access_token: String,
     token_type: String,
+    exp: i64,
 }
 impl AuthBody {
-    fn new(access_token: String) -> Self {
+    fn new(access_token: String, exp: i64) -> Self {
         Self {
             access_token,
             token_type: "Bearer".to_string(),
+            exp,
         }
     }
 }
