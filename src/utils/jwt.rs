@@ -71,7 +71,7 @@ pub async fn authorize(Json(payload): Json<AuthPayload>) -> Result<Json<AuthBody
     let exp = iat + Duration::minutes(CFG.jwt.jwt_exp);
     let claims = Claims {
         id: payload.id.to_owned(),
-        name: payload.name.to_owned(),
+        name: payload.name,
         exp: exp.timestamp(),
     };
     // Create the authorization token

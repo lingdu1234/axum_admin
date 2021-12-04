@@ -1,7 +1,7 @@
 use crate::CFG;
 use sea_orm::DatabaseConnection;
 use sea_orm_casbin_adapter::{casbin::prelude::*, casbin::Result as CasbinResult, SeaOrmAdapter};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
 
 #[derive(Clone)]
 pub struct CasbinService {

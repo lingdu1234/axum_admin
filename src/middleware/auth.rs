@@ -1,9 +1,7 @@
 use headers::{authorization::Bearer, HeaderMapExt};
 use jsonwebtoken::{decode, errors::ErrorKind, Validation};
 use poem::{
-    error::GetDataError,
-    http::{Extensions, StatusCode},
-    web::Data,
+    http::{StatusCode},
     Endpoint, Error, Middleware, Request, Result,
 };
 use sea_orm_casbin_adapter::casbin::prelude::*;
@@ -38,7 +36,7 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
             //  验证token
             // let validation = Validation {validate_exp: true,..Validation::default()};
             let token_data =
-                match decode::<Claims>(&auth.0.token(), &KEYS.decoding, &Validation::default()) {
+                match decode::<Claims>(auth.0.token(), &KEYS.decoding, &Validation::default()) {
                     Ok(token) => token,
                     Err(err) => {
                         match *err.kind() {
@@ -60,14 +58,14 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
             //  验证token是否过期
 
             // 验证casbin权限
-            let mut e = req.extensions().get::<CasbinService>().unwrap();
+            let e = req.extensions().get::<CasbinService>().unwrap();
             e.enforcer.enforce((
                 &token_data.claims.id.to_string(),
                 &req.uri().path().to_string(),
                 &req.method().as_str(),
             ));
 
-            let req_path = req.uri().path();
+            let _req_path = req.uri().path();
 
             //  if !casbin::is_permitted(&token_data.claims.role, req.path(), req.method()) {}
 

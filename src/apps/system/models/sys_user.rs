@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Default)]
-pub struct UserAddReq {
+#[derive(Serialize, Deserialize, Default, Debug)]
+pub struct AddReq {
     pub user_name: String,
     pub mobile: String,
     pub user_nickname: Option<String>,
@@ -19,7 +19,7 @@ pub struct UserAddReq {
     pub phone_num: Option<String>,
 }
 #[derive(PartialEq, Eq, Clone, Default, Deserialize, Serialize)]
-pub struct UserResp {
+pub struct Resp {
     pub user_name: String,
     pub mobile: String,
     pub user_nickname: String,
@@ -37,7 +37,7 @@ pub struct UserResp {
 }
 
 #[derive(Deserialize, Debug, Serialize, Default)]
-pub struct UserSearchReq {
+pub struct SearchReq {
     pub user_id: Option<String>,
     pub user_name: Option<String>,
     pub user_nickname: Option<String>,
@@ -48,6 +48,12 @@ pub struct UserSearchReq {
     pub phone_num: Option<String>,
     pub begin_time: Option<String>,
     pub end_time: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Serialize, Default)]
+pub struct DeleteReq {
+    pub user_id: Option<Vec<String>>,
+    pub user_name: Option<Vec<String>>,
 }
 
 ///  用户登录

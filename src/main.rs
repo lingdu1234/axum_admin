@@ -3,7 +3,6 @@ use poem::middleware::AddData;
 use poem::{listener::TcpListener, middleware::Cors, EndpointExt, Result, Route, Server};
 use std::time::Duration;
 
-use sea_orm_casbin_adapter::{casbin::prelude::*, SeaOrmAdapter};
 use tracing_log::LogTracer;
 use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
 

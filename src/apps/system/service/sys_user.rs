@@ -2,69 +2,73 @@ use casbin::CoreApi;
 use chrono::{Local, NaiveDateTime};
 use poem::{
     handler,
-    http::Extensions,
     web::{Data, Json, Query},
     Request, Result,
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
-    QueryOrder, Set,
+    sea_query::Expr, ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait,
+    PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
 
 use crate::utils::{
     self,
-    jwt::{AuthBody, AuthPayload, Claims},
+    jwt::{AuthBody, AuthPayload},
     CasbinService,
 };
 
 use super::super::entities::prelude::*;
 use super::super::entities::sys_user;
-use super::super::models::sys_user::{UserAddReq, UserLoginReq, UserResp, UserSearchReq};
+use super::super::models::sys_user::{AddReq, DeleteReq, Resp, SearchReq, UserLoginReq};
 use super::super::models::PageParams;
 
 /// get_user_list 获取用户列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_user_list(
+pub async fn get_sort_list(
     Data(db): Data<&DatabaseConnection>,
     Query(page_params): Query<PageParams>,
-    Query(user_search_req): Query<UserSearchReq>,
+    Query(search_req): Query<SearchReq>,
 ) -> Result<Json<serde_json::Value>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     let mut s = SysUser::find();
-
-    if let Some(x) = user_search_req.user_id {
+    // 不查找删除数据
+    s = s.filter(sys_user::Column::DeletedAt.is_null());
+    // 查询条件
+    if let Some(x) = search_req.user_id {
         s = s.filter(sys_user::Column::Id.eq(x));
     }
 
-    if let Some(x) = user_search_req.user_name {
+    if let Some(x) = search_req.user_name {
         s = s.filter(sys_user::Column::UserName.eq(x));
     }
-    if let Some(x) = user_search_req.user_status {
+    if let Some(x) = search_req.user_status {
         s = s.filter(sys_user::Column::UserStatus.eq(x));
     }
-    if let Some(x) = user_search_req.begin_time {
+    if let Some(x) = search_req.begin_time {
         s = s.filter(sys_user::Column::CreatedAt.gte(x));
     }
-    if let Some(x) = user_search_req.end_time {
+    if let Some(x) = search_req.end_time {
         s = s.filter(sys_user::Column::CreatedAt.lte(x));
     }
-
+    // 获取全部数据条数
+    let total = s.clone().count(db).await?;
+    // 获取全部数据条数
     let paginator = s
         .order_by_asc(sys_user::Column::Id)
         .paginate(db, page_per_size);
     let num_pages = paginator.num_pages().await?;
-    let users = paginator
+    let list = paginator
         .fetch_page(page_num - 1)
         .await
         .expect("could not retrieve posts");
-
+    let list_res: Vec<Resp> = serde_json::from_value(serde_json::json!(list))?; //这种数据转换效率不知道怎么样
     Ok(Json(serde_json::json!({
 
-            "list": users,
-            "total": num_pages,
+            "list": list_res,
+            "total": total,
+            "total_pages": num_pages,
             "page_num": page_num,
 
     })))
@@ -73,23 +77,26 @@ pub async fn get_user_list(
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_user_by_id_or_name(
+pub async fn get_by_id_or_name(
     req: &Request,
     Data(db): Data<&DatabaseConnection>,
-    Query(user_search_req): Query<UserSearchReq>,
+    Query(search_req): Query<SearchReq>,
 ) -> Result<Json<serde_json::Value>> {
-    let ee = req.extensions().get::<CasbinService>().unwrap();
-    let e = &ee.enforcer;
+    // let ee = req.extensions().get::<CasbinService>().unwrap();
+    // let e = &ee.enforcer;
 
-    let e_result = e.enforce(("a", "b", "a")).unwrap();
-    println!("e_result-----------{}", e_result);
+    // let e_result = e.enforce(("a", "b", "a")).unwrap();
+    // println!("e_result-----------{}", e_result);
 
     let mut s = SysUser::find();
-    if let Some(x) = user_search_req.user_id {
+    // 不查找删除数据
+    s = s.filter(sys_user::Column::DeletedAt.is_null());
+    //
+    if let Some(x) = search_req.user_id {
         s = s.filter(sys_user::Column::Id.eq(x));
     }
 
-    if let Some(x) = user_search_req.user_name {
+    if let Some(x) = search_req.user_name {
         s = s.filter(sys_user::Column::UserName.eq(x));
     }
 
@@ -98,16 +105,16 @@ pub async fn get_user_by_id_or_name(
         None => return Err("用户不存在".into()),
     };
 
-    let user_res: UserResp = serde_json::from_value(serde_json::json!(user))?; //这种数据转换效率不知道怎么样
+    let user_res: Resp = serde_json::from_value(serde_json::json!(user))?; //这种数据转换效率不知道怎么样
 
     Ok(Json(serde_json::json!({ "user": user_res })))
 }
 
-/// add_user 添加用户
+/// add 添加
 #[handler]
-pub async fn add_user(
+pub async fn add(
     Data(db): Data<&DatabaseConnection>,
-    Json(user_add): Json<UserAddReq>,
+    Json(user_add): Json<AddReq>,
 ) -> Result<Json<serde_json::Value>> {
     // let user = serde_json::from_value(serde_json::json!(user_add))?;
     let uid = scru128::scru128();
@@ -140,6 +147,81 @@ pub async fn add_user(
     Ok(resp)
 }
 
+/// delete 完全删除
+#[handler]
+pub async fn ddelete(
+    Data(db): Data<&DatabaseConnection>,
+    Json(delete_req): Json<DeleteReq>,
+) -> Result<Json<serde_json::Value>> {
+    let mut s = SysUser::delete_many();
+    let mut flag = false;
+    if let Some(x) = delete_req.user_id {
+        s = s.filter(sys_user::Column::Id.is_in(x));
+        flag = true;
+    }
+
+    if let Some(x) = delete_req.user_name {
+        s = s.filter(sys_user::Column::UserName.is_in(x));
+        flag = true;
+    }
+    if !flag {
+        return Err("用户名或者用户Id必须存在一个".into());
+    }
+
+    //开始删除
+    let d = s.exec(db).await?;
+
+    match d.rows_affected {
+        0 => return Err("没有你要删除的用户".into()),
+        i => {
+            return Ok(Json(serde_json::json!({
+                "msg": format!("成功删除{}条用户数据", i)
+            })))
+        }
+    }
+}
+
+/// delete 完全删除
+#[handler]
+pub async fn delete(
+    Data(db): Data<&DatabaseConnection>,
+    Json(delete_req): Json<DeleteReq>,
+) -> Result<Json<serde_json::Value>> {
+    let mut s = SysUser::update_many();
+    s = s.filter(sys_user::Column::DeletedAt.is_null());
+    let mut flag = false;
+    if let Some(x) = delete_req.user_id {
+        s = s.filter(sys_user::Column::Id.is_in(x));
+        flag = true;
+    }
+
+    if let Some(x) = delete_req.user_name {
+        s = s.filter(sys_user::Column::UserName.is_in(x));
+        flag = true;
+    }
+    if !flag {
+        return Err("用户名或者用户Id必须存在一个".into());
+    }
+
+    //开始软删除，将用户删除时间设置为当前时间
+    let d = s
+        .col_expr(
+            sys_user::Column::DeletedAt,
+            Expr::value(Local::now().naive_local() as NaiveDateTime),
+        )
+        .exec(db)
+        .await?;
+
+    match d.rows_affected {
+        0 => return Err("没有你要删除的用户".into()),
+        i => {
+            return Ok(Json(serde_json::json!({
+                "msg": format!("成功删除{}条用户数据", i)
+            })))
+        }
+    }
+}
+
 /// 用户登录
 #[handler]
 pub async fn login(
@@ -147,10 +229,10 @@ pub async fn login(
     Json(login_req): Json<UserLoginReq>,
 ) -> Result<Json<AuthBody>> {
     // 验证用户名密码不为空
-    if login_req.user_name.trim().len() == 0 {
+    if login_req.user_name.trim().is_empty() {
         return Err("用户名不能为空".into());
     }
-    if login_req.user_password.trim().len() == 0 {
+    if login_req.user_password.trim().is_empty() {
         return Err("密码不能为空".into());
     }
     // 根据用户名获取用户信息
