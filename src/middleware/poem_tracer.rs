@@ -26,10 +26,6 @@ impl<E: Endpoint> Endpoint for TracingEndpoint<E> {
     type Output = Response;
 
     async fn call(&self, req: Request) -> Self::Output {
-        println!(
-            "req.uri(---------------------------------------{}",
-            req.uri()
-        );
         let span = tracing::span!(
             target: module_path!(),
             Level::INFO,

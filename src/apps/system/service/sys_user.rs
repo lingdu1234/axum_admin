@@ -1,4 +1,3 @@
-use casbin::CoreApi;
 use chrono::{Local, NaiveDateTime};
 use poem::{
     handler,
@@ -181,9 +180,50 @@ pub async fn ddelete(
     }
 }
 
-/// delete 完全删除
+/// delete 软删除
 #[handler]
 pub async fn delete(
+    Data(db): Data<&DatabaseConnection>,
+    Json(delete_req): Json<DeleteReq>,
+) -> Result<Json<serde_json::Value>> {
+    let mut s = SysUser::update_many();
+    s = s.filter(sys_user::Column::DeletedAt.is_null());
+    let mut flag = false;
+    if let Some(x) = delete_req.user_id {
+        s = s.filter(sys_user::Column::Id.is_in(x));
+        flag = true;
+    }
+
+    if let Some(x) = delete_req.user_name {
+        s = s.filter(sys_user::Column::UserName.is_in(x));
+        flag = true;
+    }
+    if !flag {
+        return Err("用户名或者用户Id必须存在一个".into());
+    }
+
+    //开始软删除，将用户删除时间设置为当前时间
+    let d = s
+        .col_expr(
+            sys_user::Column::DeletedAt,
+            Expr::value(Local::now().naive_local() as NaiveDateTime),
+        )
+        .exec(db)
+        .await?;
+
+    match d.rows_affected {
+        0 => return Err("没有你要删除的用户".into()),
+        i => {
+            return Ok(Json(serde_json::json!({
+                "msg": format!("成功删除{}条用户数据", i)
+            })))
+        }
+    }
+}
+
+// edit 修改
+#[handler]
+pub async fn edit(
     Data(db): Data<&DatabaseConnection>,
     Json(delete_req): Json<DeleteReq>,
 ) -> Result<Json<serde_json::Value>> {

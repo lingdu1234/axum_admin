@@ -4,7 +4,7 @@ use poem::{delete, get, post, Route};
 // 导出
 pub use sys_user::login;
 
-pub fn sys_user() -> Route {
+pub fn sys_user_api() -> Route {
     Route::new()
         .at("/get", get(sys_user::get_sort_list)) //获取全部用户
         .at("/get_by_id", get(sys_user::get_by_id_or_name)) //按id获取用户

@@ -64,29 +64,21 @@ async fn main() -> Result<(), std::io::Error> {
     // 启动app  注意中间件顺序 最后的先执行，尤其AddData 顺序不对可能会导致数据丢失，无法在某些位置获取数据
 
     let app = Route::new()
-        .nest(
-            "/api",
-            apps::api()
-                .with(PoemTracer)
-                .with(Auth)
-                .with(AddData::new(db))
-                .with(AddData::new(casbin_service.clone()))
-                .with(cors),
-        )
-        .nest(
-            "/",
-            Files::new(&CFG.web.dir).index_file(&CFG.web.index),
-        )
-        // .after(|mut resp| async move {
-        //     if resp.status() != StatusCode::OK {
-        //         resp.set_status(StatusCode::OK);
-        //         // let b = resp.take_body();
-        //         resp
-        //     } else {
-        //         resp
-        //     }
-        // })
-        ;
+        .nest("/api", apps::api().with(middleware::Auth))
+        .nest("/", Files::new(&CFG.web.dir).index_file(&CFG.web.index))
+        .with(PoemTracer)
+        .with(AddData::new(db.clone()))
+        .with(AddData::new(casbin_service.clone()))
+        .with(cors);
+    // .after(|mut resp| async move {
+    //     if resp.status() != StatusCode::OK {
+    //         resp.set_status(StatusCode::OK);
+    //         // let b = resp.take_body();
+    //         resp
+    //     } else {
+    //         resp
+    //     }
+    // })
 
     let server = Server::new(listener).name("poem-admin");
     tracing::info!("Server started");

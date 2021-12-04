@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+#[derive(Serialize, Deserialize, Default, Debug, PartialEq)]
 pub struct AddReq {
     pub user_name: String,
     pub mobile: String,
@@ -10,7 +10,7 @@ pub struct AddReq {
     pub user_status: Option<i8>,
     pub user_email: String,
     pub sex: Option<i8>,
-    // pub avatar: Option<String>,
+    pub avatar: Option<String>,
     pub dept_id: String,
     pub remark: Option<String>,
     pub is_admin: Option<i8>,
@@ -18,6 +18,7 @@ pub struct AddReq {
     pub describe: Option<String>,
     pub phone_num: Option<String>,
 }
+
 #[derive(PartialEq, Eq, Clone, Default, Deserialize, Serialize)]
 pub struct Resp {
     pub user_name: String,

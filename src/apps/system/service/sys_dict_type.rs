@@ -1,5 +1,3 @@
-use casbin::CoreApi;
-
 use poem::{
     handler,
     web::{Data, Json, Query},

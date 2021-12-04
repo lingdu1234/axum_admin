@@ -1,9 +1,6 @@
 use headers::{authorization::Bearer, HeaderMapExt};
 use jsonwebtoken::{decode, errors::ErrorKind, Validation};
-use poem::{
-    http::{StatusCode},
-    Endpoint, Error, Middleware, Request, Result,
-};
+use poem::{http::StatusCode, Endpoint, Error, Middleware, Request, Result};
 use sea_orm_casbin_adapter::casbin::prelude::*;
 
 use crate::utils::{
@@ -31,7 +28,10 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
     type Output = Result<E::Output>;
 
     async fn call(&self, req: Request) -> Self::Output {
-        println!(">>>>>>>>>>>>>{:#?}", req);
+        let req_path = req.uri().path().replacen("/", "", 1);
+        if req_path == "system/login" {
+            return Ok(self.ep.call(req).await);
+        }
         if let Some(auth) = req.headers().typed_get::<headers::Authorization<Bearer>>() {
             //  验证token
             // let validation = Validation {validate_exp: true,..Validation::default()};
@@ -46,7 +46,7 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
                             }
                             ErrorKind::ExpiredSignature => {
                                 return Err(Error::new(StatusCode::UNAUTHORIZED)
-                                    .with_reason("Expired token "));
+                                    .with_reason("Expired token"));
                             }
                             _ => {
                                 return Err(Error::new(StatusCode::UNAUTHORIZED)
@@ -65,11 +65,9 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
                 &req.method().as_str(),
             ));
 
-            let _req_path = req.uri().path();
-
             //  if !casbin::is_permitted(&token_data.claims.role, req.path(), req.method()) {}
 
-            println!("{:?}", token_data.claims);
+            println!("{:?}------req_path-{}", token_data.claims, req_path);
             return Ok(self.ep.call(req).await);
         }
 
