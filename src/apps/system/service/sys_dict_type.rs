@@ -8,11 +8,13 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait,
     QueryFilter, QueryOrder, Set,
 };
+use validator::Validate;
 
-use super::super::entities::prelude::*;
-use super::super::entities::sys_dict_type;
-use super::super::models::sys_dict_type::{self, AddReq, DeleteReq, EditReq, Resp, SearchReq};
-use super::super::models::PageParams;
+use super::super::entities::{prelude::*, sys_dict_type};
+use super::super::models::{
+    sys_dict_type::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
+    PageParams,
+};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -23,16 +25,22 @@ pub async fn get_sort_list(
     Query(page_params): Query<PageParams>,
     Query(search_req): Query<SearchReq>,
 ) -> Result<Json<serde_json::Value>> {
+    //  数据验证
+    match search_req.validate() {
+        Ok(_) => {}
+        Err(e) => return Err(e.into()),
+    }
+
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
     let mut s = SysDictType::find();
 
-    if let Some(x) = search_req.dict_name {
+    if let Some(x) = search_req.dict_type {
         s = s.filter(sys_dict_type::Column::DictType.eq(x));
     }
 
-    if let Some(x) = search_req.dict_type {
+    if let Some(x) = search_req.dict_name {
         s = s.filter(sys_dict_type::Column::DictName.eq(x));
     }
     if let Some(x) = search_req.status {
@@ -93,9 +101,9 @@ pub async fn add(
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_dict_type::ActiveModel {
         dict_id: Set(uid.clone()),
-        dict_name: Set(Some(add_req.dict_name)),
-        dict_type: Set(Some(add_req.dict_type)),
-        status: Set(Some(add_req.status.unwrap_or(1))),
+        dict_name: Set(add_req.dict_name),
+        dict_type: Set(add_req.dict_type),
+        status: Set(add_req.status.unwrap_or(1)),
         remark: Set(Some(add_req.remark.unwrap_or("".to_string()))),
         created_at: Set(Some(now)),
         ..Default::default()
@@ -144,7 +152,7 @@ pub async fn edit(
         dict_name: Set(edit_req.dict_name),
         dict_type: Set(edit_req.dict_type),
         status: Set(edit_req.status),
-        remark: Set(edit_req.remark),
+        remark: Set(Some(edit_req.remark)),
         updated_at: Set(Some(now)),
         ..s_r
     };
@@ -185,9 +193,7 @@ pub async fn get_by_id(
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_all_dict_type(
-    Data(db): Data<&DatabaseConnection>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn get_all(Data(db): Data<&DatabaseConnection>) -> Result<Json<serde_json::Value>> {
     let s = SysDictType::find()
         .filter(sys_dict_type::Column::DeletedAt.is_null())
         .filter(sys_dict_type::Column::Status.eq(1))

@@ -8,10 +8,10 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub dict_id: String,
-    pub dict_name: Option<String>,
+    pub dict_name: String,
     #[sea_orm(unique)]
-    pub dict_type: Option<String>,
-    pub status: Option<i8>,
+    pub dict_type: String,
+    pub status: i8,
     pub create_by: Option<String>,
     pub update_by: Option<String>,
     pub remark: Option<String>,

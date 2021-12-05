@@ -2,7 +2,7 @@ use chrono::{Local, NaiveDateTime};
 use poem::{
     handler,
     web::{Data, Json, Query},
-    Request, Result,
+    Result,
 };
 
 use sea_orm::{
@@ -14,13 +14,13 @@ use validator::Validate;
 use crate::utils::{
     self,
     jwt::{AuthBody, AuthPayload},
-    CasbinService,
 };
 
-use super::super::entities::prelude::*;
-use super::super::entities::sys_user;
-use super::super::models::sys_user::{AddReq, DeleteReq, EditReq, Resp, SearchReq, UserLoginReq};
-use super::super::models::PageParams;
+use super::super::entities::{prelude::*, sys_user};
+use super::super::models::{
+    sys_user::{AddReq, DeleteReq, EditReq, Resp, SearchReq, UserLoginReq},
+    PageParams,
+};
 
 /// get_user_list 获取用户列表
 /// page_params 分页参数
@@ -119,7 +119,7 @@ pub async fn add(
     // let user = serde_json::from_value(serde_json::json!(add_req))?;
     let uid = scru128::scru128();
     let salt = utils::rand_s(10);
-    let passwd = utils::encrypt_password(&user_add.user_password, &salt);
+    let passwd = utils::encrypt_password(&add_req.user_password, &salt);
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_user::ActiveModel {
         id: Set(uid.clone()),
