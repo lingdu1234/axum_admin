@@ -64,7 +64,7 @@ async fn main() -> Result<(), std::io::Error> {
     // 启动app  注意中间件顺序 最后的先执行，尤其AddData 顺序不对可能会导致数据丢失，无法在某些位置获取数据
 
     let app = Route::new()
-        .nest("/api", apps::api().with(middleware::Auth))
+        .nest("/api", apps::api().with(Auth))
         .nest("/", Files::new(&CFG.web.dir).index_file(&CFG.web.index))
         .with(PoemTracer)
         .with(AddData::new(db.clone()))

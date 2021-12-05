@@ -4,10 +4,12 @@ use poem::{
     web::{Data, Json, Query},
     Request, Result,
 };
+
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait,
     PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
+use validator::Validate;
 
 use crate::utils::{
     self,
@@ -17,7 +19,7 @@ use crate::utils::{
 
 use super::super::entities::prelude::*;
 use super::super::entities::sys_user;
-use super::super::models::sys_user::{AddReq, DeleteReq, Resp, SearchReq, UserLoginReq};
+use super::super::models::sys_user::{AddReq, DeleteReq, EditReq, Resp, SearchReq, UserLoginReq};
 use super::super::models::PageParams;
 
 /// get_user_list 获取用户列表
@@ -77,16 +79,9 @@ pub async fn get_sort_list(
 /// db 数据库连接 使用db.0
 #[handler]
 pub async fn get_by_id_or_name(
-    req: &Request,
     Data(db): Data<&DatabaseConnection>,
     Query(search_req): Query<SearchReq>,
 ) -> Result<Json<serde_json::Value>> {
-    // let ee = req.extensions().get::<CasbinService>().unwrap();
-    // let e = &ee.enforcer;
-
-    // let e_result = e.enforce(("a", "b", "a")).unwrap();
-    // println!("e_result-----------{}", e_result);
-
     let mut s = SysUser::find();
     // 不查找删除数据
     s = s.filter(sys_user::Column::DeletedAt.is_null());
@@ -115,6 +110,12 @@ pub async fn add(
     Data(db): Data<&DatabaseConnection>,
     Json(user_add): Json<AddReq>,
 ) -> Result<Json<serde_json::Value>> {
+    //  数据验证
+    match user_add.validate() {
+        Ok(_) => {}
+        Err(e) => return Err(e.into()),
+    }
+
     // let user = serde_json::from_value(serde_json::json!(user_add))?;
     let uid = scru128::scru128();
     let salt = utils::rand_s(10);
@@ -141,7 +142,8 @@ pub async fn add(
         ..Default::default()
     };
 
-    user.insert(db).await?;
+    //  let re =   user.insert(db).await?; 这个多查询一次结果
+    let _ = SysUser::insert(user).exec(db).await?;
     let resp = Json(serde_json::json!({ "id": uid }));
     Ok(resp)
 }
@@ -225,41 +227,37 @@ pub async fn delete(
 #[handler]
 pub async fn edit(
     Data(db): Data<&DatabaseConnection>,
-    Json(delete_req): Json<DeleteReq>,
+    Json(edit_req): Json<EditReq>,
 ) -> Result<Json<serde_json::Value>> {
-    let mut s = SysUser::update_many();
-    s = s.filter(sys_user::Column::DeletedAt.is_null());
-    let mut flag = false;
-    if let Some(x) = delete_req.user_id {
-        s = s.filter(sys_user::Column::Id.is_in(x));
-        flag = true;
-    }
+    let uid = edit_req.user_id;
+    let s_u = SysUser::find_by_id(uid.clone()).one(db).await?;
+    let s_user: sys_user::ActiveModel = s_u.unwrap().into();
+    let now: NaiveDateTime = Local::now().naive_local();
+    let user = sys_user::ActiveModel {
+        user_name: Set(edit_req.user_name),
+        user_nickname: Set(edit_req.user_nickname),
+        mobile: Set(edit_req.mobile),
+        birthday: Set(edit_req.birthday),
+        user_status: Set(edit_req.user_status),
+        user_email: Set(edit_req.user_email),
+        sex: Set(edit_req.sex),
+        dept_id: Set(edit_req.dept_id),
+        remark: Set(edit_req.remark),
+        is_admin: Set(edit_req.is_admin),
+        address: Set(edit_req.address),
+        describe: Set(edit_req.describe),
+        phone_num: Set(edit_req.phone_num),
+        updated_at: Set(Some(now)),
+        ..s_user
+    };
+    // 更新
+    let _aa = user.update(db).await?; //这个两种方式一样 都要多查询一次
+                                      // let _bb = SysUser::update(user).exec(db).await?;
+                                      //  后续更新 角色  职位等信息
 
-    if let Some(x) = delete_req.user_name {
-        s = s.filter(sys_user::Column::UserName.is_in(x));
-        flag = true;
-    }
-    if !flag {
-        return Err("用户名或者用户Id必须存在一个".into());
-    }
-
-    //开始软删除，将用户删除时间设置为当前时间
-    let d = s
-        .col_expr(
-            sys_user::Column::DeletedAt,
-            Expr::value(Local::now().naive_local() as NaiveDateTime),
-        )
-        .exec(db)
-        .await?;
-
-    match d.rows_affected {
-        0 => return Err("没有你要删除的用户".into()),
-        i => {
-            return Ok(Json(serde_json::json!({
-                "msg": format!("成功删除{}条用户数据", i)
-            })))
-        }
-    }
+    return Ok(Json(serde_json::json!({
+        "msg": format!("用户<{}>数据更新成功", uid)
+    })));
 }
 
 /// 用户登录
