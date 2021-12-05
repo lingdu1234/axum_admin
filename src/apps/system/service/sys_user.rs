@@ -94,29 +94,29 @@ pub async fn get_by_id_or_name(
         s = s.filter(sys_user::Column::UserName.eq(x));
     }
 
-    let user = match s.one(db).await? {
-        Some(user) => user,
+    let res = match s.one(db).await? {
+        Some(m) => m,
         None => return Err("用户不存在".into()),
     };
 
-    let user_res: Resp = serde_json::from_value(serde_json::json!(user))?; //这种数据转换效率不知道怎么样
+    let result: Resp = serde_json::from_value(serde_json::json!(res))?; //这种数据转换效率不知道怎么样
 
-    Ok(Json(serde_json::json!({ "user": user_res })))
+    Ok(Json(serde_json::json!({ "result": result })))
 }
 
 /// add 添加
 #[handler]
 pub async fn add(
     Data(db): Data<&DatabaseConnection>,
-    Json(user_add): Json<AddReq>,
+    Json(add_req): Json<AddReq>,
 ) -> Result<Json<serde_json::Value>> {
     //  数据验证
-    match user_add.validate() {
+    match add_req.validate() {
         Ok(_) => {}
         Err(e) => return Err(e.into()),
     }
 
-    // let user = serde_json::from_value(serde_json::json!(user_add))?;
+    // let user = serde_json::from_value(serde_json::json!(add_req))?;
     let uid = scru128::scru128();
     let salt = utils::rand_s(10);
     let passwd = utils::encrypt_password(&user_add.user_password, &salt);
@@ -124,20 +124,20 @@ pub async fn add(
     let user = sys_user::ActiveModel {
         id: Set(uid.clone()),
         user_salt: Set(salt),
-        user_name: Set(user_add.user_name),
-        user_nickname: Set(user_add.user_nickname.unwrap_or("".to_string())),
+        user_name: Set(add_req.user_name),
+        user_nickname: Set(add_req.user_nickname.unwrap_or("".to_string())),
         user_password: Set(passwd),
-        mobile: Set(user_add.mobile),
-        birthday: Set(user_add.birthday.unwrap_or(0)),
-        user_status: Set(user_add.user_status.unwrap_or(1)),
-        user_email: Set(user_add.user_email),
-        sex: Set(user_add.sex.unwrap_or(0)),
-        dept_id: Set(user_add.dept_id),
-        remark: Set(user_add.remark.unwrap_or("".to_string())),
-        is_admin: Set(user_add.is_admin.unwrap_or(1)),
-        address: Set(user_add.address.unwrap_or("".to_string())),
-        describe: Set(user_add.describe.unwrap_or("".to_string())),
-        phone_num: Set(user_add.phone_num.unwrap_or("".to_string())),
+        mobile: Set(add_req.mobile),
+        birthday: Set(add_req.birthday.unwrap_or(0)),
+        user_status: Set(add_req.user_status.unwrap_or(1)),
+        user_email: Set(add_req.user_email),
+        sex: Set(add_req.sex.unwrap_or(0)),
+        dept_id: Set(add_req.dept_id),
+        remark: Set(add_req.remark.unwrap_or("".to_string())),
+        is_admin: Set(add_req.is_admin.unwrap_or(1)),
+        address: Set(add_req.address.unwrap_or("".to_string())),
+        describe: Set(add_req.describe.unwrap_or("".to_string())),
+        phone_num: Set(add_req.phone_num.unwrap_or("".to_string())),
         created_at: Set(Some(now)),
         ..Default::default()
     };
