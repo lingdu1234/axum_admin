@@ -31,6 +31,8 @@ pub struct Model {
     pub created_at: Option<DateTime>,
     pub updated_at: Option<DateTime>,
     pub deleted_at: Option<DateTime>,
+    pub created_by: Option<String>,
+    pub updated_by: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]

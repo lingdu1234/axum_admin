@@ -15,6 +15,7 @@ pub struct AddReq {
     // #[validate(phone)]
     #[validate(regex(path = "MOBILE_REGEX", code = "mobile_phone_num is invalid"))]
     pub mobile: String,
+    #[validate(length(min = 1))]
     pub user_nickname: Option<String>,
     pub birthday: Option<i32>,
     pub user_password: String,
@@ -24,12 +25,17 @@ pub struct AddReq {
     pub user_email: String,
     #[validate(range(min = 0, max = 2))]
     pub sex: Option<i8>,
+    #[validate(length(min = 1))]
     pub avatar: Option<String>,
+    #[validate(length(min = 1))]
     pub dept_id: String,
+    #[validate(length(min = 1))]
     pub remark: Option<String>,
     #[validate(range(min = 0, max = 1))]
     pub is_admin: Option<i8>,
+    #[validate(length(min = 1))]
     pub address: Option<String>,
+    #[validate(length(min = 1))]
     pub describe: Option<String>,
     #[validate(regex(path = "PHONE_REGEX", code = "phone_num is invalid"))]
     pub phone_num: Option<String>,
@@ -74,16 +80,18 @@ pub struct Resp {
     pub phone_num: String,
 }
 
-#[derive(Deserialize, Debug, Serialize, Default)]
+#[derive(Deserialize, Debug, Serialize, Default, Validate)]
 pub struct SearchReq {
+    #[validate(length(min = 1))]
     pub user_id: Option<String>,
+    #[validate(length(min = 1))]
     pub user_name: Option<String>,
+    #[validate(length(min = 1))]
     pub user_nickname: Option<String>,
+    #[validate(range(min = 0, max = 1))]
     pub user_status: Option<i8>,
-    pub user_email: Option<String>,
-    pub sex: Option<i8>,
+    #[validate(length(min = 1))]
     pub dept_id: Option<String>,
-    pub phone_num: Option<String>,
     pub begin_time: Option<String>,
     pub end_time: Option<String>,
 }

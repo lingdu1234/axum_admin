@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+pub mod sys_dict_data;
 pub mod sys_dict_type;
 pub mod sys_user;
 

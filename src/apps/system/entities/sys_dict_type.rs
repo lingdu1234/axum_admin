@@ -7,13 +7,13 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "sys_dict_type")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub dict_id: String,
+    pub dict_type_id: String,
     pub dict_name: String,
     #[sea_orm(unique)]
     pub dict_type: String,
     pub status: i8,
-    pub create_by: Option<String>,
-    pub update_by: Option<String>,
+    pub created_by: Option<String>,
+    pub updated_by: Option<String>,
     pub remark: Option<String>,
     pub created_at: Option<DateTime>,
     pub updated_at: Option<DateTime>,

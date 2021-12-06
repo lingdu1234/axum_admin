@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-
 #[derive(Deserialize, Debug, Serialize, Default, Validate)]
 pub struct SearchReq {
     pub dict_id: Option<String>,
@@ -14,11 +13,13 @@ pub struct SearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Serialize, Default)]
+#[derive(Deserialize, Debug, Serialize, Default, Validate)]
 pub struct AddReq {
     pub dict_name: String,
     pub dict_type: String,
+    #[validate(range(min = 0, max = 2))]
     pub status: Option<i8>,
+    #[validate(length(min = 1))]
     pub remark: Option<String>,
 }
 
