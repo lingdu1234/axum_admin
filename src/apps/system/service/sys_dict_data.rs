@@ -11,7 +11,7 @@ use sea_orm::{
 use validator::Validate;
 
 use super::super::entities::{
-    prelude::*,
+    prelude::SysDictData,
     sys_dict_data::{ActiveModel, Column},
 };
 use super::super::models::{
@@ -37,7 +37,7 @@ pub async fn get_sort_list(
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
-    let mut s = SysDictType::find();
+    let mut s = SysDictData::find();
 
     if let Some(x) = search_req.dict_type {
         s = s.filter(Column::DictType.eq(x));
@@ -129,7 +129,7 @@ pub async fn ddelete(
     Data(db): Data<&DatabaseConnection>,
     Json(delete_req): Json<DeleteReq>,
 ) -> Result<Json<serde_json::Value>> {
-    let mut s = SysDictType::delete_many();
+    let mut s = SysDictData::delete_many();
 
     s = s.filter(Column::DictDataId.is_in(delete_req.dict_ids));
 
@@ -181,7 +181,7 @@ pub async fn get_by_id(
     Data(db): Data<&DatabaseConnection>,
     Query(search_req): Query<SearchReq>,
 ) -> Result<Json<serde_json::Value>> {
-    let mut s = SysUser::find();
+    let mut s = SysDictData::find();
     s = s.filter(Column::DeletedAt.is_null());
     //
     if let Some(x) = search_req.dict_data_id {
@@ -204,7 +204,7 @@ pub async fn get_by_id(
 /// db 数据库连接 使用db.0
 #[handler]
 pub async fn get_all(Data(db): Data<&DatabaseConnection>) -> Result<Json<serde_json::Value>> {
-    let s = SysDictType::find()
+    let s = SysDictData::find()
         .filter(Column::DeletedAt.is_null())
         .filter(Column::Status.eq(1))
         .order_by(Column::DictDataId, Order::Asc)

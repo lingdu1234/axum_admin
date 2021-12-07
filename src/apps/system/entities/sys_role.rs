@@ -9,8 +9,7 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
     pub status: i8,
-    #[sea_orm(column_type = "Custom(\"MEDIUMINT(10) UNSIGNED\".to_owned())")]
-    pub list_order: String,
+    pub list_order: i32,
     pub name: String,
     pub remark: String,
     pub data_scope: i8,

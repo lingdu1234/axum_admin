@@ -17,7 +17,7 @@ use crate::utils::{
 };
 
 use super::super::entities::{
-    prelude::*,
+    prelude::SysUser,
     sys_user::{ActiveModel, Column},
 };
 use super::super::models::{

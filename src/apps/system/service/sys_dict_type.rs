@@ -11,7 +11,7 @@ use sea_orm::{
 use validator::Validate;
 
 use super::super::entities::{
-    prelude::*,
+    prelude::SysDictType,
     sys_dict_type::{ActiveModel, Column},
 };
 use super::super::models::{
@@ -174,7 +174,7 @@ pub async fn get_by_id(
     Data(db): Data<&DatabaseConnection>,
     Query(search_req): Query<SearchReq>,
 ) -> Result<Json<serde_json::Value>> {
-    let mut s = SysUser::find();
+    let mut s = SysDictType::find();
     s = s.filter(Column::DeletedAt.is_null());
     //
     if let Some(x) = search_req.dict_id {
