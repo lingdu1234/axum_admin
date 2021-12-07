@@ -11,7 +11,7 @@ pub struct Model {
     pub post_code: String,
     pub post_name: String,
     pub post_sort: i32,
-    pub status: String,
+    pub status: i8,
     pub remark: Option<String>,
     pub created_by: Option<String>,
     pub updated_by: Option<String>,

@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod sys_dict_data;
 pub mod sys_dict_type;
+pub mod sys_post;
 pub mod sys_user;
 
 #[derive(Deserialize, Debug, Serialize, Default)]
