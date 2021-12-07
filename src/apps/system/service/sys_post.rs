@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use chrono::{Local, NaiveDateTime};
 use poem::{
     handler,

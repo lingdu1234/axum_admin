@@ -4,7 +4,7 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "sys_auth_rule")]
+#[sea_orm(table_name = "sys_rule_auth")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
@@ -22,8 +22,8 @@ pub struct Model {
     pub path: String,
     pub jump_path: String,
     pub component: String,
-    pub allow_data_scope: Option<i8>,
-    pub is_data_scope: Option<i8>,
+    pub allow_data_scope: i8,
+    pub is_data_scope: i8,
     pub is_frame: i8,
     pub module_type: String,
     pub model_id: i32,
