@@ -16,10 +16,7 @@ use crate::utils::{
     jwt::{AuthBody, AuthPayload},
 };
 
-use super::super::entities::{
-    prelude::SysUser,
-    sys_user::{ActiveModel, Column},
-};
+use super::super::entities::{prelude::SysUser, sys_user};
 use super::super::models::{
     sys_user::{AddReq, DeleteReq, EditReq, Resp, SearchReq, UserLoginReq},
     PageParams,
@@ -38,28 +35,30 @@ pub async fn get_sort_list(
     let page_per_size = page_params.page_size.unwrap_or(10);
     let mut s = SysUser::find();
     // 不查找删除数据
-    s = s.filter(Column::DeletedAt.is_null());
+    s = s.filter(sys_user::Column::DeletedAt.is_null());
     // 查询条件
     if let Some(x) = search_req.user_id {
-        s = s.filter(Column::Id.eq(x));
+        s = s.filter(sys_user::Column::Id.eq(x));
     }
 
     if let Some(x) = search_req.user_name {
-        s = s.filter(Column::UserName.eq(x));
+        s = s.filter(sys_user::Column::UserName.eq(x));
     }
     if let Some(x) = search_req.user_status {
-        s = s.filter(Column::UserStatus.eq(x));
+        s = s.filter(sys_user::Column::UserStatus.eq(x));
     }
     if let Some(x) = search_req.begin_time {
-        s = s.filter(Column::CreatedAt.gte(x));
+        s = s.filter(sys_user::Column::CreatedAt.gte(x));
     }
     if let Some(x) = search_req.end_time {
-        s = s.filter(Column::CreatedAt.lte(x));
+        s = s.filter(sys_user::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
     // 获取全部数据条数
-    let paginator = s.order_by_asc(Column::Id).paginate(db, page_per_size);
+    let paginator = s
+        .order_by_asc(sys_user::Column::Id)
+        .paginate(db, page_per_size);
     let num_pages = paginator.num_pages().await?;
     let list = paginator
         .fetch_page(page_num - 1)
@@ -85,14 +84,14 @@ pub async fn get_by_id_or_name(
 ) -> Result<Json<serde_json::Value>> {
     let mut s = SysUser::find();
     // 不查找删除数据
-    s = s.filter(Column::DeletedAt.is_null());
+    s = s.filter(sys_user::Column::DeletedAt.is_null());
     //
     if let Some(x) = search_req.user_id {
-        s = s.filter(Column::Id.eq(x));
+        s = s.filter(sys_user::Column::Id.eq(x));
     }
 
     if let Some(x) = search_req.user_name {
-        s = s.filter(Column::UserName.eq(x));
+        s = s.filter(sys_user::Column::UserName.eq(x));
     }
 
     let res = match s.one(db).await? {
@@ -122,7 +121,7 @@ pub async fn add(
     let salt = utils::rand_s(10);
     let passwd = utils::encrypt_password(&add_req.user_password, &salt);
     let now: NaiveDateTime = Local::now().naive_local();
-    let user = ActiveModel {
+    let user = sys_user::ActiveModel {
         id: Set(uid.clone()),
         user_salt: Set(salt),
         user_name: Set(add_req.user_name),
@@ -159,12 +158,12 @@ pub async fn ddelete(
     let mut s = SysUser::delete_many();
     let mut flag = false;
     if let Some(x) = delete_req.user_id {
-        s = s.filter(Column::Id.is_in(x));
+        s = s.filter(sys_user::Column::Id.is_in(x));
         flag = true;
     }
 
     if let Some(x) = delete_req.user_name {
-        s = s.filter(Column::UserName.is_in(x));
+        s = s.filter(sys_user::Column::UserName.is_in(x));
         flag = true;
     }
     if !flag {
@@ -191,15 +190,15 @@ pub async fn delete(
     Json(delete_req): Json<DeleteReq>,
 ) -> Result<Json<serde_json::Value>> {
     let mut s = SysUser::update_many();
-    s = s.filter(Column::DeletedAt.is_null());
+    s = s.filter(sys_user::Column::DeletedAt.is_null());
     let mut flag = false;
     if let Some(x) = delete_req.user_id {
-        s = s.filter(Column::Id.is_in(x));
+        s = s.filter(sys_user::Column::Id.is_in(x));
         flag = true;
     }
 
     if let Some(x) = delete_req.user_name {
-        s = s.filter(Column::UserName.is_in(x));
+        s = s.filter(sys_user::Column::UserName.is_in(x));
         flag = true;
     }
     if !flag {
@@ -209,7 +208,7 @@ pub async fn delete(
     //开始软删除，将用户删除时间设置为当前时间
     let d = s
         .col_expr(
-            Column::DeletedAt,
+            sys_user::Column::DeletedAt,
             Expr::value(Local::now().naive_local() as NaiveDateTime),
         )
         .exec(db)
@@ -233,9 +232,9 @@ pub async fn edit(
 ) -> Result<Json<serde_json::Value>> {
     let uid = edit_req.user_id;
     let s_u = SysUser::find_by_id(uid.clone()).one(db).await?;
-    let s_user: ActiveModel = s_u.unwrap().into();
+    let s_user: sys_user::ActiveModel = s_u.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
-    let user = ActiveModel {
+    let user = sys_user::ActiveModel {
         user_name: Set(edit_req.user_name),
         user_nickname: Set(edit_req.user_nickname),
         mobile: Set(edit_req.mobile),
@@ -277,7 +276,7 @@ pub async fn login(
     }
     // 根据用户名获取用户信息
     let user = match SysUser::find()
-        .filter(Column::UserName.eq(login_req.user_name.clone()))
+        .filter(sys_user::Column::UserName.eq(login_req.user_name.clone()))
         .one(db)
         .await?
     {

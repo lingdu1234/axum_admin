@@ -10,10 +10,7 @@ use sea_orm::{
 };
 use validator::Validate;
 
-use super::super::entities::{
-    prelude::*,
-    sys_post::{ActiveModel, Column},
-};
+use super::super::entities::{prelude::*, sys_post};
 use super::super::models::{
     sys_post::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
     PageParams,
@@ -40,25 +37,27 @@ pub async fn get_sort_list(
     let mut s = SysPost::find();
 
     if let Some(x) = search_req.post_code {
-        s = s.filter(Column::PostCode.eq(x));
+        s = s.filter(sys_post::Column::PostCode.eq(x));
     }
 
     if let Some(x) = search_req.post_name {
-        s = s.filter(Column::PostName.eq(x));
+        s = s.filter(sys_post::Column::PostName.eq(x));
     }
     if let Some(x) = search_req.status {
-        s = s.filter(Column::Status.eq(x));
+        s = s.filter(sys_post::Column::Status.eq(x));
     }
     if let Some(x) = search_req.begin_time {
-        s = s.filter(Column::CreatedAt.gte(x));
+        s = s.filter(sys_post::Column::CreatedAt.gte(x));
     }
     if let Some(x) = search_req.end_time {
-        s = s.filter(Column::CreatedAt.lte(x));
+        s = s.filter(sys_post::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
     // 分页获取数据
-    let paginator = s.order_by_asc(Column::PostId).paginate(db, page_per_size);
+    let paginator = s
+        .order_by_asc(sys_post::Column::PostId)
+        .paginate(db, page_per_size);
     let num_pages = paginator.num_pages().await?;
     let list = paginator
         .fetch_page(page_num - 1)
@@ -80,9 +79,9 @@ pub async fn check_data_is_exist(
     post_name: String,
     db: &DatabaseConnection,
 ) -> Result<bool> {
-    let s1 = SysPost::find().filter(Column::PostCode.eq(post_code));
+    let s1 = SysPost::find().filter(sys_post::Column::PostCode.eq(post_code));
 
-    let s2 = SysPost::find().filter(Column::PostName.eq(post_name));
+    let s2 = SysPost::find().filter(sys_post::Column::PostName.eq(post_name));
     let count1 = s1.count(db).await?;
     let count2 = s2.count(db).await?;
     Ok(count1 > 0 || count2 > 0)
@@ -106,7 +105,7 @@ pub async fn add(
 
     let uid = scru128::scru128();
     let now: NaiveDateTime = Local::now().naive_local();
-    let user = ActiveModel {
+    let user = sys_post::ActiveModel {
         post_id: Set(uid.clone()),
         post_code: Set(add_req.post_code),
         post_sort: Set(add_req.post_sort),
@@ -131,7 +130,7 @@ pub async fn ddelete(
 ) -> Result<Json<serde_json::Value>> {
     let mut s = SysPost::delete_many();
 
-    s = s.filter(Column::PostId.is_in(delete_req.post_ids));
+    s = s.filter(sys_post::Column::PostId.is_in(delete_req.post_ids));
 
     //开始删除
     let d = s.exec(db).await?;
@@ -163,9 +162,9 @@ pub async fn edit(
     }
     let uid = edit_req.post_id;
     let s_s = SysPost::find_by_id(uid.clone()).one(db).await?;
-    let s_r: ActiveModel = s_s.unwrap().into();
+    let s_r: sys_post::ActiveModel = s_s.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
-    let act = ActiveModel {
+    let act = sys_post::ActiveModel {
         post_code: Set(edit_req.post_code),
         post_name: Set(edit_req.post_name),
         post_sort: Set(edit_req.post_sort),
@@ -190,10 +189,10 @@ pub async fn get_by_id(
     Query(search_req): Query<SearchReq>,
 ) -> Result<Json<serde_json::Value>> {
     let mut s = SysPost::find();
-    s = s.filter(Column::DeletedAt.is_null());
+    s = s.filter(sys_post::Column::DeletedAt.is_null());
     //
     if let Some(x) = search_req.post_id {
-        s = s.filter(Column::PostId.eq(x));
+        s = s.filter(sys_post::Column::PostId.eq(x));
     } else {
         return Err("请输入id".into());
     }
@@ -213,9 +212,9 @@ pub async fn get_by_id(
 #[handler]
 pub async fn get_all(Data(db): Data<&DatabaseConnection>) -> Result<Json<serde_json::Value>> {
     let s = SysPost::find()
-        .filter(Column::DeletedAt.is_null())
-        .filter(Column::Status.eq(1))
-        .order_by(Column::PostId, Order::Asc)
+        .filter(sys_post::Column::DeletedAt.is_null())
+        .filter(sys_post::Column::Status.eq(1))
+        .order_by(sys_post::Column::PostId, Order::Asc)
         .all(db)
         .await?;
     let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s))?; //这种数据转换效率不知道怎么样

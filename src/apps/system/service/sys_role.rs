@@ -10,10 +10,7 @@ use sea_orm::{
 };
 use validator::Validate;
 
-use super::super::entities::{
-    prelude::SysRole,
-    sys_role::{ActiveModel, Column},
-};
+use super::super::entities::{prelude::SysRole, sys_role};
 use super::super::models::{
     sys_role::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
     PageParams,
@@ -40,16 +37,18 @@ pub async fn get_sort_list(
     let mut s = SysRole::find();
 
     if let Some(x) = search_req.name {
-        s = s.filter(Column::Name.eq(x));
+        s = s.filter(sys_role::Column::Name.eq(x));
     }
 
     if let Some(x) = search_req.status {
-        s = s.filter(Column::Status.eq(x));
+        s = s.filter(sys_role::Column::Status.eq(x));
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
     // 分页获取数据
-    let paginator = s.order_by_asc(Column::Id).paginate(db, page_per_size);
+    let paginator = s
+        .order_by_asc(sys_role::Column::Id)
+        .paginate(db, page_per_size);
     let num_pages = paginator.num_pages().await?;
     let list = paginator
         .fetch_page(page_num - 1)
@@ -67,7 +66,7 @@ pub async fn get_sort_list(
 }
 
 pub async fn check_data_is_exist(role_name: String, db: &DatabaseConnection) -> Result<bool> {
-    let s1 = SysRole::find().filter(Column::Name.eq(role_name));
+    let s1 = SysRole::find().filter(sys_role::Column::Name.eq(role_name));
 
     let count1 = s1.count(db).await?;
     Ok(count1 > 0)
@@ -91,11 +90,12 @@ pub async fn add(
 
     let uid = scru128::scru128();
     let now: NaiveDateTime = Local::now().naive_local();
-    let user = ActiveModel {
+    let user = sys_role::ActiveModel {
         id: Set(uid.clone()),
         name: Set(add_req.name),
         list_order: Set(add_req.list_order),
         data_scope: Set(add_req.data_scope),
+        created_at: Set(Some(now)),
         status: Set(add_req.status.unwrap_or(1)),
         remark: Set(add_req.remark.unwrap_or("".to_string())),
         ..Default::default()
@@ -116,7 +116,7 @@ pub async fn ddelete(
 ) -> Result<Json<serde_json::Value>> {
     let mut s = SysRole::delete_many();
 
-    s = s.filter(Column::Id.is_in(delete_req.role_ids));
+    s = s.filter(sys_role::Column::Id.is_in(delete_req.role_ids));
 
     //开始删除
     let d = s.exec(db).await?;
@@ -148,12 +148,13 @@ pub async fn edit(
     }
     let uid = edit_req.id;
     let s_s = SysRole::find_by_id(uid.clone()).one(db).await?;
-    let s_r: ActiveModel = s_s.unwrap().into();
+    let s_r: sys_role::ActiveModel = s_s.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
-    let act = ActiveModel {
+    let act = sys_role::ActiveModel {
         name: Set(edit_req.name),
         data_scope: Set(edit_req.data_scope),
         list_order: Set(edit_req.list_order),
+        updated_at: Set(Some(now)),
         status: Set(edit_req.status),
         remark: Set(edit_req.remark),
         ..s_r
@@ -176,7 +177,7 @@ pub async fn get_by_id(
     let mut s = SysRole::find();
     //
     if let Some(x) = search_req.id {
-        s = s.filter(Column::Id.eq(x));
+        s = s.filter(sys_role::Column::Id.eq(x));
     } else {
         return Err("请输入id".into());
     }
@@ -196,8 +197,8 @@ pub async fn get_by_id(
 #[handler]
 pub async fn get_all(Data(db): Data<&DatabaseConnection>) -> Result<Json<serde_json::Value>> {
     let s = SysRole::find()
-        .filter(Column::Status.eq(1))
-        .order_by(Column::Id, Order::Asc)
+        .filter(sys_role::Column::Status.eq(1))
+        .order_by(sys_role::Column::Id, Order::Asc)
         .all(db)
         .await?;
     let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s))?; //这种数据转换效率不知道怎么样

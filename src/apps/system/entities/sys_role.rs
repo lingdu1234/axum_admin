@@ -13,6 +13,10 @@ pub struct Model {
     pub name: String,
     pub remark: String,
     pub data_scope: i8,
+    pub created_by: Option<String>,
+    pub created_at: Option<DateTime>,
+    pub updated_by: Option<String>,
+    pub updated_at: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]

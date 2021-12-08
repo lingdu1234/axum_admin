@@ -10,6 +10,7 @@ pub struct Model {
     pub role_id: String,
     #[sea_orm(primary_key, auto_increment = false)]
     pub dept_id: String,
+    pub created_at: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]

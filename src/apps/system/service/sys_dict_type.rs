@@ -10,10 +10,7 @@ use sea_orm::{
 };
 use validator::Validate;
 
-use super::super::entities::{
-    prelude::SysDictType,
-    sys_dict_type::{ActiveModel, Column},
-};
+use super::super::entities::{prelude::SysDictType, sys_dict_type};
 use super::super::models::{
     sys_dict_type::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
     PageParams,
@@ -40,26 +37,26 @@ pub async fn get_sort_list(
     let mut s = SysDictType::find();
 
     if let Some(x) = search_req.dict_type {
-        s = s.filter(Column::DictType.eq(x));
+        s = s.filter(sys_dict_type::Column::DictType.eq(x));
     }
 
     if let Some(x) = search_req.dict_name {
-        s = s.filter(Column::DictName.eq(x));
+        s = s.filter(sys_dict_type::Column::DictName.eq(x));
     }
     if let Some(x) = search_req.status {
-        s = s.filter(Column::Status.eq(x));
+        s = s.filter(sys_dict_type::Column::Status.eq(x));
     }
     if let Some(x) = search_req.begin_time {
-        s = s.filter(Column::CreatedAt.gte(x));
+        s = s.filter(sys_dict_type::Column::CreatedAt.gte(x));
     }
     if let Some(x) = search_req.end_time {
-        s = s.filter(Column::CreatedAt.lte(x));
+        s = s.filter(sys_dict_type::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
     // 分页获取数据
     let paginator = s
-        .order_by_asc(Column::DictTypeId)
+        .order_by_asc(sys_dict_type::Column::DictTypeId)
         .paginate(db, page_per_size);
     let num_pages = paginator.num_pages().await?;
     let list = paginator
@@ -79,7 +76,7 @@ pub async fn get_sort_list(
 
 pub async fn check_dict_type_is_exist(dict_type: &str, db: &DatabaseConnection) -> Result<bool> {
     let mut s = SysDictType::find();
-    s = s.filter(Column::DictType.eq(dict_type));
+    s = s.filter(sys_dict_type::Column::DictType.eq(dict_type));
     let count = s.count(db).await?;
     Ok(count > 0)
 }
@@ -102,7 +99,7 @@ pub async fn add(
 
     let uid = scru128::scru128();
     let now: NaiveDateTime = Local::now().naive_local();
-    let user = ActiveModel {
+    let user = sys_dict_type::ActiveModel {
         dict_type_id: Set(uid.clone()),
         dict_name: Set(add_req.dict_name),
         dict_type: Set(add_req.dict_type),
@@ -126,7 +123,7 @@ pub async fn ddelete(
 ) -> Result<Json<serde_json::Value>> {
     let mut s = SysDictType::delete_many();
 
-    s = s.filter(Column::DictTypeId.is_in(delete_req.dict_ids));
+    s = s.filter(sys_dict_type::Column::DictTypeId.is_in(delete_req.dict_ids));
 
     //开始删除
     let d = s.exec(db).await?;
@@ -149,9 +146,9 @@ pub async fn edit(
 ) -> Result<Json<serde_json::Value>> {
     let uid = edit_req.dict_id;
     let s_s = SysDictType::find_by_id(uid.clone()).one(db).await?;
-    let s_r: ActiveModel = s_s.unwrap().into();
+    let s_r: sys_dict_type::ActiveModel = s_s.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
-    let act = ActiveModel {
+    let act = sys_dict_type::ActiveModel {
         dict_name: Set(edit_req.dict_name),
         dict_type: Set(edit_req.dict_type),
         status: Set(edit_req.status),
@@ -175,10 +172,10 @@ pub async fn get_by_id(
     Query(search_req): Query<SearchReq>,
 ) -> Result<Json<serde_json::Value>> {
     let mut s = SysDictType::find();
-    s = s.filter(Column::DeletedAt.is_null());
+    s = s.filter(sys_dict_type::Column::DeletedAt.is_null());
     //
     if let Some(x) = search_req.dict_id {
-        s = s.filter(Column::DictTypeId.eq(x));
+        s = s.filter(sys_dict_type::Column::DictTypeId.eq(x));
     } else {
         return Err("请输入字典类型id".into());
     }
@@ -198,9 +195,9 @@ pub async fn get_by_id(
 #[handler]
 pub async fn get_all(Data(db): Data<&DatabaseConnection>) -> Result<Json<serde_json::Value>> {
     let s = SysDictType::find()
-        .filter(Column::DeletedAt.is_null())
-        .filter(Column::Status.eq(1))
-        .order_by(Column::DictTypeId, Order::Asc)
+        .filter(sys_dict_type::Column::DeletedAt.is_null())
+        .filter(sys_dict_type::Column::Status.eq(1))
+        .order_by(sys_dict_type::Column::DictTypeId, Order::Asc)
         .all(db)
         .await?;
     let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s))?; //这种数据转换效率不知道怎么样

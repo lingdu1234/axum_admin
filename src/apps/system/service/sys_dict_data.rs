@@ -10,10 +10,7 @@ use sea_orm::{
 };
 use validator::Validate;
 
-use super::super::entities::{
-    prelude::SysDictData,
-    sys_dict_data::{ActiveModel, Column},
-};
+use super::super::entities::{prelude::SysDictData, sys_dict_data};
 use super::super::models::{
     sys_dict_data::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
     PageParams,
@@ -40,26 +37,26 @@ pub async fn get_sort_list(
     let mut s = SysDictData::find();
 
     if let Some(x) = search_req.dict_type {
-        s = s.filter(Column::DictType.eq(x));
+        s = s.filter(sys_dict_data::Column::DictType.eq(x));
     }
 
     if let Some(x) = search_req.dict_label {
-        s = s.filter(Column::DictLabel.eq(x));
+        s = s.filter(sys_dict_data::Column::DictLabel.eq(x));
     }
     if let Some(x) = search_req.status {
-        s = s.filter(Column::Status.eq(x));
+        s = s.filter(sys_dict_data::Column::Status.eq(x));
     }
     if let Some(x) = search_req.begin_time {
-        s = s.filter(Column::CreatedAt.gte(x));
+        s = s.filter(sys_dict_data::Column::CreatedAt.gte(x));
     }
     if let Some(x) = search_req.end_time {
-        s = s.filter(Column::CreatedAt.lte(x));
+        s = s.filter(sys_dict_data::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
     // 分页获取数据
     let paginator = s
-        .order_by_asc(Column::DictDataId)
+        .order_by_asc(sys_dict_data::Column::DictDataId)
         .paginate(db, page_per_size);
     let num_pages = paginator.num_pages().await?;
     let list = paginator
@@ -78,9 +75,13 @@ pub async fn get_sort_list(
 }
 
 pub async fn check_dict_data_is_exist(req: AddReq, db: &DatabaseConnection) -> Result<bool> {
-    let s = SysDictData::find().filter(Column::DictType.eq(req.dict_type));
-    let s1 = s.clone().filter(Column::DictValue.eq(req.dict_value));
-    let s2 = s.clone().filter(Column::DictLabel.eq(req.dict_label));
+    let s = SysDictData::find().filter(sys_dict_data::Column::DictType.eq(req.dict_type));
+    let s1 = s
+        .clone()
+        .filter(sys_dict_data::Column::DictValue.eq(req.dict_value));
+    let s2 = s
+        .clone()
+        .filter(sys_dict_data::Column::DictLabel.eq(req.dict_label));
     let count1 = s1.count(db).await?;
     let count2 = s2.count(db).await?;
     Ok(count1 > 0 || count2 > 0)
@@ -104,7 +105,7 @@ pub async fn add(
 
     let uid = scru128::scru128();
     let now: NaiveDateTime = Local::now().naive_local();
-    let user = ActiveModel {
+    let user = sys_dict_data::ActiveModel {
         dict_data_id: Set(uid.clone()),
         dict_label: Set(add_req.dict_label),
         dict_type: Set(add_req.dict_type),
@@ -131,7 +132,7 @@ pub async fn ddelete(
 ) -> Result<Json<serde_json::Value>> {
     let mut s = SysDictData::delete_many();
 
-    s = s.filter(Column::DictDataId.is_in(delete_req.dict_ids));
+    s = s.filter(sys_dict_data::Column::DictDataId.is_in(delete_req.dict_ids));
 
     //开始删除
     let d = s.exec(db).await?;
@@ -154,9 +155,9 @@ pub async fn edit(
 ) -> Result<Json<serde_json::Value>> {
     let uid = edit_req.dict_data_id;
     let s_s = SysDictData::find_by_id(uid.clone()).one(db).await?;
-    let s_r: ActiveModel = s_s.unwrap().into();
+    let s_r: sys_dict_data::ActiveModel = s_s.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
-    let act = ActiveModel {
+    let act = sys_dict_data::ActiveModel {
         dict_label: Set(edit_req.dict_label),
         dict_type: Set(edit_req.dict_type),
         dict_sort: Set(edit_req.dict_sort),
@@ -182,10 +183,10 @@ pub async fn get_by_id(
     Query(search_req): Query<SearchReq>,
 ) -> Result<Json<serde_json::Value>> {
     let mut s = SysDictData::find();
-    s = s.filter(Column::DeletedAt.is_null());
+    s = s.filter(sys_dict_data::Column::DeletedAt.is_null());
     //
     if let Some(x) = search_req.dict_data_id {
-        s = s.filter(Column::DictDataId.eq(x));
+        s = s.filter(sys_dict_data::Column::DictDataId.eq(x));
     } else {
         return Err("请输入字典类型id".into());
     }
@@ -205,9 +206,9 @@ pub async fn get_by_id(
 #[handler]
 pub async fn get_all(Data(db): Data<&DatabaseConnection>) -> Result<Json<serde_json::Value>> {
     let s = SysDictData::find()
-        .filter(Column::DeletedAt.is_null())
-        .filter(Column::Status.eq(1))
-        .order_by(Column::DictDataId, Order::Asc)
+        .filter(sys_dict_data::Column::DeletedAt.is_null())
+        .filter(sys_dict_data::Column::Status.eq(1))
+        .order_by(sys_dict_data::Column::DictDataId, Order::Asc)
         .all(db)
         .await?;
     let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s))?; //这种数据转换效率不知道怎么样
