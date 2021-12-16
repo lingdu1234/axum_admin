@@ -1,7 +1,10 @@
-use chrono::{Local, NaiveDateTime};
+use std::time::Duration;
 
-#[test]
-fn test_time() {
+use chrono::{Local, NaiveDateTime};
+use sea_orm::{sea_query::Query, ConnectOptions, Database};
+
+#[tokio::test]
+async fn test_time() {
     let a = Local::now().to_string();
     println!("{}", a);
 

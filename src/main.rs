@@ -8,6 +8,7 @@ use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
 
 //导入全局
 pub use crate::config::CFG;
+use crate::database::{db_conn, DB};
 //路由日志追踪
 use crate::middleware::{Auth, PoemTracer};
 use crate::utils::casbin_service::CasbinService;
@@ -16,7 +17,7 @@ mod apps;
 //  配置文件
 mod config;
 // 数据库
-mod db;
+mod database;
 mod env;
 mod middleware;
 pub mod utils;
@@ -47,7 +48,9 @@ async fn main() -> Result<(), std::io::Error> {
         .with(fmt::Subscriber::new().with_writer(non_blocking).pretty());
     tracing::collect::set_global_default(collector).expect("Unable to set a global collector");
     //  数据库联机
-    let db = db::db_connect().await;
+    let db = DB.get_or_init(db_conn).await;
+    // 数据库初始化
+    database::db_init(db).await;
     //  casbin设置
     let casbin_service = CasbinService::new(db.clone())
         .await
@@ -67,7 +70,7 @@ async fn main() -> Result<(), std::io::Error> {
         .nest("/api", apps::api().with(Auth))
         .nest("/", Files::new(&CFG.web.dir).index_file(&CFG.web.index))
         .with(PoemTracer)
-        .with(AddData::new(db.clone()))
+        // .with(AddData::new(db.clone()))
         .with(AddData::new(casbin_service.clone()))
         .with(cors);
     // .after(|mut resp| async move {

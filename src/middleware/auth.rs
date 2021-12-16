@@ -25,12 +25,12 @@ pub struct AuthEndpoint<E> {
 
 #[poem::async_trait]
 impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
-    type Output = Result<E::Output>;
+    type Output = E::Output;
 
-    async fn call(&self, req: Request) -> Self::Output {
+    async fn call(&self, req: Request) -> Result<Self::Output> {
         let req_path = req.uri().path().replacen("/", "", 1);
         if req_path == "system/login" {
-            return Ok(self.ep.call(req).await);
+            return self.ep.call(req).await;
         }
         if let Some(auth) = req.headers().typed_get::<headers::Authorization<Bearer>>() {
             //  验证token
@@ -38,22 +38,26 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
             let token_data =
                 match decode::<Claims>(auth.0.token(), &KEYS.decoding, &Validation::default()) {
                     Ok(token) => token,
-                    Err(err) => {
-                        match *err.kind() {
-                            ErrorKind::InvalidToken => {
-                                return Err(Error::new(StatusCode::UNAUTHORIZED)
-                                    .with_reason("Invalid token"));
-                            }
-                            ErrorKind::ExpiredSignature => {
-                                return Err(Error::new(StatusCode::UNAUTHORIZED)
-                                    .with_reason("Expired token"));
-                            }
-                            _ => {
-                                return Err(Error::new(StatusCode::UNAUTHORIZED)
-                                    .with_reason(err.to_string()));
-                            }
+                    Err(err) => match *err.kind() {
+                        ErrorKind::InvalidToken => {
+                            return Err(Error::from_string(
+                                "Invalid token",
+                                StatusCode::UNAUTHORIZED,
+                            ));
                         }
-                    }
+                        ErrorKind::ExpiredSignature => {
+                            return Err(Error::from_string(
+                                "Expired token",
+                                StatusCode::UNAUTHORIZED,
+                            ));
+                        }
+                        _ => {
+                            return Err(Error::from_string(
+                                err.to_string(),
+                                StatusCode::UNAUTHORIZED,
+                            ));
+                        }
+                    },
                 };
             //  验证token是否过期
 
@@ -68,9 +72,9 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
             //  if !casbin::is_permitted(&token_data.claims.role, req.path(), req.method()) {}
 
             println!("{:?}------req_path-{}", token_data.claims, req_path);
-            return Ok(self.ep.call(req).await);
+            return self.ep.call(req).await;
         }
 
-        Err(Error::new(StatusCode::UNAUTHORIZED))
+        Err(Error::from_status(StatusCode::UNAUTHORIZED))
     }
 }

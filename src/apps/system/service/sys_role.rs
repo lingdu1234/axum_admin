@@ -10,6 +10,8 @@ use sea_orm::{
 };
 use validator::Validate;
 
+use crate::database::{db_conn, DB};
+
 use super::super::entities::{prelude::SysRole, sys_role};
 use super::super::models::{
     sys_role::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
@@ -21,10 +23,10 @@ use super::super::models::{
 /// db 数据库连接 使用db.0
 #[handler]
 pub async fn get_sort_list(
-    Data(db): Data<&DatabaseConnection>,
     Query(page_params): Query<PageParams>,
     Query(search_req): Query<SearchReq>,
 ) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     //  数据验证
     match search_req.validate() {
         Ok(_) => {}
@@ -74,10 +76,8 @@ pub async fn check_data_is_exist(role_name: String, db: &DatabaseConnection) -> 
 
 /// add 添加
 #[handler]
-pub async fn add(
-    Data(db): Data<&DatabaseConnection>,
-    Json(add_req): Json<AddReq>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     //  数据验证
     match add_req.validate() {
         Ok(_) => {}
@@ -88,7 +88,7 @@ pub async fn add(
         return Err("信息已存在".into());
     }
 
-    let uid = scru128::scru128();
+    let uid = scru128::scru128().to_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_role::ActiveModel {
         id: Set(uid.clone()),
@@ -110,10 +110,8 @@ pub async fn add(
 
 /// delete 完全删除
 #[handler]
-pub async fn ddelete(
-    Data(db): Data<&DatabaseConnection>,
-    Json(delete_req): Json<DeleteReq>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     let mut s = SysRole::delete_many();
 
     s = s.filter(sys_role::Column::Id.is_in(delete_req.role_ids));
@@ -133,10 +131,8 @@ pub async fn ddelete(
 
 // edit 修改
 #[handler]
-pub async fn edit(
-    Data(db): Data<&DatabaseConnection>,
-    Json(edit_req): Json<EditReq>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     //  数据验证
     match edit_req.validate() {
         Ok(_) => {}
@@ -170,10 +166,8 @@ pub async fn edit(
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_by_id(
-    Data(db): Data<&DatabaseConnection>,
-    Query(search_req): Query<SearchReq>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     let mut s = SysRole::find();
     //
     if let Some(x) = search_req.id {
@@ -195,7 +189,8 @@ pub async fn get_by_id(
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_all(Data(db): Data<&DatabaseConnection>) -> Result<Json<serde_json::Value>> {
+pub async fn get_all() -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     let s = SysRole::find()
         .filter(sys_role::Column::Status.eq(1))
         .order_by(sys_role::Column::Id, Order::Asc)

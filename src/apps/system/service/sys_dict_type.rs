@@ -10,6 +10,8 @@ use sea_orm::{
 };
 use validator::Validate;
 
+use crate::database::{db_conn, DB};
+
 use super::super::entities::{prelude::SysDictType, sys_dict_type};
 use super::super::models::{
     sys_dict_type::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
@@ -21,10 +23,10 @@ use super::super::models::{
 /// db 数据库连接 使用db.0
 #[handler]
 pub async fn get_sort_list(
-    Data(db): Data<&DatabaseConnection>,
     Query(page_params): Query<PageParams>,
     Query(search_req): Query<SearchReq>,
 ) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     //  数据验证
     match search_req.validate() {
         Ok(_) => {}
@@ -83,10 +85,8 @@ pub async fn check_dict_type_is_exist(dict_type: &str, db: &DatabaseConnection) 
 
 /// add 添加
 #[handler]
-pub async fn add(
-    Data(db): Data<&DatabaseConnection>,
-    Json(add_req): Json<AddReq>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     //  数据验证
     // match add_req.validate() {
     //     Ok(_) => {}
@@ -97,7 +97,7 @@ pub async fn add(
         return Err("字典类型已存在".into());
     }
 
-    let uid = scru128::scru128();
+    let uid = scru128::scru128().to_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_dict_type::ActiveModel {
         dict_type_id: Set(uid.clone()),
@@ -117,10 +117,8 @@ pub async fn add(
 
 /// delete 完全删除
 #[handler]
-pub async fn ddelete(
-    Data(db): Data<&DatabaseConnection>,
-    Json(delete_req): Json<DeleteReq>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     let mut s = SysDictType::delete_many();
 
     s = s.filter(sys_dict_type::Column::DictTypeId.is_in(delete_req.dict_ids));
@@ -140,10 +138,8 @@ pub async fn ddelete(
 
 // edit 修改
 #[handler]
-pub async fn edit(
-    Data(db): Data<&DatabaseConnection>,
-    Json(edit_req): Json<EditReq>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     let uid = edit_req.dict_id;
     let s_s = SysDictType::find_by_id(uid.clone()).one(db).await?;
     let s_r: sys_dict_type::ActiveModel = s_s.unwrap().into();
@@ -167,10 +163,8 @@ pub async fn edit(
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_by_id(
-    Data(db): Data<&DatabaseConnection>,
-    Query(search_req): Query<SearchReq>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     let mut s = SysDictType::find();
     s = s.filter(sys_dict_type::Column::DeletedAt.is_null());
     //
@@ -193,7 +187,8 @@ pub async fn get_by_id(
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_all(Data(db): Data<&DatabaseConnection>) -> Result<Json<serde_json::Value>> {
+pub async fn get_all() -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     let s = SysDictType::find()
         .filter(sys_dict_type::Column::DeletedAt.is_null())
         .filter(sys_dict_type::Column::Status.eq(1))

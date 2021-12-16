@@ -11,9 +11,12 @@ use sea_orm::{
 };
 use validator::Validate;
 
-use crate::utils::{
-    self,
-    jwt::{AuthBody, AuthPayload},
+use crate::{
+    database::{db_conn, DB},
+    utils::{
+        self,
+        jwt::{AuthBody, AuthPayload},
+    },
 };
 
 use super::super::entities::{prelude::SysUser, sys_user};
@@ -27,10 +30,10 @@ use super::super::models::{
 /// db 数据库连接 使用db.0
 #[handler]
 pub async fn get_sort_list(
-    Data(db): Data<&DatabaseConnection>,
     Query(page_params): Query<PageParams>,
     Query(search_req): Query<SearchReq>,
 ) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     let mut s = SysUser::find();
@@ -79,9 +82,9 @@ pub async fn get_sort_list(
 /// db 数据库连接 使用db.0
 #[handler]
 pub async fn get_by_id_or_name(
-    Data(db): Data<&DatabaseConnection>,
     Query(search_req): Query<SearchReq>,
 ) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     let mut s = SysUser::find();
     // 不查找删除数据
     s = s.filter(sys_user::Column::DeletedAt.is_null());
@@ -106,10 +109,8 @@ pub async fn get_by_id_or_name(
 
 /// add 添加
 #[handler]
-pub async fn add(
-    Data(db): Data<&DatabaseConnection>,
-    Json(add_req): Json<AddReq>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     //  数据验证
     match add_req.validate() {
         Ok(_) => {}
@@ -117,7 +118,7 @@ pub async fn add(
     }
 
     // let user = serde_json::from_value(serde_json::json!(add_req))?;
-    let uid = scru128::scru128();
+    let uid = scru128::scru128().to_string();
     let salt = utils::rand_s(10);
     let passwd = utils::encrypt_password(&add_req.user_password, &salt);
     let now: NaiveDateTime = Local::now().naive_local();
@@ -151,10 +152,8 @@ pub async fn add(
 
 /// delete 完全删除
 #[handler]
-pub async fn ddelete(
-    Data(db): Data<&DatabaseConnection>,
-    Json(delete_req): Json<DeleteReq>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     let mut s = SysUser::delete_many();
     let mut flag = false;
     if let Some(x) = delete_req.user_id {
@@ -185,10 +184,8 @@ pub async fn ddelete(
 
 /// delete 软删除
 #[handler]
-pub async fn delete(
-    Data(db): Data<&DatabaseConnection>,
-    Json(delete_req): Json<DeleteReq>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     let mut s = SysUser::update_many();
     s = s.filter(sys_user::Column::DeletedAt.is_null());
     let mut flag = false;
@@ -226,10 +223,8 @@ pub async fn delete(
 
 // edit 修改
 #[handler]
-pub async fn edit(
-    Data(db): Data<&DatabaseConnection>,
-    Json(edit_req): Json<EditReq>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<serde_json::Value>> {
+    let db = DB.get_or_init(db_conn).await;
     let uid = edit_req.user_id;
     let s_u = SysUser::find_by_id(uid.clone()).one(db).await?;
     let s_user: sys_user::ActiveModel = s_u.unwrap().into();
@@ -263,10 +258,8 @@ pub async fn edit(
 
 /// 用户登录
 #[handler]
-pub async fn login(
-    Data(db): Data<&DatabaseConnection>,
-    Json(login_req): Json<UserLoginReq>,
-) -> Result<Json<AuthBody>> {
+pub async fn login(Json(login_req): Json<UserLoginReq>) -> Result<Json<AuthBody>> {
+    let db = DB.get_or_init(db_conn).await;
     // 验证用户名密码不为空
     if login_req.user_name.trim().is_empty() {
         return Err("用户名不能为空".into());
