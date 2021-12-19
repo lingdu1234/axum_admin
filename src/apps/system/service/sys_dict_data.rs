@@ -1,6 +1,8 @@
 use chrono::{Local, NaiveDateTime};
 use poem::{
+    error::BadRequest,
     handler,
+    http::StatusCode,
     web::{Json, Query},
     Error, Result,
 };
@@ -28,11 +30,7 @@ pub async fn get_sort_list(
 ) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
     //  数据验证
-    // match search_req.validate() {
-    //     Ok(_) => {}
-    //     Err(e) => return Err(e.into()),
-    // }
-    search_req.validate().map_err(|e| e.into())?;
+    search_req.validate().map_err(BadRequest)?;
 
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
@@ -56,12 +54,12 @@ pub async fn get_sort_list(
         s = s.filter(sys_dict_data::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
-    let total = s.clone().count(db).await.map_err(|e| e.into())?;
+    let total = s.clone().count(db).await.map_err(BadRequest)?;
     // 分页获取数据
     let paginator = s
         .order_by_asc(sys_dict_data::Column::DictDataId)
         .paginate(db, page_per_size);
-    let num_pages = paginator.num_pages().await.map_err(|e| e.into())?;
+    let num_pages = paginator.num_pages().await.map_err(BadRequest)?;
     let list = paginator
         .fetch_page(page_num - 1)
         .await
@@ -85,8 +83,8 @@ pub async fn check_dict_data_is_exist(req: AddReq, db: &DatabaseConnection) -> R
     let s2 = s
         .clone()
         .filter(sys_dict_data::Column::DictLabel.eq(req.dict_label));
-    let count1 = s1.count(db).await.map_err(|e| e.into())?;
-    let count2 = s2.count(db).await.map_err(|e| e.into())?;
+    let count1 = s1.count(db).await.map_err(BadRequest)?;
+    let count2 = s2.count(db).await.map_err(BadRequest)?;
     Ok(count1 > 0 || count2 > 0)
 }
 
@@ -95,16 +93,13 @@ pub async fn check_dict_data_is_exist(req: AddReq, db: &DatabaseConnection) -> R
 pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
     //  数据验证
-    match add_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Err(e.into()),
-    }
+    add_req.validate().map_err(BadRequest)?;
     //  检查字典类型是否存在
-    if check_dict_data_is_exist(add_req.clone(), db)
-        .await
-        .map_err(|e| e.into())?
-    {
-        return Err("字典标签已存在".into());
+    if check_dict_data_is_exist(add_req.clone(), db).await? {
+        return Err(Error::from_string(
+            "字典类型或者字典值或者字典标签已经存在",
+            StatusCode::BAD_REQUEST,
+        ));
     }
 
     let uid = scru128::scru128().to_string();
@@ -120,13 +115,13 @@ pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>>
         created_at: Set(Some(now)),
         ..Default::default()
     };
-    let txn = db.begin().await.map_err(|e| e.into())?;
-    //  let re =   user.insert(db).await.map_err(|e| e.into())?; 这个多查询一次结果
+    let txn = db.begin().await.map_err(BadRequest)?;
+    //  let re =   user.insert(db).await?; 这个多查询一次结果
     let _ = SysDictData::insert(user)
         .exec(&txn)
         .await
-        .map_err(|e| e.into())?;
-    txn.commit().await.map_err(|e| e.into())?;
+        .map_err(BadRequest)?;
+    txn.commit().await.map_err(BadRequest)?;
     let resp = Json(serde_json::json!({ "id": uid }));
     Ok(resp)
 }
@@ -140,10 +135,15 @@ pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_jso
     s = s.filter(sys_dict_data::Column::DictDataId.is_in(delete_req.dict_ids));
 
     //开始删除
-    let d = s.exec(db).await.map_err(|e| e.into())?;
+    let d = s.exec(db).await.map_err(BadRequest)?;
 
     match d.rows_affected {
-        0 => return Err("你要删除的字典类型不存在".into()),
+        0 => {
+            return Err(Error::from_string(
+                "你要删除的字典类型不存在",
+                StatusCode::BAD_REQUEST,
+            ))
+        }
         i => {
             return Ok(Json(serde_json::json!({
                 "msg": format!("成功删除{}条数据", i)
@@ -160,7 +160,7 @@ pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<serde_json::Valu
     let s_s = SysDictData::find_by_id(uid.clone())
         .one(db)
         .await
-        .map_err(|e| e.into())?;
+        .map_err(BadRequest)?;
     let s_r: sys_dict_data::ActiveModel = s_s.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
     let act = sys_dict_data::ActiveModel {
@@ -174,7 +174,7 @@ pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<serde_json::Valu
         ..s_r
     };
     // 更新
-    let _aa = act.update(db).await.map_err(|e| e.into())?; //这个两种方式一样 都要多查询一次
+    let _aa = act.update(db).await.map_err(BadRequest); //这个两种方式一样 都要多查询一次
 
     return Ok(Json(serde_json::json!({
         "msg": format!("用户<{}>数据更新成功", uid)
@@ -192,15 +192,23 @@ pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Result<Json<serde
     if let Some(x) = search_req.dict_data_id {
         s = s.filter(sys_dict_data::Column::DictDataId.eq(x));
     } else {
-        return Err(Error::from("请输入字典类型id".into()));
+        return Err(Error::from_string(
+            "请输入字典类型id",
+            StatusCode::BAD_REQUEST,
+        ));
     }
 
-    let res = match s.one(db).await.map_err(|e| e.into())? {
+    let res = match s.one(db).await.map_err(BadRequest)? {
         Some(m) => m,
-        None => return Err("该字典数据不存在".into()),
+        None => {
+            return Err(Error::from_string(
+                "字典类型不存在",
+                StatusCode::BAD_REQUEST,
+            ))
+        }
     };
 
-    let result: Resp = serde_json::from_value(serde_json::json!(res))?; //这种数据转换效率不知道怎么样
+    let result: Resp = serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
 
     Ok(Json(serde_json::json!({ "result": result })))
 }
@@ -216,7 +224,7 @@ pub async fn get_all() -> Result<Json<serde_json::Value>> {
         .order_by(sys_dict_data::Column::DictDataId, Order::Asc)
         .all(db)
         .await
-        .map_err(|e| e.into())?;
-    let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s))?; //这种数据转换效率不知道怎么样
+        .map_err(BadRequest)?;
+    let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
     Ok(Json(serde_json::json!({ "result": result })))
 }

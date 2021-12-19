@@ -1,13 +1,15 @@
 use chrono::{Local, NaiveDateTime};
 use poem::{
+    error::BadRequest,
     handler,
-    web::{Data, Json, Query},
-    Result,
+    http::StatusCode,
+    web::{Json, Query},
+    Error, Result,
 };
 
 use sea_orm::{
-    sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
-    EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
+    sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, PaginatorTrait,
+    QueryFilter, QueryOrder, Set,
 };
 use validator::Validate;
 
@@ -57,17 +59,18 @@ pub async fn get_sort_list(
         s = s.filter(sys_user::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
-    let total = s.clone().count(db).await?;
+    let total = s.clone().count(db).await.map_err(BadRequest)?;
     // 获取全部数据条数
     let paginator = s
         .order_by_asc(sys_user::Column::Id)
         .paginate(db, page_per_size);
-    let num_pages = paginator.num_pages().await?;
+    let num_pages = paginator.num_pages().await.map_err(BadRequest)?;
     let list = paginator
         .fetch_page(page_num - 1)
         .await
         .expect("could not retrieve posts");
-    let list_res: Vec<Resp> = serde_json::from_value(serde_json::json!(list))?; //这种数据转换效率不知道怎么样
+    let list_res: Vec<Resp> =
+        serde_json::from_value(serde_json::json!(list)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
     Ok(Json(serde_json::json!({
 
             "list": list_res,
@@ -97,12 +100,12 @@ pub async fn get_by_id_or_name(
         s = s.filter(sys_user::Column::UserName.eq(x));
     }
 
-    let res = match s.one(db).await? {
+    let res = match s.one(db).await.map_err(BadRequest)? {
         Some(m) => m,
-        None => return Err("用户不存在".into()),
+        None => return Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
     };
 
-    let result: Resp = serde_json::from_value(serde_json::json!(res))?; //这种数据转换效率不知道怎么样
+    let result: Resp = serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
 
     Ok(Json(serde_json::json!({ "result": result })))
 }
@@ -112,10 +115,7 @@ pub async fn get_by_id_or_name(
 pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
     //  数据验证
-    match add_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Err(e.into()),
-    }
+    add_req.validate().map_err(BadRequest)?;
 
     // let user = serde_json::from_value(serde_json::json!(add_req))?;
     let uid = scru128::scru128().to_string();
@@ -143,9 +143,9 @@ pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>>
         ..Default::default()
     };
 
-    let txn = db.begin().await?;
-    let _ = SysUser::insert(user).exec(&txn).await?;
-    txn.commit().await?;
+    let txn = db.begin().await.map_err(BadRequest)?;
+    let _ = SysUser::insert(user).exec(&txn).await.map_err(BadRequest)?;
+    txn.commit().await.map_err(BadRequest)?;
     let resp = Json(serde_json::json!({ "id": uid }));
     Ok(resp)
 }
@@ -166,14 +166,17 @@ pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_jso
         flag = true;
     }
     if !flag {
-        return Err("用户名或者用户Id必须存在一个".into());
+        return Err(Error::from_string(
+            "用户名或者用户Id必须存在一个",
+            StatusCode::BAD_REQUEST,
+        ));
     }
 
     //开始删除
-    let d = s.exec(db).await?;
+    let d = s.exec(db).await.map_err(BadRequest)?;
 
     match d.rows_affected {
-        0 => return Err("没有你要删除的用户".into()),
+        0 => return Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
         i => {
             return Ok(Json(serde_json::json!({
                 "msg": format!("成功删除{}条用户数据", i)
@@ -199,7 +202,10 @@ pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_json
         flag = true;
     }
     if !flag {
-        return Err("用户名或者用户Id必须存在一个".into());
+        return Err(Error::from_string(
+            "用户名或者用户Id必须存在一个",
+            StatusCode::BAD_REQUEST,
+        ));
     }
 
     //开始软删除，将用户删除时间设置为当前时间
@@ -209,10 +215,11 @@ pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_json
             Expr::value(Local::now().naive_local() as NaiveDateTime),
         )
         .exec(db)
-        .await?;
+        .await
+        .map_err(BadRequest)?;
 
     match d.rows_affected {
-        0 => return Err("没有你要删除的用户".into()),
+        0 => return Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
         i => {
             return Ok(Json(serde_json::json!({
                 "msg": format!("成功删除{}条用户数据", i)
@@ -226,7 +233,10 @@ pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_json
 pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
     let uid = edit_req.user_id;
-    let s_u = SysUser::find_by_id(uid.clone()).one(db).await?;
+    let s_u = SysUser::find_by_id(uid.clone())
+        .one(db)
+        .await
+        .map_err(BadRequest)?;
     let s_user: sys_user::ActiveModel = s_u.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_user::ActiveModel {
@@ -247,9 +257,9 @@ pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<serde_json::Valu
         ..s_user
     };
     // 更新
-    let _aa = user.update(db).await?; //这个两种方式一样 都要多查询一次
-                                      // let _bb = SysUser::update(user).exec(db).await?;
-                                      //  后续更新 角色  职位等信息
+    let _aa = user.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
+                                                          // let _bb = SysUser::update(user).exec(db).await?;
+                                                          //  后续更新 角色  职位等信息
 
     return Ok(Json(serde_json::json!({
         "msg": format!("用户<{}>数据更新成功", uid)
@@ -262,25 +272,26 @@ pub async fn login(Json(login_req): Json<UserLoginReq>) -> Result<Json<AuthBody>
     let db = DB.get_or_init(db_conn).await;
     // 验证用户名密码不为空
     if login_req.user_name.trim().is_empty() {
-        return Err("用户名不能为空".into());
+        return Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST));
     }
     if login_req.user_password.trim().is_empty() {
-        return Err("密码不能为空".into());
+        return Err(Error::from_string("密码不能为空", StatusCode::BAD_REQUEST));
     }
     // 根据用户名获取用户信息
     let user = match SysUser::find()
         .filter(sys_user::Column::UserName.eq(login_req.user_name.clone()))
         .one(db)
-        .await?
+        .await
+        .map_err(BadRequest)?
     {
         Some(user) => user,
         None => {
-            return Err("该用户不存在".into());
+            return Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST));
         }
     };
     //  验证密码是否正确
     if utils::encrypt_password(&login_req.user_password, &user.user_salt) != user.user_password {
-        return Err("用户密码不正确".into());
+        return Err(Error::from_string("密码不正确", StatusCode::BAD_REQUEST));
     };
     // 注册JWT
     let claims = AuthPayload {

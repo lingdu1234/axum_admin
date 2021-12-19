@@ -1,8 +1,10 @@
 use chrono::{Local, NaiveDateTime};
 use poem::{
+    error::BadRequest,
     handler,
-    web::{Data, Json, Query},
-    Result,
+    http::StatusCode,
+    web::{Json, Query},
+    Error, Result,
 };
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
@@ -28,10 +30,7 @@ pub async fn get_sort_list(
 ) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
     //  数据验证
-    match search_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Err(e.into()),
-    }
+    search_req.validate().map_err(BadRequest)?;
 
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
@@ -46,12 +45,12 @@ pub async fn get_sort_list(
         s = s.filter(sys_role::Column::Status.eq(x));
     }
     // 获取全部数据条数
-    let total = s.clone().count(db).await?;
+    let total = s.clone().count(db).await.map_err(BadRequest)?;
     // 分页获取数据
     let paginator = s
         .order_by_asc(sys_role::Column::Id)
         .paginate(db, page_per_size);
-    let num_pages = paginator.num_pages().await?;
+    let num_pages = paginator.num_pages().await.map_err(BadRequest)?;
     let list = paginator
         .fetch_page(page_num - 1)
         .await
@@ -70,7 +69,7 @@ pub async fn get_sort_list(
 pub async fn check_data_is_exist(role_name: String, db: &DatabaseConnection) -> Result<bool> {
     let s1 = SysRole::find().filter(sys_role::Column::Name.eq(role_name));
 
-    let count1 = s1.count(db).await?;
+    let count1 = s1.count(db).await.map_err(BadRequest)?;
     Ok(count1 > 0)
 }
 
@@ -79,13 +78,13 @@ pub async fn check_data_is_exist(role_name: String, db: &DatabaseConnection) -> 
 pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
     //  数据验证
-    match add_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Err(e.into()),
-    }
+    add_req.validate().map_err(BadRequest)?;
     //  检查字典类型是否存在
     if check_data_is_exist(add_req.clone().name, db).await? {
-        return Err("信息已存在".into());
+        return Err(Error::from_string(
+            "字典类型已存在",
+            StatusCode::BAD_REQUEST,
+        ));
     }
 
     let uid = scru128::scru128().to_string();
@@ -100,10 +99,10 @@ pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>>
         remark: Set(add_req.remark.unwrap_or("".to_string())),
         ..Default::default()
     };
-    let txn = db.begin().await?;
+    let txn = db.begin().await.map_err(BadRequest)?;
     //  let re =   user.insert(db).await?; 这个多查询一次结果
-    let _ = SysRole::insert(user).exec(&txn).await?;
-    txn.commit().await?;
+    let _ = SysRole::insert(user).exec(&txn).await.map_err(BadRequest)?;
+    txn.commit().await.map_err(BadRequest)?;
     let resp = Json(serde_json::json!({ "id": uid }));
     Ok(resp)
 }
@@ -117,10 +116,15 @@ pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_jso
     s = s.filter(sys_role::Column::Id.is_in(delete_req.role_ids));
 
     //开始删除
-    let d = s.exec(db).await?;
+    let d = s.exec(db).await.map_err(BadRequest)?;
 
     match d.rows_affected {
-        0 => return Err("你要删除的数据不存在".into()),
+        0 => {
+            return Err(Error::from_string(
+                "删除失败,数据不存在",
+                StatusCode::BAD_REQUEST,
+            ))
+        }
         i => {
             return Ok(Json(serde_json::json!({
                 "msg": format!("成功删除{}条数据", i)
@@ -134,16 +138,16 @@ pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_jso
 pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
     //  数据验证
-    match edit_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Err(e.into()),
-    }
+    edit_req.validate().map_err(BadRequest)?;
     //  检查字典类型是否存在
     if check_data_is_exist(edit_req.clone().name, db).await? {
-        return Err("岗位信息已存在".into());
+        return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
     }
     let uid = edit_req.id;
-    let s_s = SysRole::find_by_id(uid.clone()).one(db).await?;
+    let s_s = SysRole::find_by_id(uid.clone())
+        .one(db)
+        .await
+        .map_err(BadRequest)?;
     let s_r: sys_role::ActiveModel = s_s.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
     let act = sys_role::ActiveModel {
@@ -156,7 +160,7 @@ pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<serde_json::Valu
         ..s_r
     };
     // 更新
-    let _aa = act.update(db).await?; //这个两种方式一样 都要多查询一次
+    let _aa = act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
 
     return Ok(Json(serde_json::json!({
         "msg": format!("用户<{}>数据更新成功", uid)
@@ -173,15 +177,15 @@ pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Result<Json<serde
     if let Some(x) = search_req.id {
         s = s.filter(sys_role::Column::Id.eq(x));
     } else {
-        return Err("请输入id".into());
+        return Err(Error::from_string("id不能为空", StatusCode::BAD_REQUEST));
     }
 
-    let res = match s.one(db).await? {
+    let res = match s.one(db).await.map_err(BadRequest)? {
         Some(m) => m,
-        None => return Err("该数据不存在".into()),
+        None => return Err(Error::from_string("数据不存在", StatusCode::BAD_REQUEST)),
     };
 
-    let result: Resp = serde_json::from_value(serde_json::json!(res))?; //这种数据转换效率不知道怎么样
+    let result: Resp = serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
 
     Ok(Json(serde_json::json!({ "result": result })))
 }
@@ -195,7 +199,8 @@ pub async fn get_all() -> Result<Json<serde_json::Value>> {
         .filter(sys_role::Column::Status.eq(1))
         .order_by(sys_role::Column::Id, Order::Asc)
         .all(db)
-        .await?;
-    let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s))?; //这种数据转换效率不知道怎么样
+        .await
+        .map_err(BadRequest)?;
+    let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
     Ok(Json(serde_json::json!({ "result": result })))
 }
