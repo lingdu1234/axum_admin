@@ -1,6 +1,5 @@
-pub mod database;
+pub mod db;
 pub mod setup; //数据库初始化
 
-pub use database::db_conn;
-pub use database::DB;
+pub use db::{db_conn, DB};
 pub use setup::db_init;

@@ -35,12 +35,11 @@ tracing = {git = "https://github.com/tokio-rs/tracing.git"}
 tracing-appender = {git = "https://github.com/tokio-rs/tracing.git"}
 tracing-log = {git = "https://github.com/tokio-rs/tracing.git"}
 tracing-subscriber = {git = "https://github.com/tokio-rs/tracing.git", version = "0.3", features = ["json", "env-filter"]}
-# tracing = "0.1.29"
+# tracing = "0.2"
 # tracing-appender = "0.2.0"
 # tracing-log = "0.1.2"
-# tracing-subscriber = {version = "0.3.1", features = ["json", "env-filter"]}
-# async-trait = "0.1.51"
-# casbin = {version = "2.0.9", default-features = false}
+# tracing-subscriber = {version = "0.3.3", features = ["json", "env-filter"]}
+
 sea_orm_casbin_adapter = "0.2.3"
 # sea_orm_casbin_adapter = {git = "https://github.com/lingdu1234/sea_orm_casbin_adapter.git"}
 

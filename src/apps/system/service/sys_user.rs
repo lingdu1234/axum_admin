@@ -1,17 +1,10 @@
 use chrono::{Local, NaiveDateTime};
-use poem::{
-    error::BadRequest,
-    handler,
-    http::StatusCode,
-    web::{Json, Query},
-    Error, Result,
-};
+use poem::{error::BadRequest, http::StatusCode, web::Json, Error, Result};
 
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, PaginatorTrait,
     QueryFilter, QueryOrder, Set,
 };
-use validator::Validate;
 
 use crate::{
     database::{db_conn, DB},
@@ -30,10 +23,10 @@ use super::super::models::{
 /// get_user_list 获取用户列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-#[handler]
+// #[handler]
 pub async fn get_sort_list(
-    Query(page_params): Query<PageParams>,
-    Query(search_req): Query<SearchReq>,
+    page_params: PageParams,
+    search_req: SearchReq,
 ) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
     let page_num = page_params.page_num.unwrap_or(1);
@@ -83,10 +76,7 @@ pub async fn get_sort_list(
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-#[handler]
-pub async fn get_by_id_or_name(
-    Query(search_req): Query<SearchReq>,
-) -> Result<Json<serde_json::Value>> {
+pub async fn get_by_id_or_name(search_req: SearchReq) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
     let mut s = SysUser::find();
     // 不查找删除数据
@@ -111,12 +101,9 @@ pub async fn get_by_id_or_name(
 }
 
 /// add 添加
-#[handler]
-pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>> {
+pub async fn add(add_req: AddReq) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
     //  数据验证
-    add_req.validate().map_err(BadRequest)?;
-
     // let user = serde_json::from_value(serde_json::json!(add_req))?;
     let uid = scru128::scru128().to_string();
     let salt = utils::rand_s(10);
@@ -126,7 +113,7 @@ pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>>
         id: Set(uid.clone()),
         user_salt: Set(salt),
         user_name: Set(add_req.user_name),
-        user_nickname: Set(add_req.user_nickname.unwrap_or("".to_string())),
+        user_nickname: Set(add_req.user_nickname.unwrap_or_else(|| "".to_string())),
         user_password: Set(passwd),
         mobile: Set(add_req.mobile),
         birthday: Set(add_req.birthday.unwrap_or(0)),
@@ -134,11 +121,11 @@ pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>>
         user_email: Set(add_req.user_email),
         sex: Set(add_req.sex.unwrap_or(0)),
         dept_id: Set(add_req.dept_id),
-        remark: Set(add_req.remark.unwrap_or("".to_string())),
+        remark: Set(add_req.remark.unwrap_or_else(|| "".to_string())),
         is_admin: Set(add_req.is_admin.unwrap_or(1)),
-        address: Set(add_req.address.unwrap_or("".to_string())),
-        describe: Set(add_req.describe.unwrap_or("".to_string())),
-        phone_num: Set(add_req.phone_num.unwrap_or("".to_string())),
+        address: Set(add_req.address.unwrap_or_else(|| "".to_string())),
+        describe: Set(add_req.describe.unwrap_or_else(|| "".to_string())),
+        phone_num: Set(add_req.phone_num.unwrap_or_else(|| "".to_string())),
         created_at: Set(Some(now)),
         ..Default::default()
     };
@@ -151,8 +138,7 @@ pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>>
 }
 
 /// delete 完全删除
-#[handler]
-pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_json::Value>> {
+pub async fn ddelete(delete_req: DeleteReq) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
     let mut s = SysUser::delete_many();
     let mut flag = false;
@@ -175,19 +161,16 @@ pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_jso
     //开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
 
-    match d.rows_affected {
-        0 => return Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
-        i => {
-            return Ok(Json(serde_json::json!({
-                "msg": format!("成功删除{}条用户数据", i)
-            })))
-        }
-    }
+    return match d.rows_affected {
+        0 => Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
+        i => Ok(Json(serde_json::json!({
+            "msg": format!("成功删除{}条用户数据", i)
+        }))),
+    };
 }
 
 /// delete 软删除
-#[handler]
-pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_json::Value>> {
+pub async fn delete_soft(delete_req: DeleteReq) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
     let mut s = SysUser::update_many();
     s = s.filter(sys_user::Column::DeletedAt.is_null());
@@ -218,19 +201,16 @@ pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_json
         .await
         .map_err(BadRequest)?;
 
-    match d.rows_affected {
-        0 => return Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
-        i => {
-            return Ok(Json(serde_json::json!({
-                "msg": format!("成功删除{}条用户数据", i)
-            })))
-        }
-    }
+    return match d.rows_affected {
+        0 => Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
+        i => Ok(Json(serde_json::json!({
+            "msg": format!("成功删除{}条用户数据", i)
+        }))),
+    };
 }
 
 // edit 修改
-#[handler]
-pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<serde_json::Value>> {
+pub async fn edit(edit_req: EditReq) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
     let uid = edit_req.user_id;
     let s_u = SysUser::find_by_id(uid.clone())
@@ -267,8 +247,7 @@ pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<serde_json::Valu
 }
 
 /// 用户登录
-#[handler]
-pub async fn login(Json(login_req): Json<UserLoginReq>) -> Result<Json<AuthBody>> {
+pub async fn login(login_req: UserLoginReq) -> Result<Json<AuthBody>> {
     let db = DB.get_or_init(db_conn).await;
     // 验证用户名密码不为空
     if login_req.user_name.trim().is_empty() {

@@ -111,7 +111,7 @@ pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>>
         dict_sort: Set(add_req.dict_sort),
         is_default: Set(add_req.is_default),
         status: Set(add_req.status.unwrap_or(1)),
-        remark: Set(Some(add_req.remark.unwrap_or("".to_string()))),
+        remark: Set(Some(add_req.remark.unwrap_or_else(|| "".to_string()))),
         created_at: Set(Some(now)),
         ..Default::default()
     };
@@ -138,12 +138,10 @@ pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_jso
     let d = s.exec(db).await.map_err(BadRequest)?;
 
     match d.rows_affected {
-        0 => {
-            return Err(Error::from_string(
-                "你要删除的字典类型不存在",
-                StatusCode::BAD_REQUEST,
-            ))
-        }
+        0 => Err(Error::from_string(
+            "你要删除的字典类型不存在",
+            StatusCode::BAD_REQUEST,
+        )),
         i => {
             return Ok(Json(serde_json::json!({
                 "msg": format!("成功删除{}条数据", i)

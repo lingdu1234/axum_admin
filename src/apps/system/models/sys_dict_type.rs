@@ -1,8 +1,9 @@
+use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 #[derive(Deserialize, Debug, Serialize, Default, Validate)]
 pub struct SearchReq {
-    pub dict_id: Option<String>,
+    pub dict_type_id: Option<String>,
     #[validate(length(min = 1))]
     pub dict_name: Option<String>,
     #[validate(length(min = 1))]
@@ -25,21 +26,21 @@ pub struct AddReq {
 
 #[derive(Deserialize, Serialize)]
 pub struct DeleteReq {
-    pub dict_ids: Vec<String>,
+    pub dict_type_ids: Vec<String>,
 }
 
 #[derive(Deserialize, Debug, Serialize, Default)]
 pub struct EditReq {
-    pub dict_id: String,
+    pub dict_type_id: String,
     pub dict_name: String,
     pub dict_type: String,
     pub status: i8,
     pub remark: String,
 }
 
-#[derive(Deserialize, Debug, Serialize, Default)]
+#[derive(Deserialize, Debug, Serialize, FromQueryResult)]
 pub struct Resp {
-    pub dict_id: String,
+    pub dict_type_id: String,
     pub dict_name: String,
     pub dict_type: String,
     pub status: i8,

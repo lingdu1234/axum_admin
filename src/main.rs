@@ -10,7 +10,7 @@ use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
 pub use crate::config::CFG;
 use crate::database::{db_conn, DB};
 //路由日志追踪
-use crate::middleware::{Auth, PoemTracer};
+use crate::middleware::{Auth, Tracing};
 use crate::utils::casbin_service::CasbinService;
 
 mod apps;
@@ -69,7 +69,7 @@ async fn main() -> Result<(), std::io::Error> {
     let app = Route::new()
         .nest("/api", apps::api().with(Auth))
         .nest("/", Files::new(&CFG.web.dir).index_file(&CFG.web.index))
-        .with(PoemTracer)
+        .with(Tracing)
         // .with(AddData::new(db.clone()))
         .with(AddData::new(casbin_service.clone()))
         .with(cors);

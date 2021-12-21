@@ -41,7 +41,7 @@ pub struct AddReq {
     pub phone_num: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Default, Debug)]
+#[derive(Serialize, Deserialize, Default, Debug, Validate)]
 pub struct EditReq {
     pub user_id: String,
     pub user_name: String,
@@ -96,17 +96,21 @@ pub struct SearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Serialize, Default)]
+#[derive(Deserialize, Debug, Serialize, Default, Validate)]
 pub struct DeleteReq {
+    #[validate(length(min = 1))]
     pub user_id: Option<Vec<String>>,
+    #[validate(length(min = 1))]
     pub user_name: Option<Vec<String>>,
 }
 
 ///  用户登录
-#[derive(Deserialize, Debug, Serialize, Default)]
+#[derive(Deserialize, Debug, Serialize, Default, Validate)]
 pub struct UserLoginReq {
     ///  用户名
+    #[validate(length(min = 4))]
     pub user_name: String,
     ///  用户密码
+    #[validate(length(min = 5))]
     pub user_password: String,
 }

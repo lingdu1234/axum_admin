@@ -96,7 +96,7 @@ pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>>
         data_scope: Set(add_req.data_scope),
         created_at: Set(Some(now)),
         status: Set(add_req.status.unwrap_or(1)),
-        remark: Set(add_req.remark.unwrap_or("".to_string())),
+        remark: Set(add_req.remark.unwrap_or_else(|| "".to_string())),
         ..Default::default()
     };
     let txn = db.begin().await.map_err(BadRequest)?;
@@ -119,12 +119,10 @@ pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_jso
     let d = s.exec(db).await.map_err(BadRequest)?;
 
     match d.rows_affected {
-        0 => {
-            return Err(Error::from_string(
-                "删除失败,数据不存在",
-                StatusCode::BAD_REQUEST,
-            ))
-        }
+        0 => Err(Error::from_string(
+            "删除失败,数据不存在",
+            StatusCode::BAD_REQUEST,
+        )),
         i => {
             return Ok(Json(serde_json::json!({
                 "msg": format!("成功删除{}条数据", i)

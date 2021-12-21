@@ -68,12 +68,12 @@ pub struct Log {
     pub file: String,
 }
 
-#[derive(Debug, Deserialize)]
-pub enum DbType {
-    MYSQL(String),
-    POSTGRESQL,
-    SQLITE,
-}
+// #[derive(Debug, Deserialize)]
+// pub enum DbType {
+//     MYSQL(String),
+//     POSTGRESQL,
+//     SQLITE,
+// }
 
 /// 数据库
 #[derive(Debug, Deserialize)]

@@ -103,7 +103,7 @@ pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<serde_json::Value>>
         dict_name: Set(add_req.dict_name),
         dict_type: Set(add_req.dict_type),
         status: Set(add_req.status.unwrap_or(1)),
-        remark: Set(Some(add_req.remark.unwrap_or("".to_string()))),
+        remark: Set(Some(add_req.remark.unwrap_or_else(|| "".to_string()))),
         created_at: Set(Some(now)),
         ..Default::default()
     };
@@ -120,7 +120,7 @@ pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_jso
     let db = DB.get_or_init(db_conn).await;
     let mut s = SysDictType::delete_many();
 
-    s = s.filter(sys_dict_type::Column::DictTypeId.is_in(delete_req.dict_ids));
+    s = s.filter(sys_dict_type::Column::DictTypeId.is_in(delete_req.dict_type_ids));
 
     //开始删除
     let d = s
@@ -145,7 +145,7 @@ pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_jso
 #[handler]
 pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<serde_json::Value>> {
     let db = DB.get_or_init(db_conn).await;
-    let uid = edit_req.dict_id;
+    let uid = edit_req.dict_type_id;
     let s_s = SysDictType::find_by_id(uid.clone())
         .one(db)
         .await
@@ -176,7 +176,7 @@ pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Result<Json<serde
     let mut s = SysDictType::find();
     s = s.filter(sys_dict_type::Column::DeletedAt.is_null());
     //
-    if let Some(x) = search_req.dict_id {
+    if let Some(x) = search_req.dict_type_id {
         s = s.filter(sys_dict_type::Column::DictTypeId.eq(x));
     } else {
         return Err(Error::from_string(
@@ -185,14 +185,14 @@ pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Result<Json<serde
         ));
     }
 
-    let res = match s.one(db).await.map_err(BadRequest)? {
+    let res = match s.into_model::<Resp>().one(db).await.map_err(BadRequest)? {
         Some(m) => m,
         None => return Err(Error::from_string("没有找到数据", StatusCode::BAD_REQUEST)),
     };
 
-    let result: Resp = serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
+    // let result: Resp = serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
 
-    Ok(Json(serde_json::json!({ "result": result })))
+    Ok(Json(serde_json::json!({ "result": res })))
 }
 
 /// get_all 获取全部   
@@ -204,9 +204,11 @@ pub async fn get_all() -> Result<Json<serde_json::Value>> {
         .filter(sys_dict_type::Column::DeletedAt.is_null())
         .filter(sys_dict_type::Column::Status.eq(1))
         .order_by(sys_dict_type::Column::DictTypeId, Order::Asc)
+        .into_model::<Resp>()
         .all(db)
         .await
         .map_err(BadRequest)?;
-    let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
-    Ok(Json(serde_json::json!({ "result": result })))
+    // println!("{:?}", s);
+    // let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
+    Ok(Json(serde_json::json!({ "result": s })))
 }

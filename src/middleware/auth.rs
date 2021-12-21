@@ -63,11 +63,13 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
 
             // 验证casbin权限
             let e = req.extensions().get::<CasbinService>().unwrap();
-            e.enforcer.enforce((
-                &token_data.claims.id.to_string(),
-                &req.uri().path().to_string(),
-                &req.method().as_str(),
-            ));
+            e.enforcer
+                .enforce((
+                    &token_data.claims.id.to_string(),
+                    &req.uri().path().to_string(),
+                    &req.method().as_str(),
+                ))
+                .unwrap();
 
             //  if !casbin::is_permitted(&token_data.claims.role, req.path(), req.method()) {}
 

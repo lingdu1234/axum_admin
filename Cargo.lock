@@ -319,9 +319,9 @@ checksum = "c4872d67bab6358e59559027aa3b9157c53d9358c51423c17554809a8858e0f8"
 
 [[package]]
 name = "cache-padded"
-version = "1.1.1"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "631ae5198c9be5e753e5cc215e1bd73c2b466a3565173db433f52bb9d3e66dba"
+checksum = "c1db59621ec70f09c5e9b597b220c7a2b43611f4710dc03ceb8748637775692c"
 
 [[package]]
 name = "casbin"
@@ -551,9 +551,9 @@ checksum = "f7531096570974c3a9dcf9e4b8e1cede1ec26cf5046219fb3b9d897503b9be59"
 
 [[package]]
 name = "fastrand"
-version = "1.5.0"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b394ed3d285a429378d3b384b9eb1285267e7df4b166df24b7a6939a04dc392e"
+checksum = "779d043b6a0b90cc4c0ed7ee380a6504394cee7efd7db050e3774eee387324b2"
 dependencies = [
  "instant",
 ]
@@ -1461,9 +1461,9 @@ checksum = "58893f751c9b0412871a09abd62ecd2a00298c6c83befa223ef98c52aef40cbe"
 
 [[package]]
 name = "poem"
-version = "1.2.5"
+version = "1.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "957d469e8a4fc94074fb8425ce5f3d4bd66b1143ba82e3b66548499589b5cdc2"
+checksum = "f1d738fb920a485671ab98500ad871b58c96ee21e56d23c4c47270258782b320"
 dependencies = [
  "async-trait",
  "bytes",
@@ -1519,9 +1519,9 @@ dependencies = [
 
 [[package]]
 name = "poem-derive"
-version = "1.2.5"
+version = "1.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e821046527aa710139fede85d5e458f858d16ee97d145bf8819bc8cb11dcfa2c"
+checksum = "c7de60da0f6ec1a63f5627ebd2c8ced788599b0736545ce76d8ba0de23acf7e5"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
