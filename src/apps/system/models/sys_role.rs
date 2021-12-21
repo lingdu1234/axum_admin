@@ -24,7 +24,7 @@ pub struct AddReq {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Validate)]
 pub struct DeleteReq {
     pub role_ids: Vec<String>,
 }
@@ -41,7 +41,7 @@ pub struct EditReq {
     pub remark: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct Resp {
     pub id: String,
     pub status: i8,

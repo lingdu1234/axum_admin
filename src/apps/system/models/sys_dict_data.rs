@@ -28,7 +28,7 @@ pub struct AddReq {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Validate)]
 pub struct DeleteReq {
     pub dict_ids: Vec<String>,
 }
@@ -47,7 +47,7 @@ pub struct EditReq {
     pub remark: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct Resp {
     pub dict_type: String,
     pub dict_label: String,

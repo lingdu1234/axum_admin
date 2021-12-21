@@ -25,8 +25,9 @@ pub struct AddReq {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Validate)]
 pub struct DeleteReq {
+    #[validate(length(min = 1))]
     pub post_ids: Vec<String>,
 }
 
@@ -41,7 +42,7 @@ pub struct EditReq {
     pub remark: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct Resp {
     pub post_id: String,
     pub post_code: String,

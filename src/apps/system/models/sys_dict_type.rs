@@ -24,12 +24,12 @@ pub struct AddReq {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Validate)]
 pub struct DeleteReq {
     pub dict_type_ids: Vec<String>,
 }
 
-#[derive(Deserialize, Debug, Serialize, Default)]
+#[derive(Deserialize, Debug, Serialize, Default, Validate)]
 pub struct EditReq {
     pub dict_type_id: String,
     pub dict_name: String,
@@ -38,7 +38,7 @@ pub struct EditReq {
     pub remark: String,
 }
 
-#[derive(Deserialize, Debug, Serialize, FromQueryResult)]
+#[derive(Deserialize, Debug, Serialize, FromQueryResult, Validate)]
 pub struct Resp {
     pub dict_type_id: String,
     pub dict_name: String,
