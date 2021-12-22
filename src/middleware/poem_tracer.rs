@@ -59,7 +59,7 @@ impl<E: Endpoint> Endpoint for TracingEndpoint<E> {
                     Ok(resp)
                 }
                 (Err(err), _) => {
-                    tracing::info!(error = %err, "error");
+                    tracing::error!(error = %err, "error");
                     Err(err)
                 }
             }

@@ -1,4 +1,5 @@
 pub fn setup() {
+    //   打印logo
     self::show_log();
 }
 

@@ -1,24 +1,21 @@
-use crate::CFG;
-use sea_orm::DatabaseConnection;
-use sea_orm_casbin_adapter::{casbin::prelude::*, casbin::Result as CasbinResult, SeaOrmAdapter};
-use std::sync::{Arc};
+use crate::{
+    database::{db_conn, DB},
+    CFG,
+};
+use sea_orm_casbin_adapter::{casbin::prelude::*, SeaOrmAdapter};
+use tokio::sync::OnceCell;
 
-#[derive(Clone)]
-pub struct CasbinService {
-    pub enforcer: Arc<Enforcer>,
-}
+//  异步初始化CASBIN
+pub static CASBIN: OnceCell<Enforcer> = OnceCell::const_new();
 
-impl CasbinService {
-    pub async fn new(pool: DatabaseConnection) -> CasbinResult<Self> {
-        println!("CasbinService 开始初始化了…………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………");
-        let m = DefaultModel::from_file(&CFG.casbin.model_file)
-            .await
-            .unwrap();
-        let adpt = SeaOrmAdapter::new_with_pool(pool).await.unwrap();
-        let mut e = Enforcer::new(m, adpt).await.unwrap();
-        e.enable_log(true);
-        Ok(CasbinService {
-            enforcer: Arc::new(e),
-        })
-    }
+pub async fn get_enforcer() -> Enforcer {
+    println!("CasbinService 开始初始化了…………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………………");
+    let db = DB.get_or_init(db_conn).await;
+    let m = DefaultModel::from_file(&CFG.casbin.model_file)
+        .await
+        .unwrap();
+    let adpt = SeaOrmAdapter::new_with_pool(db.clone()).await.unwrap();
+    let mut e = Enforcer::new(m, adpt).await.unwrap();
+    e.enable_log(true);
+    e
 }

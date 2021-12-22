@@ -1290,9 +1290,9 @@ dependencies = [
 
 [[package]]
 name = "num_cpus"
-version = "1.13.0"
+version = "1.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05499f3756671c15885fee9034446956fff3f243d6077b91e5767df161f766b3"
+checksum = "19e64526ebdee182341572e50e9ad03965aa510cd94427a4549448f285e957a1"
 dependencies = [
  "hermit-abi",
  "libc",
@@ -1461,9 +1461,9 @@ checksum = "58893f751c9b0412871a09abd62ecd2a00298c6c83befa223ef98c52aef40cbe"
 
 [[package]]
 name = "poem"
-version = "1.2.7"
+version = "1.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1d738fb920a485671ab98500ad871b58c96ee21e56d23c4c47270258782b320"
+checksum = "6545107482e7e403296b133db2b5913732f82a23d433a62769b577bc675c8330"
 dependencies = [
  "async-trait",
  "bytes",
@@ -1519,9 +1519,9 @@ dependencies = [
 
 [[package]]
 name = "poem-derive"
-version = "1.2.7"
+version = "1.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7de60da0f6ec1a63f5627ebd2c8ced788599b0736545ce76d8ba0de23acf7e5"
+checksum = "abcce5a862d6d2fc144068ffa06903464b650e050f4cc74cd73b071bb1251072"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -2581,6 +2581,7 @@ dependencies = [
  "sharded-slab",
  "smallvec",
  "thread_local",
+ "time 0.3.5",
  "tracing 0.2.0",
  "tracing-core 0.2.0",
  "tracing-log",

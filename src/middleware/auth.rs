@@ -4,8 +4,9 @@ use poem::{http::StatusCode, Endpoint, Error, Middleware, Request, Result};
 use sea_orm_casbin_adapter::casbin::prelude::*;
 
 use crate::utils::{
+    get_enforcer,
     jwt::{Claims, KEYS},
-    CasbinService,
+    CASBIN,
 };
 
 #[derive(Clone, Debug)]
@@ -62,14 +63,14 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
             //  验证token是否过期
 
             // 验证casbin权限
-            let e = req.extensions().get::<CasbinService>().unwrap();
-            e.enforcer
-                .enforce((
-                    &token_data.claims.id.to_string(),
-                    &req.uri().path().to_string(),
-                    &req.method().as_str(),
-                ))
-                .unwrap();
+            // let e = req.extensions().get::<CasbinService>().unwrap();
+            let e = CASBIN.get_or_init(get_enforcer).await;
+            e.enforce((
+                &token_data.claims.id.to_string(),
+                &req.uri().path().to_string(),
+                &req.method().as_str(),
+            ))
+            .unwrap();
 
             //  if !casbin::is_permitted(&token_data.claims.role, req.path(), req.method()) {}
 
