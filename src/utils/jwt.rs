@@ -2,11 +2,7 @@ use chrono::{Duration, Utc};
 use headers::{authorization::Bearer, Authorization};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use once_cell::sync::Lazy;
-use poem::{
-    http::StatusCode,
-    web::{Json, TypedHeader},
-    Error, FromRequest, Request, RequestBody, Result,
-};
+use poem::{http::StatusCode, web::TypedHeader, Error, FromRequest, Request, RequestBody, Result};
 use serde::{Deserialize, Serialize};
 
 use crate::CFG;
@@ -46,7 +42,7 @@ pub struct Claims {
 #[poem::async_trait]
 impl<'a> FromRequest<'a> for Claims {
     // type Error = AuthError;
-    /// 将用户信息注意request
+    /// 将用户信息注入request
     async fn from_request(req: &'a Request, body: &mut RequestBody) -> Result<Self> {
         // Extract the token from the authorization header
         let TypedHeader(Authorization(bearer)) =
@@ -62,14 +58,13 @@ impl<'a> FromRequest<'a> for Claims {
     }
 }
 
-pub async fn authorize(Json(payload): Json<AuthPayload>) -> Result<Json<AuthBody>> {
+pub async fn authorize(payload: AuthPayload) -> Result<AuthBody> {
     if payload.id.is_empty() || payload.name.is_empty() {
         return Err(Error::from_string(
             "Missing credentials",
             StatusCode::BAD_REQUEST,
         ));
     }
-    println!("CFG.jwt.jwt_exp  == {:?}", CFG.jwt.jwt_exp);
     let iat = Utc::now();
     let exp = iat + Duration::minutes(CFG.jwt.jwt_exp);
     let claims = Claims {
@@ -83,7 +78,7 @@ pub async fn authorize(Json(payload): Json<AuthPayload>) -> Result<Json<AuthBody
     })?;
 
     // Send the authorized token
-    Ok(Json(AuthBody::new(token, claims.exp)))
+    Ok(AuthBody::new(token, claims.exp))
 }
 
 // #[derive(Debug)]

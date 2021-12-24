@@ -1,14 +1,18 @@
 use chrono::{Local, NaiveDateTime};
-use poem::{error::BadRequest, http::StatusCode, web::Json, Error, Result};
+use poem::{error::BadRequest, http::StatusCode, Error, Result};
 
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
     EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
+use serde_json::json;
 
-use crate::utils::{
-    self,
-    jwt::{AuthBody, AuthPayload},
+use crate::{
+    apps::system::models::RespData,
+    utils::{
+        self,
+        jwt::{AuthBody, AuthPayload},
+    },
 };
 
 use super::super::entities::{prelude::SysUser, sys_user};
@@ -25,7 +29,7 @@ pub async fn get_sort_list(
     db: &DatabaseConnection,
     page_params: PageParams,
     search_req: SearchReq,
-) -> Result<Json<serde_json::Value>> {
+) -> Result<RespData> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     let mut s = SysUser::find();
@@ -53,30 +57,25 @@ pub async fn get_sort_list(
     // 获取全部数据条数
     let paginator = s
         .order_by_asc(sys_user::Column::Id)
+        .into_model::<Resp>()
         .paginate(db, page_per_size);
     let num_pages = paginator.num_pages().await.map_err(BadRequest)?;
     let list = paginator
         .fetch_page(page_num - 1)
         .await
         .expect("could not retrieve posts");
-    let list_res: Vec<Resp> =
-        serde_json::from_value(serde_json::json!(list)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
-    Ok(Json(serde_json::json!({
-
-            "list": list_res,
+    let res = json!({
+            "list": list,
             "total": total,
             "total_pages": num_pages,
             "page_num": page_num,
-
-    })))
+    });
+    Ok(RespData::with_data(res))
 }
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-pub async fn get_by_id_or_name(
-    db: &DatabaseConnection,
-    search_req: SearchReq,
-) -> Result<Json<serde_json::Value>> {
+pub async fn get_by_id_or_name(db: &DatabaseConnection, search_req: SearchReq) -> Result<Resp> {
     let mut s = SysUser::find();
     // 不查找删除数据
     s = s.filter(sys_user::Column::DeletedAt.is_null());
@@ -89,18 +88,16 @@ pub async fn get_by_id_or_name(
         s = s.filter(sys_user::Column::UserName.eq(x));
     }
 
-    let res = match s.one(db).await.map_err(BadRequest)? {
+    let result = match s.into_model::<Resp>().one(db).await.map_err(BadRequest)? {
         Some(m) => m,
         None => return Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
     };
 
-    let result: Resp = serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
-
-    Ok(Json(serde_json::json!({ "result": result })))
+    Ok(result)
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<Json<serde_json::Value>> {
+pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
     let uid = scru128::scru128().to_string();
     let salt = utils::rand_s(10);
     let passwd = utils::encrypt_password(&add_req.user_password, &salt);
@@ -129,15 +126,13 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<Json<serde_
     let txn = db.begin().await.map_err(BadRequest)?;
     let _ = SysUser::insert(user).exec(&txn).await.map_err(BadRequest)?;
     txn.commit().await.map_err(BadRequest)?;
-    let resp = Json(serde_json::json!({ "id": uid }));
-    Ok(resp)
+    let res = json!({ "user_id": uid });
+
+    Ok(RespData::with_data(res))
 }
 
 /// delete 完全删除
-pub async fn ddelete(
-    db: &DatabaseConnection,
-    delete_req: DeleteReq,
-) -> Result<Json<serde_json::Value>> {
+pub async fn ddelete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
     let mut s = SysUser::delete_many();
     let mut flag = false;
     if let Some(x) = delete_req.user_id {
@@ -161,17 +156,12 @@ pub async fn ddelete(
 
     return match d.rows_affected {
         0 => Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
-        i => Ok(Json(serde_json::json!({
-            "msg": format!("成功删除{}条用户数据", i)
-        }))),
+        i => Ok(RespData::with_msg(&format!("成功删除{}条用户数据", i))),
     };
 }
 
 /// delete 软删除
-pub async fn delete_soft(
-    db: &DatabaseConnection,
-    delete_req: DeleteReq,
-) -> Result<Json<serde_json::Value>> {
+pub async fn delete_soft(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
     let mut s = SysUser::update_many();
     s = s.filter(sys_user::Column::DeletedAt.is_null());
     let mut flag = false;
@@ -203,14 +193,12 @@ pub async fn delete_soft(
 
     return match d.rows_affected {
         0 => Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
-        i => Ok(Json(serde_json::json!({
-            "msg": format!("成功删除{}条用户数据", i)
-        }))),
+        i => Ok(RespData::with_msg(&format!("成功删除{}条用户数据", i))),
     };
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<Json<serde_json::Value>> {
+pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData> {
     let uid = edit_req.user_id;
     let s_u = SysUser::find_by_id(uid.clone())
         .one(db)
@@ -240,13 +228,11 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<Json<ser
                                                           // let _bb = SysUser::update(user).exec(db).await?;
                                                           //  后续更新 角色  职位等信息
 
-    return Ok(Json(serde_json::json!({
-        "msg": format!("用户<{}>数据更新成功", uid)
-    })));
+    Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)))
 }
 
 /// 用户登录
-pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq) -> Result<Json<AuthBody>> {
+pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq) -> Result<AuthBody> {
     // 验证用户名密码不为空
     if login_req.user_name.trim().is_empty() {
         return Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST));
@@ -276,7 +262,7 @@ pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq) -> Result<J
         name: login_req.user_name.clone(), // 用户名
     };
 
-    let token = utils::authorize(Json(claims)).await.unwrap();
+    let token = utils::authorize(claims).await.unwrap();
 
     Ok(token)
 }

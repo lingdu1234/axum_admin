@@ -60,7 +60,7 @@ pub struct Jwt {
 /// 日志配置
 #[derive(Debug, Deserialize)]
 pub struct Log {
-    /// `log_level` 日志输出文件夹
+    /// `log_level` 日志输出等级
     pub log_level: String,
     /// `dir` 日志输出文件夹
     pub dir: String,

@@ -4,6 +4,9 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
     PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
+use sea_orm_casbin_adapter::casbin::MgmtApi;
+
+use crate::utils::{get_enforcer, CASBIN};
 
 use super::super::entities::{prelude::SysRole, sys_role};
 use super::super::models::{
@@ -35,6 +38,7 @@ pub async fn get_sort_list(
     let total = s.clone().count(db).await.map_err(BadRequest)?;
     // 分页获取数据
     let paginator = s
+        .order_by_asc(sys_role::Column::ListOrder)
         .order_by_asc(sys_role::Column::Id)
         .paginate(db, page_per_size);
     let num_pages = paginator.num_pages().await.map_err(BadRequest)?;
@@ -171,13 +175,41 @@ pub async fn get_by_id(
 
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
-pub async fn get_all(db: &DatabaseConnection) -> Result<Json<serde_json::Value>> {
+pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
     let s = SysRole::find()
-        .filter(sys_role::Column::Status.eq(1))
-        .order_by(sys_role::Column::Id, Order::Asc)
+        .order_by_asc(sys_role::Column::ListOrder)
+        .order_by_asc(sys_role::Column::Id)
+        .into_model::<Resp>()
         .all(db)
         .await
         .map_err(BadRequest)?;
-    let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
-    Ok(Json(serde_json::json!({ "result": result })))
+    Ok(s)
+}
+
+//  获取用户角色
+pub async fn get_admin_role(user_id: &str, all_roles: Vec<Resp>) -> Result<Vec<Resp>> {
+    let user_id = user_id.trim();
+    let role_ids = self::get_admin_role_ids(user_id).await;
+    let mut roles: Vec<Resp> = Vec::new();
+    for role in all_roles {
+        if role_ids.contains(&role.id) {
+            roles.push(role);
+        }
+    }
+    Ok(roles)
+}
+
+//  获取用户角色ids
+pub async fn get_admin_role_ids(user_id: &str) -> Vec<String> {
+    let user_id = user_id.trim();
+    let e = CASBIN.get_or_init(get_enforcer).await;
+    // 查询角色关联规则
+    let group_policy = e.get_filtered_grouping_policy(0, vec![user_id.to_string()]);
+    let mut role_ids = vec![];
+    if !group_policy.is_empty() {
+        for p in group_policy {
+            role_ids.push(p[1].clone());
+        }
+    }
+    role_ids
 }

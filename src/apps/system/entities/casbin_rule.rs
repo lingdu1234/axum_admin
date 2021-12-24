@@ -6,15 +6,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "casbin_rule")]
 pub struct Model {
-    #[sea_orm(primary_key, auto_increment = false)]
-    pub id: String,
-    pub ptype: Option<String>,
-    pub v0: Option<String>,
-    pub v1: Option<String>,
-    pub v2: Option<String>,
-    pub v3: Option<String>,
-    pub v4: Option<String>,
-    pub v5: Option<String>,
+    #[sea_orm(primary_key)]
+    pub id: i32,
+    pub ptype: String,
+    pub v0: String,
+    pub v1: String,
+    pub v2: String,
+    pub v3: String,
+    pub v4: String,
+    pub v5: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]

@@ -4,24 +4,24 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "sys_rule_auth")]
+#[sea_orm(table_name = "sys_menu")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
     pub pid: String,
     #[sea_orm(unique)]
-    pub name: String,
+    pub route_path: String,
     pub title: String,
     pub icon: String,
     pub condition: String,
     pub remark: String,
     pub menu_type: i8,
-    pub weigh: i32,
+    pub order_sort: i32,
     pub status: i8,
     pub always_show: i8,
-    pub path: String,
+    pub front_route_path: String,
     pub jump_path: String,
-    pub component: String,
+    pub component_path: String,
     pub allow_data_scope: i8,
     pub is_data_scope: i8,
     pub is_frame: i8,

@@ -1,4 +1,4 @@
-use crate::apps::system::service;
+use crate::apps::system::{models::sys_role::Resp, service};
 use poem::{
     error::BadRequest,
     handler,
@@ -65,7 +65,8 @@ pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Result<Json<serde
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_all() -> Result<Json<serde_json::Value>> {
+pub async fn get_all() -> Result<Json<Vec<Resp>>> {
     let db = DB.get_or_init(db_conn).await;
-    service::sys_role::get_all(db).await
+    let result = service::sys_role::get_all(db).await?;
+    Ok(Json(result))
 }

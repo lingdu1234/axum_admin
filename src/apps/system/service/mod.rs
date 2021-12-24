@@ -10,3 +10,5 @@ pub mod sys_dict_data;
 pub mod sys_post;
 // 角色管理
 pub mod sys_role;
+// 菜单管理
+pub mod sys_menu;

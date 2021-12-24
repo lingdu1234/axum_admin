@@ -1,6 +1,7 @@
 use poem::{delete, get, post, Route};
 mod sys_dict_data;
 mod sys_dict_type;
+mod sys_menu;
 mod sys_post;
 mod sys_role;
 mod sys_user;
@@ -13,6 +14,7 @@ pub fn system_api() -> Route {
         .nest("/dict_data", sys_dict_data_api()) //字典数据模块
         .nest("/post", sys_post_api()) //岗位模块
         .nest("/role", sys_role_api()) //角色模块
+        .nest("/menu", sys_menu_api()) //路由 菜单 模块
 }
 
 fn sys_user_api() -> Route {
@@ -23,6 +25,7 @@ fn sys_user_api() -> Route {
         .at("/edit", post(sys_user::edit)) //更新用户
         .at("/delete", delete(sys_user::delete)) //软删除用户
         .at("/ddelete", delete(sys_user::ddelete)) //硬删除用户
+        .at("/get_info", get(sys_user::get_info)) //获取用户信息
 }
 
 fn sys_dict_type_api() -> Route {
@@ -67,4 +70,17 @@ fn sys_role_api() -> Route {
         .at("/edit", post(sys_role::edit)) //更新
         // .at("/delete", delete(sys_role::delete)) //软删除
         .at("/ddelete", delete(sys_role::ddelete)) //硬删除
+}
+
+fn sys_menu_api() -> Route {
+    Route::new()
+        // .at("/get_all", get(sys_menu::get_all)) //获取筛选分页
+        .at("/get_by_id", get(sys_menu::get_by_id)) //按id获取
+        .at("/add", post(sys_menu::add)) //添加
+        .at("/edit", post(sys_menu::edit)) //更新
+        // .at("/delete", delete(sys_role::delete)) //软删除
+        .at("/ddelete", delete(sys_menu::ddelete)) //硬删除
+        //
+        .at("/get_all_menu_tree", get(sys_menu::get_all_menu_tree)) //获取全部路由菜单树
+        .at("/get_routers", get(sys_menu::get_routers)) //获取用户菜单树
 }

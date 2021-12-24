@@ -1,5 +1,6 @@
 use once_cell::sync::Lazy;
 use regex::Regex;
+use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -62,7 +63,7 @@ pub struct EditReq {
     // pub role_ids: Vec<String>,
 }
 
-#[derive(PartialEq, Eq, Clone, Default, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize, FromQueryResult)]
 pub struct Resp {
     pub user_name: String,
     pub mobile: String,
@@ -113,4 +114,11 @@ pub struct UserLoginReq {
     ///  用户密码
     #[validate(length(min = 5))]
     pub user_password: String,
+}
+
+#[derive(Serialize, Debug)]
+pub struct UserInfo {
+    pub user: Resp,
+    pub roles: Vec<String>,
+    pub permissions: Vec<String>,
 }

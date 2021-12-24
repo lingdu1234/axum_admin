@@ -12,6 +12,7 @@ use crate::database::{db_conn, DB};
 
 //路由日志追踪
 use crate::middleware::{Auth, Tracing};
+use crate::utils::{get_enforcer, CASBIN};
 
 mod apps;
 //  配置文件
@@ -66,7 +67,7 @@ async fn main() -> Result<(), std::io::Error> {
     // 数据库初始化
     database::db_init().await;
     //  casbin设置
-    // let casbin_service = CasbinService::new(db.clone())
+    CASBIN.get_or_init(get_enforcer).await;
     //     .await
     //     .expect("casbin init error");
     // let e = &casbin_service.enforcer;

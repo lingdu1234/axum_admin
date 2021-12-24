@@ -12,9 +12,9 @@ upload_dir = "data/upload"
 model_file = "config/casbin_conf/rbac_model.conf"
 policy_file = "config/casbin_conf/rbac_policy.csv"
 [log]
-dir = "data/log"
-file = "app_log"
-log_level = "DEBUG"
+dir = "data/log" 
+file = "app_log" 
+log_level = "DEBUG" # DEBUG TRACE  INFO  WARN ERROR
 [jwt]
 # 单位 分钟
 jwt_exp = 1440
