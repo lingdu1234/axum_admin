@@ -45,7 +45,7 @@ pub async fn get_sort_list(
     let list = paginator
         .fetch_page(page_num - 1)
         .await
-        .expect("could not retrieve posts");
+        .map_err(BadRequest)?;
 
     Ok(Json(serde_json::json!({
 

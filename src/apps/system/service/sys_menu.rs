@@ -55,7 +55,7 @@ pub async fn get_sort_list(
     let list = paginator
         .fetch_page(page_num - 1)
         .await
-        .expect("could not retrieve posts");
+        .map_err(BadRequest)?;
 
     let resp = json!({
             "list": list,
@@ -67,7 +67,7 @@ pub async fn get_sort_list(
 }
 
 pub async fn check_router_is_exist(route_path: String, db: &DatabaseConnection) -> Result<bool> {
-    let s1 = SysMenu::find().filter(sys_menu::Column::RoutePath.eq(route_path));
+    let s1 = SysMenu::find().filter(sys_menu::Column::Name.eq(route_path));
     let count1 = s1.count(db).await.map_err(BadRequest)?;
     Ok(count1 > 0)
 }
@@ -77,7 +77,7 @@ pub async fn check_f_router_is_exist(
     db: &DatabaseConnection,
 ) -> Result<bool> {
     let s2 = SysMenu::find()
-        .filter(sys_menu::Column::FrontRoutePath.eq(front_route_path))
+        .filter(sys_menu::Column::Path.eq(front_route_path))
         .filter(sys_menu::Column::MenuType.ne(2));
     let count2 = s2.count(db).await.map_err(BadRequest)?;
     Ok(count2 > 0)
@@ -86,10 +86,10 @@ pub async fn check_f_router_is_exist(
 /// add 添加
 pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
     //  检查数据是否存在
-    if check_router_is_exist(add_req.clone().route_path, db).await? {
+    if check_router_is_exist(add_req.clone().name, db).await? {
         return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
     }
-    if let Some(x) = add_req.clone().front_route_path {
+    if let Some(x) = add_req.clone().path {
         if check_f_router_is_exist(x, db).await? {
             return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
         }
@@ -100,18 +100,18 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
     let active_model = sys_menu::ActiveModel {
         id: Set(uid.clone()),
         pid: Set(add_req.pid),
-        route_path: Set(add_req.route_path),
+        name: Set(add_req.name),
         title: Set(add_req.title),
         icon: Set(add_req.icon.unwrap_or_else(|| "".to_string())),
-        condition: Set(add_req.condition.unwrap_or_else(|| "".to_string())),
         remark: Set(add_req.remark.unwrap_or_else(|| "".to_string())),
         menu_type: Set(add_req.menu_type),
         order_sort: Set(add_req.order_sort),
         status: Set(add_req.status),
-        always_show: Set(add_req.always_show),
-        front_route_path: Set(add_req.front_route_path.unwrap_or_else(|| "".to_string())),
+        hidden: Set(add_req.hidden),
+        keep_alive: Set(add_req.keep_alive),
+        path: Set(add_req.path.unwrap_or_else(|| "".to_string())),
         jump_path: Set(add_req.jump_path.unwrap_or_else(|| "".to_string())),
-        component_path: Set(add_req.component_path.unwrap_or_else(|| "".to_string())),
+        component: Set(add_req.component.unwrap_or_else(|| "".to_string())),
         allow_data_scope: Set(add_req.allow_data_scope),
         is_data_scope: Set(add_req.is_data_scope),
         is_frame: Set(add_req.is_frame),
@@ -152,11 +152,11 @@ pub async fn ddelete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<R
 // edit 修改
 pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData> {
     //  检查数据是否存在
-    if check_router_is_exist(edit_req.clone().route_path, db).await? {
+    if check_router_is_exist(edit_req.clone().name, db).await? {
         return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
     }
-    if edit_req.clone().front_route_path != "" {
-        if check_f_router_is_exist(edit_req.clone().front_route_path, db).await? {
+    if edit_req.clone().path != "" {
+        if check_f_router_is_exist(edit_req.clone().path, db).await? {
             return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
         }
     }
@@ -171,18 +171,18 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
     let act = sys_menu::ActiveModel {
         id: Set(uid.clone()),
         pid: Set(edit_req.pid),
-        route_path: Set(edit_req.route_path),
+        name: Set(edit_req.name),
         title: Set(edit_req.title),
         icon: Set(edit_req.icon),
-        condition: Set(edit_req.condition),
         remark: Set(edit_req.remark),
         menu_type: Set(edit_req.menu_type),
         order_sort: Set(edit_req.order_sort),
         status: Set(edit_req.status),
-        always_show: Set(edit_req.always_show),
-        front_route_path: Set(edit_req.front_route_path),
+        hidden: Set(edit_req.hidden),
+        keep_alive: Set(edit_req.keep_alive),
+        path: Set(edit_req.path),
         jump_path: Set(edit_req.jump_path),
-        component_path: Set(edit_req.component_path),
+        component: Set(edit_req.component),
         allow_data_scope: Set(edit_req.allow_data_scope),
         is_data_scope: Set(edit_req.is_data_scope),
         is_frame: Set(edit_req.is_frame),
@@ -297,6 +297,8 @@ pub fn get_menu_data(menus: Vec<MenuResp>) -> Vec<SysMenuTree> {
         let meta = Meta {
             icon: menu.icon.clone(),
             title: menu.title.clone(),
+            keep_alive: menu.keep_alive.clone(),
+            hidden: menu.hidden.clone(),
         };
         let user_menu = UserMenu { menu, meta };
         let menu_tree = SysMenuTree {
