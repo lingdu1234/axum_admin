@@ -70,6 +70,7 @@ fn sys_role_api() -> Route {
         .at("/edit", post(sys_role::edit)) //更新
         // .at("/delete", delete(sys_role::delete)) //软删除
         .at("/ddelete", delete(sys_role::ddelete)) //硬删除
+        .at("/get_role_menu", get(sys_role::get_role_menu)) //获取角色菜单
 }
 
 fn sys_menu_api() -> Route {

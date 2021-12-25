@@ -1,18 +1,22 @@
+use std::collections::HashMap;
+
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, web::Json, Error, Result};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, DatabaseTransaction,
+    EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
 use sea_orm_casbin_adapter::casbin::MgmtApi;
+use serde_json::json;
 
 use crate::utils::{get_enforcer, CASBIN};
 
 use super::super::entities::{prelude::SysRole, sys_role};
 use super::super::models::{
     sys_role::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
-    PageParams,
+    PageParams, RespData,
 };
+use super::super::service;
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -21,7 +25,7 @@ pub async fn get_sort_list(
     db: &DatabaseConnection,
     page_params: PageParams,
     search_req: SearchReq,
-) -> Result<Json<serde_json::Value>> {
+) -> Result<RespData> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -46,15 +50,15 @@ pub async fn get_sort_list(
         .fetch_page(page_num - 1)
         .await
         .map_err(BadRequest)?;
+    let res = json!({
 
-    Ok(Json(serde_json::json!({
+        "list": list,
+        "total": total,
+        "total_pages": num_pages,
+        "page_num": page_num,
 
-            "list": list,
-            "total": total,
-            "total_pages": num_pages,
-            "page_num": page_num,
-
-    })))
+    });
+    Ok(RespData::with_data(res))
 }
 
 pub async fn check_data_is_exist(role_name: String, db: &DatabaseConnection) -> Result<bool> {
@@ -65,15 +69,53 @@ pub async fn check_data_is_exist(role_name: String, db: &DatabaseConnection) -> 
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<Json<serde_json::Value>> {
+pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
     //  检查字典类型是否存在
     if check_data_is_exist(add_req.clone().name, db).await? {
         return Err(Error::from_string(
-            "字典类型已存在",
+            "数据已存在，请检查后重试",
             StatusCode::BAD_REQUEST,
         ));
     }
 
+    // 开启事务
+    let txn = db.begin().await.map_err(BadRequest)?;
+    // 添加角色数据
+    let role_id = self::add_role(&txn, add_req.clone()).await?;
+    // 获取组合角色权限数据
+    let permissions =
+        self::combine_permissions_data(db, role_id.clone(), add_req.menu_ids.clone()).await?;
+    // 添加角色权限数据
+    self::add_role_permission(permissions).await?;
+    txn.commit().await.map_err(BadRequest)?;
+    let res = json!({ "id": role_id });
+    Ok(RespData::with_data(res))
+}
+
+// 组合角色数据
+pub async fn combine_permissions_data(
+    db: &DatabaseConnection,
+    role_id: String,
+    permission_ids: Vec<String>,
+) -> Result<Vec<Vec<String>>> {
+    // 获取全部菜单
+    let menus = service::sys_menu::get_all(db).await?;
+    let menu_map = menus
+        .iter()
+        .map(|x| (x.id.clone(), x.method.clone()))
+        .collect::<HashMap<String, String>>();
+    // 组装角色权限数据
+    let mut permissions: Vec<Vec<String>> = Vec::new();
+    for permission_id in permission_ids {
+        if let Some(method) = menu_map.get(&permission_id) {
+            permissions.push(vec![role_id.clone(), permission_id.clone(), method.clone()]);
+        }
+    }
+    Ok(permissions)
+}
+
+/// 添加角色数据
+pub async fn add_role(txn: &DatabaseTransaction, add_req: AddReq) -> Result<String> {
     let uid = scru128::scru128().to_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_role::ActiveModel {
@@ -86,12 +128,14 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<Json<serde_
         remark: Set(add_req.remark.unwrap_or_else(|| "".to_string())),
         ..Default::default()
     };
-    let txn = db.begin().await.map_err(BadRequest)?;
-    //  let re =   user.insert(db).await?; 这个多查询一次结果
-    let _ = SysRole::insert(user).exec(&txn).await.map_err(BadRequest)?;
-    txn.commit().await.map_err(BadRequest)?;
-    let resp = Json(serde_json::json!({ "id": uid }));
-    Ok(resp)
+    SysRole::insert(user).exec(txn).await.map_err(BadRequest)?;
+    Ok(uid)
+}
+
+pub async fn add_role_permission(permission: Vec<Vec<String>>) -> Result<()> {
+    let mut e = CASBIN.get().unwrap().lock().await;
+    e.add_policies(permission).await.unwrap();
+    Ok(())
 }
 
 /// delete 完全删除
@@ -202,7 +246,7 @@ pub async fn get_admin_role(user_id: &str, all_roles: Vec<Resp>) -> Result<Vec<R
 //  获取用户角色ids
 pub async fn get_admin_role_ids(user_id: &str) -> Vec<String> {
     let user_id = user_id.trim();
-    let e = CASBIN.get_or_init(get_enforcer).await;
+    let e = CASBIN.get_or_init(get_enforcer).await.lock().await;
     // 查询角色关联规则
     let group_policy = e.get_filtered_grouping_policy(0, vec![user_id.to_string()]);
     let mut role_ids = vec![];

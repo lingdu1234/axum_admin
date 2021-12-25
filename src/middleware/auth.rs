@@ -64,7 +64,7 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
 
             // 验证casbin权限
             // let e = req.extensions().get::<CasbinService>().unwrap();
-            let e = CASBIN.get_or_init(get_enforcer).await;
+            let e = CASBIN.get_or_init(get_enforcer).await.lock().await;
             e.enforce((
                 &token_data.claims.id.to_string(),
                 &req.uri().path().to_string(),

@@ -12,6 +12,7 @@ pub struct Model {
     #[sea_orm(unique)]
     pub name: String,
     pub title: String,
+    pub method: String,
     pub icon: String,
     pub menu_type: i8,
     pub order_sort: i32,

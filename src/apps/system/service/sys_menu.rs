@@ -102,6 +102,7 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
         pid: Set(add_req.pid),
         name: Set(add_req.name),
         title: Set(add_req.title),
+        method: Set(add_req.method),
         icon: Set(add_req.icon.unwrap_or_else(|| "".to_string())),
         remark: Set(add_req.remark.unwrap_or_else(|| "".to_string())),
         menu_type: Set(add_req.menu_type),
@@ -173,6 +174,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
         pid: Set(edit_req.pid),
         name: Set(edit_req.name),
         title: Set(edit_req.title),
+        method: Set(edit_req.method),
         icon: Set(edit_req.icon),
         remark: Set(edit_req.remark),
         menu_type: Set(edit_req.menu_type),
@@ -248,7 +250,7 @@ pub async fn get_all_menu_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTre
 
 /// 获取授权菜单信息
 pub async fn get_permissions(role_ids: Vec<String>) -> Vec<String> {
-    let e = CASBIN.get_or_init(get_enforcer).await;
+    let e = CASBIN.get_or_init(get_enforcer).await.lock().await;
     let mut menu_ids: Vec<String> = Vec::new();
     for role_id in role_ids {
         let policies = e.get_filtered_policy(0, vec![role_id]);
@@ -267,7 +269,14 @@ pub async fn get_admin_menu_by_role_ids(
 ) -> Result<Vec<SysMenuTree>> {
     let menu_ids = self::get_permissions(role_ids).await;
     //  todo 可能以后加条件判断
-    let menus = get_all(db).await?;
+    let menu_all = get_all(db).await?;
+    //  生成menus
+    let mut menus: Vec<MenuResp> = Vec::new();
+    for ele in menu_all {
+        if menu_ids.contains(&ele.id) {
+            menus.push(ele);
+        }
+    }
     let menu_data = self::get_menu_data(menus);
 
     let menu_tree = self::get_menu_tree(menu_data, "0".to_string());

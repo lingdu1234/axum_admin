@@ -23,6 +23,7 @@ pub struct AddReq {
     pub status: Option<i8>,
     #[validate(length(min = 1))]
     pub remark: Option<String>,
+    pub menu_ids: Vec<String>,
 }
 
 #[derive(Deserialize, Serialize, Validate)]
