@@ -43,19 +43,20 @@ pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<RespData>> {
 
 /// delete 完全删除
 #[handler]
-pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_json::Value>> {
+pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Result<Json<serde_json::Value>> {
     delete_req.validate().map_err(BadRequest)?;
     let db = DB.get_or_init(db_conn).await;
-    service::sys_role::ddelete(db, delete_req).await
+    service::sys_role::delete(db, delete_req).await
 }
 
 // edit 修改
 #[handler]
-pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<serde_json::Value>> {
+pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<RespData>> {
     //  数据验证
     edit_req.validate().map_err(BadRequest)?;
     let db = DB.get_or_init(db_conn).await;
-    service::sys_role::edit(db, edit_req).await
+    let res = service::sys_role::edit(db, edit_req).await?;
+    Ok(Json(res))
 }
 
 /// get_user_by_id 获取用户Id获取用户   

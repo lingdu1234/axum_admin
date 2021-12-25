@@ -36,11 +36,13 @@ pub struct EditReq {
     pub id: String,
     pub name: String,
     pub list_order: i32,
-    #[validate(range(min = 0, max = 1))]
-    pub status: i8,
     #[validate(range(min = 0, max = 5))]
     pub data_scope: i8,
+    #[validate(range(min = 0, max = 1))]
+    pub status: i8,
+    #[validate(length(min = 1))]
     pub remark: String,
+    pub menu_ids: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate, FromQueryResult, Clone)]

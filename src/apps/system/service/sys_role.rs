@@ -116,7 +116,7 @@ pub async fn combine_permissions_data(
 
 /// 添加角色数据
 pub async fn add_role(txn: &DatabaseTransaction, add_req: AddReq) -> Result<String> {
-    let uid = scru128::scru128().to_string();
+    let uid = scru128::scru128_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_role::ActiveModel {
         id: Set(uid.clone()),
@@ -139,17 +139,24 @@ pub async fn add_role_permission(permission: Vec<Vec<String>>) -> Result<()> {
 }
 
 /// delete 完全删除
-pub async fn ddelete(
+pub async fn delete(
     db: &DatabaseConnection,
     delete_req: DeleteReq,
 ) -> Result<Json<serde_json::Value>> {
+    let txn = db.begin().await.map_err(BadRequest)?;
     let mut s = SysRole::delete_many();
-
-    s = s.filter(sys_role::Column::Id.is_in(delete_req.role_ids));
-
+    s = s.filter(sys_role::Column::Id.is_in(delete_req.role_ids.clone()));
     //开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
-
+    // 删除角色权限数据
+    let mut e = CASBIN.get().unwrap().lock().await;
+    for it in delete_req.role_ids {
+        e.remove_filtered_policy(0, vec![it.clone()])
+            .await
+            .map_err(BadRequest)?;
+    }
+    // 提交事务
+    txn.commit().await.map_err(BadRequest)?;
     match d.rows_affected {
         0 => Err(Error::from_string(
             "删除失败,数据不存在",
@@ -164,14 +171,17 @@ pub async fn ddelete(
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<Json<serde_json::Value>> {
+pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData> {
     //  检查字典类型是否存在
     if check_data_is_exist(edit_req.clone().name, db).await? {
         return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
     }
+    // 开启事务
+    let txn = db.begin().await.map_err(BadRequest)?;
+    // 修改数据
     let uid = edit_req.id;
     let s_s = SysRole::find_by_id(uid.clone())
-        .one(db)
+        .one(&txn)
         .await
         .map_err(BadRequest)?;
     let s_r: sys_role::ActiveModel = s_s.unwrap().into();
@@ -180,17 +190,30 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<Json<ser
         name: Set(edit_req.name),
         data_scope: Set(edit_req.data_scope),
         list_order: Set(edit_req.list_order),
-        updated_at: Set(Some(now)),
         status: Set(edit_req.status),
         remark: Set(edit_req.remark),
+        updated_at: Set(Some(now)),
         ..s_r
     };
-    // 更新
-    let _aa = act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
+    // 更新 //这个两种方式一样 都要多查询一次
+    act.update(&txn).await.map_err(BadRequest)?;
 
-    return Ok(Json(serde_json::json!({
-        "msg": format!("用户<{}>数据更新成功", uid)
-    })));
+    // 删除全部权限 按角色id删除
+    let mut e = CASBIN.get().unwrap().lock().await;
+    e.remove_filtered_policy(0, vec![uid.clone()])
+        .await
+        .map_err(BadRequest)?;
+    // 重新添加角色权限数据
+    // 获取组合角色权限数据
+    let permissions =
+        self::combine_permissions_data(db, uid.clone(), edit_req.menu_ids.clone()).await?;
+    // 添加角色权限数据
+    self::add_role_permission(permissions).await?;
+
+    // 提交事务
+    txn.commit().await.map_err(BadRequest)?;
+
+    return Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)));
 }
 
 /// get_user_by_id 获取用户Id获取用户   
