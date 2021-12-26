@@ -67,7 +67,9 @@ async fn main() -> Result<(), std::io::Error> {
     // 数据库初始化
     database::db_init().await;
     //  casbin设置
-    CASBIN.get_or_init(get_enforcer).await;
+    unsafe {
+        CASBIN.get_or_init(get_enforcer).await;
+    }
     //     .await
     //     .expect("casbin init error");
     // let e = &casbin_service.enforcer;
@@ -86,7 +88,6 @@ async fn main() -> Result<(), std::io::Error> {
         .nest("/", Files::new(&CFG.web.dir).index_file(&CFG.web.index))
         .with(Tracing)
         // .with(AddData::new(db.clone()))
-        // .with(AddData::new(casbin_service.clone()))
         .with(cors);
     // .after(|mut resp| async move {
     //     if resp.status() != StatusCode::OK {

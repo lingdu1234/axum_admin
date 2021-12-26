@@ -4,11 +4,11 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
     PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
-use sea_orm_casbin_adapter::casbin::MgmtApi;
+use sea_orm_casbin_adapter::casbin::{MgmtApi};
 use serde_json::json;
 
 use crate::apps::system::models::RespData;
-use crate::utils::{get_enforcer, CASBIN};
+use crate::utils::CASBIN;
 
 use super::super::entities::{prelude::*, sys_menu};
 use super::super::models::{
@@ -250,12 +250,14 @@ pub async fn get_all_menu_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTre
 
 /// 获取授权菜单信息
 pub async fn get_permissions(role_ids: Vec<String>) -> Vec<String> {
-    let e = CASBIN.get_or_init(get_enforcer).await.lock().await;
     let mut menu_ids: Vec<String> = Vec::new();
     for role_id in role_ids {
-        let policies = e.get_filtered_policy(0, vec![role_id]);
-        for policy in policies {
-            menu_ids.push(policy[1].clone());
+        unsafe {
+            let e = CASBIN.get_mut().unwrap();
+            let policies = e.get_filtered_policy(0, vec![role_id]);
+            for policy in policies {
+                menu_ids.push(policy[1].clone());
+            }
         }
     }
     menu_ids

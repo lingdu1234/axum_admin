@@ -1,9 +1,12 @@
 use chrono::{Local, NaiveDateTime};
-use poem::{error::BadRequest, http::StatusCode, web::Json, Error, Result};
+use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
     PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
+use serde_json::json;
+
+use crate::apps::system::models::RespData;
 
 use super::super::entities::{prelude::SysDictData, sys_dict_data};
 use super::super::models::{
@@ -18,7 +21,7 @@ pub async fn get_sort_list(
     db: &DatabaseConnection,
     page_params: PageParams,
     search_req: SearchReq,
-) -> Result<Json<serde_json::Value>> {
+) -> Result<RespData> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -52,14 +55,13 @@ pub async fn get_sort_list(
         .await
         .map_err(BadRequest)?;
 
-    Ok(Json(serde_json::json!({
-
+    let res = json!({
             "list": list,
             "total": total,
             "total_pages": num_pages,
             "page_num": page_num,
-
-    })))
+    });
+    Ok(RespData::with_data(res))
 }
 
 pub async fn check_dict_data_is_exist(req: AddReq, db: &DatabaseConnection) -> Result<bool> {
@@ -76,7 +78,7 @@ pub async fn check_dict_data_is_exist(req: AddReq, db: &DatabaseConnection) -> R
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<Json<serde_json::Value>> {
+pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
     //  检查字典类型是否存在
     if check_dict_data_is_exist(add_req.clone(), db).await? {
         return Err(Error::from_string(
@@ -105,15 +107,12 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<Json<serde_
         .await
         .map_err(BadRequest)?;
     txn.commit().await.map_err(BadRequest)?;
-    let resp = Json(serde_json::json!({ "id": uid }));
-    Ok(resp)
+    let res = json!({ "id": uid });
+    Ok(RespData::with_data(res))
 }
 
 /// delete 完全删除
-pub async fn ddelete(
-    db: &DatabaseConnection,
-    delete_req: DeleteReq,
-) -> Result<Json<serde_json::Value>> {
+pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
     let mut s = SysDictData::delete_many();
 
     s = s.filter(sys_dict_data::Column::DictDataId.is_in(delete_req.dict_ids));
@@ -126,16 +125,12 @@ pub async fn ddelete(
             "你要删除的字典类型不存在",
             StatusCode::BAD_REQUEST,
         )),
-        i => {
-            return Ok(Json(serde_json::json!({
-                "msg": format!("成功删除{}条数据", i)
-            })))
-        }
+        i => Ok(RespData::with_msg(&format!("成功删除{}条数据", i))),
     }
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<Json<serde_json::Value>> {
+pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData> {
     let uid = edit_req.dict_data_id;
     let s_s = SysDictData::find_by_id(uid.clone())
         .one(db)
@@ -156,18 +151,13 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<Json<ser
     // 更新
     let _aa = act.update(db).await.map_err(BadRequest); //这个两种方式一样 都要多查询一次
 
-    return Ok(Json(serde_json::json!({
-        "msg": format!("用户<{}>数据更新成功", uid)
-    })));
+    Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)))
 }
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 
-pub async fn get_by_id(
-    db: &DatabaseConnection,
-    search_req: SearchReq,
-) -> Result<Json<serde_json::Value>> {
+pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<Resp> {
     let mut s = SysDictData::find();
     s = s.filter(sys_dict_data::Column::DeletedAt.is_null());
     //
@@ -180,7 +170,7 @@ pub async fn get_by_id(
         ));
     }
 
-    let res = match s.one(db).await.map_err(BadRequest)? {
+    let res = match s.into_model::<Resp>().one(db).await.map_err(BadRequest)? {
         Some(m) => m,
         None => {
             return Err(Error::from_string(
@@ -190,21 +180,20 @@ pub async fn get_by_id(
         }
     };
 
-    let result: Resp = serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
-
-    Ok(Json(serde_json::json!({ "result": result })))
+    Ok(res)
 }
 
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
-pub async fn get_all(db: &DatabaseConnection) -> Result<Json<serde_json::Value>> {
+pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
     let s = SysDictData::find()
         .filter(sys_dict_data::Column::DeletedAt.is_null())
         .filter(sys_dict_data::Column::Status.eq(1))
         .order_by(sys_dict_data::Column::DictDataId, Order::Asc)
+        .into_model::<Resp>()
         .all(db)
         .await
         .map_err(BadRequest)?;
-    let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
-    Ok(Json(serde_json::json!({ "result": result })))
+    // let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
+    Ok(s)
 }

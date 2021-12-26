@@ -1,19 +1,22 @@
 use std::collections::HashMap;
 
 use chrono::{Local, NaiveDateTime};
-use poem::{error::BadRequest, http::StatusCode, web::Json, Error, Result};
+use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, DatabaseTransaction,
-    EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set,
+    EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
 use sea_orm_casbin_adapter::casbin::MgmtApi;
 use serde_json::json;
 
-use crate::utils::{get_enforcer, CASBIN};
+use crate::utils::CASBIN;
 
-use super::super::entities::{prelude::SysRole, sys_role};
+use super::super::entities::{
+    prelude::{SysRole, SysRoleDept},
+    sys_role, sys_role_dept,
+};
 use super::super::models::{
-    sys_role::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
+    sys_role::{AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq},
     PageParams, RespData,
 };
 use super::super::service;
@@ -86,7 +89,11 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
     let permissions =
         self::combine_permissions_data(db, role_id.clone(), add_req.menu_ids.clone()).await?;
     // 添加角色权限数据
-    self::add_role_permission(permissions).await?;
+    unsafe {
+        let e = CASBIN.get_mut().unwrap();
+        e.add_policies(permissions).await.map_err(BadRequest)?;
+    }
+
     txn.commit().await.map_err(BadRequest)?;
     let res = json!({ "id": role_id });
     Ok(RespData::with_data(res))
@@ -132,29 +139,27 @@ pub async fn add_role(txn: &DatabaseTransaction, add_req: AddReq) -> Result<Stri
     Ok(uid)
 }
 
-pub async fn add_role_permission(permission: Vec<Vec<String>>) -> Result<()> {
-    let mut e = CASBIN.get().unwrap().lock().await;
-    e.add_policies(permission).await.unwrap();
-    Ok(())
-}
-
 /// delete 完全删除
-pub async fn delete(
-    db: &DatabaseConnection,
-    delete_req: DeleteReq,
-) -> Result<Json<serde_json::Value>> {
+pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
     let txn = db.begin().await.map_err(BadRequest)?;
     let mut s = SysRole::delete_many();
     s = s.filter(sys_role::Column::Id.is_in(delete_req.role_ids.clone()));
     //开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
-    // 删除角色权限数据
-    let mut e = CASBIN.get().unwrap().lock().await;
-    for it in delete_req.role_ids {
-        e.remove_filtered_policy(0, vec![it.clone()])
-            .await
-            .map_err(BadRequest)?;
+    // 删除角色权限数据 和 部门权限数据
+    for it in delete_req.role_ids.clone() {
+        unsafe {
+            let e = CASBIN.get_mut().unwrap();
+            e.remove_filtered_policy(0, vec![it.clone()])
+                .await
+                .map_err(BadRequest)?;
+        }
     }
+    SysRoleDept::delete_many()
+        .filter(sys_role_dept::Column::RoleId.is_in(delete_req.role_ids.clone()))
+        .exec(&txn)
+        .await
+        .map_err(BadRequest)?;
     // 提交事务
     txn.commit().await.map_err(BadRequest)?;
     match d.rows_affected {
@@ -162,11 +167,8 @@ pub async fn delete(
             "删除失败,数据不存在",
             StatusCode::BAD_REQUEST,
         )),
-        i => {
-            return Ok(Json(serde_json::json!({
-                "msg": format!("成功删除{}条数据", i)
-            })))
-        }
+
+        i => return Ok(RespData::with_msg(&format!("成功删除{}条数据", i))),
     }
 }
 
@@ -198,17 +200,18 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
     // 更新 //这个两种方式一样 都要多查询一次
     act.update(&txn).await.map_err(BadRequest)?;
 
-    // 删除全部权限 按角色id删除
-    let mut e = CASBIN.get().unwrap().lock().await;
-    e.remove_filtered_policy(0, vec![uid.clone()])
-        .await
-        .map_err(BadRequest)?;
-    // 重新添加角色权限数据
     // 获取组合角色权限数据
     let permissions =
         self::combine_permissions_data(db, uid.clone(), edit_req.menu_ids.clone()).await?;
-    // 添加角色权限数据
-    self::add_role_permission(permissions).await?;
+    unsafe {
+        let e = CASBIN.get_mut().unwrap();
+        // 删除全部权限 按角色id删除
+        e.remove_filtered_policy(0, vec![uid.clone()])
+            .await
+            .map_err(BadRequest)?;
+        // 添加角色权限数据
+        e.add_policies(permissions).await.map_err(BadRequest)?;
+    }
 
     // 提交事务
     txn.commit().await.map_err(BadRequest)?;
@@ -216,12 +219,82 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
     return Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)));
 }
 
+// set_status 状态修改
+pub async fn set_status(db: &DatabaseConnection, status_req: StatusReq) -> Result<RespData> {
+    // 开启事务
+    let txn = db.begin().await.map_err(BadRequest)?;
+    // 修改数据
+    let uid = status_req.id;
+    let s_s = SysRole::find_by_id(uid.clone())
+        .one(&txn)
+        .await
+        .map_err(BadRequest)?;
+    let s_r: sys_role::ActiveModel = s_s.unwrap().into();
+    let now: NaiveDateTime = Local::now().naive_local();
+    let act = sys_role::ActiveModel {
+        status: Set(status_req.status),
+        updated_at: Set(Some(now)),
+        ..s_r
+    };
+    act.update(&txn).await.map_err(BadRequest)?;
+    txn.commit().await.map_err(BadRequest)?;
+    return Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)));
+}
+
+// set_status 状态修改
+pub async fn set_data_scope(
+    db: &DatabaseConnection,
+    data_scope_req: DataScopeReq,
+) -> Result<RespData> {
+    // 开启事务
+    let txn = db.begin().await.map_err(BadRequest)?;
+    // 修改数据
+    let uid = data_scope_req.id;
+    let s_s = SysRole::find_by_id(uid.clone())
+        .one(&txn)
+        .await
+        .map_err(BadRequest)?;
+    let s_r: sys_role::ActiveModel = s_s.unwrap().into();
+    let now: NaiveDateTime = Local::now().naive_local();
+    // 更新数据权限
+    let data_scope = data_scope_req.data_scope;
+    let act = sys_role::ActiveModel {
+        data_scope: Set(data_scope),
+        updated_at: Set(Some(now)),
+        ..s_r
+    };
+    act.update(&txn).await.map_err(BadRequest)?;
+    // 当数据权限为自定义数据时，删除全部权限，重新添加部门权限
+    if data_scope == 2 {
+        // 删除全部部门权限
+        SysRoleDept::delete_many()
+            .filter(sys_role_dept::Column::RoleId.eq(uid.clone()))
+            .exec(&txn)
+            .await
+            .map_err(BadRequest)?;
+        // 添加部门权限
+        let mut act_datas: Vec<sys_role_dept::ActiveModel> = Vec::new();
+        for dept in data_scope_req.dept_ids {
+            let act_data = sys_role_dept::ActiveModel {
+                role_id: Set(uid.clone()),
+                dept_id: Set(dept.clone()),
+                created_at: Set(Some(now)),
+            };
+            act_datas.push(act_data);
+        }
+        //  批量添加部门权限
+        SysRoleDept::insert_many(act_datas)
+            .exec(&txn)
+            .await
+            .map_err(BadRequest)?;
+    }
+    txn.commit().await.map_err(BadRequest)?;
+    return Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)));
+}
+
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(
-    db: &DatabaseConnection,
-    search_req: SearchReq,
-) -> Result<Json<serde_json::Value>> {
+pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<Resp> {
     let mut s = SysRole::find();
     //
     if let Some(x) = search_req.id {
@@ -230,14 +303,12 @@ pub async fn get_by_id(
         return Err(Error::from_string("id不能为空", StatusCode::BAD_REQUEST));
     }
 
-    let res = match s.one(db).await.map_err(BadRequest)? {
+    let res = match s.into_model::<Resp>().one(db).await.map_err(BadRequest)? {
         Some(m) => m,
         None => return Err(Error::from_string("数据不存在", StatusCode::BAD_REQUEST)),
     };
 
-    let result: Resp = serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
-
-    Ok(Json(serde_json::json!({ "result": result })))
+    Ok(res)
 }
 
 /// get_all 获取全部   
@@ -269,14 +340,16 @@ pub async fn get_admin_role(user_id: &str, all_roles: Vec<Resp>) -> Result<Vec<R
 //  获取用户角色ids
 pub async fn get_admin_role_ids(user_id: &str) -> Vec<String> {
     let user_id = user_id.trim();
-    let e = CASBIN.get_or_init(get_enforcer).await.lock().await;
     // 查询角色关联规则
-    let group_policy = e.get_filtered_grouping_policy(0, vec![user_id.to_string()]);
-    let mut role_ids = vec![];
-    if !group_policy.is_empty() {
-        for p in group_policy {
-            role_ids.push(p[1].clone());
+    unsafe {
+        let e = CASBIN.get().unwrap();
+        let group_policy = e.get_filtered_grouping_policy(0, vec![user_id.to_string()]);
+        let mut role_ids = vec![];
+        if !group_policy.is_empty() {
+            for p in group_policy {
+                role_ids.push(p[1].clone());
+            }
         }
+        role_ids
     }
-    role_ids
 }

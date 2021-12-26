@@ -1,3 +1,4 @@
+use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -42,7 +43,7 @@ pub struct EditReq {
     pub remark: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Validate)]
+#[derive(Debug, Serialize, Deserialize, Validate, FromQueryResult)]
 pub struct Resp {
     pub post_id: String,
     pub post_code: String,

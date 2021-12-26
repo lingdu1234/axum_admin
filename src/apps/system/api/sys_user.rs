@@ -5,16 +5,14 @@ use poem::{
     Result,
 };
 
+use serde_json::json;
 use validator::Validate;
 
 use crate::apps::system::{
-    models::{
-        sys_user::{Resp, UserInfo},
-        RespData,
-    },
+    models::{sys_user::UserInfo, RespData},
     service,
 };
-use crate::utils::jwt::{AuthBody, Claims};
+use crate::utils::jwt::Claims;
 use crate::{db_conn, DB};
 
 use super::super::models::{
@@ -39,11 +37,11 @@ pub async fn get_sort_list(
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_by_id_or_name(Query(search_req): Query<SearchReq>) -> Result<Json<Resp>> {
+pub async fn get_by_id_or_name(Query(search_req): Query<SearchReq>) -> Result<Json<RespData>> {
     search_req.validate().map_err(BadRequest)?;
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::get_by_id_or_name(db, search_req).await?;
-    Ok(Json(res))
+    Ok(Json(RespData::with_data(json!(res))))
 }
 
 /// add 添加
@@ -84,15 +82,15 @@ pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<RespData>> {
 
 /// 用户登录
 #[handler]
-pub async fn login(Json(login_req): Json<UserLoginReq>) -> Result<Json<AuthBody>> {
+pub async fn login(Json(login_req): Json<UserLoginReq>) -> Result<Json<RespData>> {
     login_req.validate().map_err(BadRequest)?;
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::login(db, login_req).await?;
-    Ok(Json(res))
+    Ok(Json(RespData::with_data(json!(res))))
 }
 /// 获取用户登录信息
 #[handler]
-pub async fn get_info(user: Claims) -> Result<Json<UserInfo>> {
+pub async fn get_info(user: Claims) -> Result<Json<RespData>> {
     let db = DB.get_or_init(db_conn).await;
     //  获取用户信息
     let user_info = service::sys_user::get_by_id_or_name(
@@ -103,12 +101,10 @@ pub async fn get_info(user: Claims) -> Result<Json<UserInfo>> {
         },
     )
     .await?;
-
     //    获取角色列表
     let all_roles = service::sys_role::get_all(db).await?;
     //  获取 用户角色
     let roles = service::sys_role::get_admin_role(&user.id, all_roles).await?;
-
     // let mut role_names: Vec<String> = Vec::new();
     let mut role_ids: Vec<String> = Vec::new();
     for role in roles {
@@ -117,11 +113,11 @@ pub async fn get_info(user: Claims) -> Result<Json<UserInfo>> {
     }
     let permissions = service::sys_menu::get_permissions(role_ids.clone()).await;
     // 获取用户菜单信息
-    let result = UserInfo {
+    let res = UserInfo {
         user: user_info,
         roles: role_ids,
         permissions,
     };
 
-    Ok(Json(result))
+    Ok(Json(RespData::with_data(json!(res))))
 }

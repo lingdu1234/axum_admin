@@ -30,6 +30,13 @@ pub struct AddReq {
 pub struct DeleteReq {
     pub role_ids: Vec<String>,
 }
+#[derive(Deserialize, Serialize, Validate)]
+pub struct DataScopeReq {
+    pub id: String,
+    #[validate(range(min = 0, max = 5))]
+    pub data_scope: i8,
+    pub dept_ids: Vec<String>,
+}
 
 #[derive(Deserialize, Clone, Debug, Serialize, Validate)]
 pub struct EditReq {
@@ -43,6 +50,12 @@ pub struct EditReq {
     #[validate(length(min = 1))]
     pub remark: String,
     pub menu_ids: Vec<String>,
+}
+#[derive(Deserialize, Clone, Debug, Serialize, Validate)]
+pub struct StatusReq {
+    pub id: String,
+    #[validate(range(min = 0, max = 1))]
+    pub status: i8,
 }
 
 #[derive(Debug, Serialize, Deserialize, Validate, FromQueryResult, Clone)]

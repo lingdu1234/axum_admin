@@ -1,3 +1,4 @@
+use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -47,7 +48,7 @@ pub struct EditReq {
     pub remark: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Validate)]
+#[derive(Debug, Serialize, Deserialize, Validate, FromQueryResult, Clone)]
 pub struct Resp {
     pub dict_type: String,
     pub dict_label: String,

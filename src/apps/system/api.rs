@@ -47,7 +47,7 @@ fn sys_dict_data_api() -> Route {
         .at("/add", post(sys_dict_data::add)) //添加
         .at("/edit", post(sys_dict_data::edit)) //更新
         // .at("/delete", delete(sys_dict_data::delete)) //软删除
-        .at("/ddelete", delete(sys_dict_data::ddelete)) //硬删除
+        .at("/ddelete", delete(sys_dict_data::delete)) //硬删除
 }
 
 fn sys_post_api() -> Route {
@@ -58,7 +58,7 @@ fn sys_post_api() -> Route {
         .at("/add", post(sys_post::add)) //添加
         .at("/edit", post(sys_post::edit)) //更新
         // .at("/delete", delete(sys_post::delete)) //软删除
-        .at("/ddelete", delete(sys_post::ddelete)) //硬删除
+        .at("/ddelete", delete(sys_post::delete)) //硬删除
 }
 
 fn sys_role_api() -> Route {
@@ -68,8 +68,10 @@ fn sys_role_api() -> Route {
         .at("/get_by_id", get(sys_role::get_by_id)) //按id获取
         .at("/add", post(sys_role::add)) //添加
         .at("/edit", post(sys_role::edit)) //更新
+        .at("/set_status", post(sys_role::set_status)) //设置状态
+        .at("/set_data_scope", post(sys_role::set_data_scope)) //设置数据权限范围
         // .at("/delete", delete(sys_role::delete)) //软删除
-        .at("/ddelete", delete(sys_role::delete)) //硬删除
+        .at("/delete", delete(sys_role::delete)) //硬删除
         .at("/get_role_menu", get(sys_role::get_role_menu)) //获取角色菜单
 }
 
