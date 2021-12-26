@@ -8,6 +8,8 @@ pub mod sys_dict_type;
 pub mod sys_dict_data;
 //  岗位管理
 pub mod sys_post;
+//  部门管理
+pub mod sys_dept;
 // 角色管理
 pub mod sys_role;
 // 菜单管理
