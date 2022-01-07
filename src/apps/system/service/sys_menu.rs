@@ -4,10 +4,10 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
     PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
-use sea_orm_casbin_adapter::casbin::{MgmtApi};
-use serde_json::json;
+use sea_orm_casbin_adapter::casbin::MgmtApi;
 
-use crate::apps::system::models::RespData;
+use crate::apps::system::models::common::{CudResData, ListData};
+
 use crate::utils::CASBIN;
 
 use super::super::entities::{prelude::*, sys_menu};
@@ -23,14 +23,14 @@ pub async fn get_sort_list(
     db: &DatabaseConnection,
     page_params: PageParams,
     search_req: SearchReq,
-) -> Result<RespData> {
+) -> Result<ListData<sys_menu::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
-    let page_per_size = page_params.page_size.unwrap_or(10);
+    let page_per_size = page_params.page_size.unwrap_or(usize::MAX);
     //  生成查询条件
     let mut s = SysMenu::find();
 
-    if let Some(x) = search_req.title {
-        s = s.filter(sys_menu::Column::Title.contains(&x));
+    if let Some(x) = search_req.menu_name {
+        s = s.filter(sys_menu::Column::MenuName.contains(&x));
     }
 
     if let Some(x) = search_req.status {
@@ -51,73 +51,90 @@ pub async fn get_sort_list(
     let paginator = s
         .order_by_asc(sys_menu::Column::OrderSort)
         .paginate(db, page_per_size);
-    let num_pages = paginator.num_pages().await.map_err(BadRequest)?;
+    let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
     let list = paginator
         .fetch_page(page_num - 1)
         .await
         .map_err(BadRequest)?;
 
-    let resp = json!({
-            "list": list,
-            "total": total,
-            "total_pages": num_pages,
-            "page_num": page_num,
-    });
-    Ok(RespData::with_data(resp))
+    let res = ListData {
+        list,
+        total,
+        total_pages,
+        page_num,
+    };
+    Ok(res)
 }
 
-pub async fn check_router_is_exist(route_path: String, db: &DatabaseConnection) -> Result<bool> {
-    let s1 = SysMenu::find().filter(sys_menu::Column::Name.eq(route_path));
-    let count1 = s1.count(db).await.map_err(BadRequest)?;
-    Ok(count1 > 0)
-}
-
-pub async fn check_f_router_is_exist(
-    front_route_path: String,
+pub async fn check_router_is_exist_update(
     db: &DatabaseConnection,
+    id: String,
+    route_path: String,
+    route_name: String,
 ) -> Result<bool> {
+    let s1 = SysMenu::find()
+        .filter(sys_menu::Column::Path.eq(route_path))
+        .filter(sys_menu::Column::MenuType.ne("F"))
+        .filter(sys_menu::Column::Id.ne(id.clone()));
+    let count1 = s1.count(db).await.map_err(BadRequest)?;
     let s2 = SysMenu::find()
-        .filter(sys_menu::Column::Path.eq(front_route_path))
-        .filter(sys_menu::Column::MenuType.ne(2));
+        .filter(sys_menu::Column::MenuName.eq(route_name))
+        .filter(sys_menu::Column::MenuType.ne("F"))
+        .filter(sys_menu::Column::Id.ne(id));
     let count2 = s2.count(db).await.map_err(BadRequest)?;
-    Ok(count2 > 0)
+    Ok(count1 > 0 || count2 > 0)
+}
+
+pub async fn check_router_is_exist_add(
+    db: &DatabaseConnection,
+    route_path: String,
+    route_name: String,
+) -> Result<bool> {
+    let s1 = SysMenu::find()
+        .filter(sys_menu::Column::Path.eq(route_path))
+        .filter(sys_menu::Column::MenuType.ne("F"));
+    let count1 = s1.count(db).await.map_err(BadRequest)?;
+    let s2 = SysMenu::find()
+        .filter(sys_menu::Column::MenuName.eq(route_name))
+        .filter(sys_menu::Column::MenuType.ne("F"));
+    let count2 = s2.count(db).await.map_err(BadRequest)?;
+    Ok(count1 > 0 || count2 > 0)
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
+pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<CudResData<String>> {
     //  检查数据是否存在
-    if check_router_is_exist(add_req.clone().name, db).await? {
-        return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
+    if check_router_is_exist_add(
+        db,
+        add_req.clone().path.unwrap_or_else(|| "".to_string()),
+        add_req.clone().menu_name,
+    )
+    .await?
+    {
+        return Err(Error::from_string(
+            "路径或者名称重复",
+            StatusCode::BAD_REQUEST,
+        ));
     }
-    if let Some(x) = add_req.clone().path {
-        if check_f_router_is_exist(x, db).await? {
-            return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
-        }
-    }
-
     let uid = scru128::scru128().to_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let active_model = sys_menu::ActiveModel {
         id: Set(uid.clone()),
         pid: Set(add_req.pid),
-        name: Set(add_req.name),
-        title: Set(add_req.title),
-        method: Set(add_req.method),
+        menu_name: Set(add_req.menu_name),
         icon: Set(add_req.icon.unwrap_or_else(|| "".to_string())),
-        remark: Set(add_req.remark.unwrap_or_else(|| "".to_string())),
+        remark: Set(add_req.remark),
         menu_type: Set(add_req.menu_type),
+        query: Set(add_req.query),
+        perms: Set(add_req.perms.unwrap_or_else(|| "".to_string())),
         order_sort: Set(add_req.order_sort),
         status: Set(add_req.status),
-        hidden: Set(add_req.hidden),
-        keep_alive: Set(add_req.keep_alive),
+        visible: Set(add_req.visible),
         path: Set(add_req.path.unwrap_or_else(|| "".to_string())),
-        jump_path: Set(add_req.jump_path.unwrap_or_else(|| "".to_string())),
-        component: Set(add_req.component.unwrap_or_else(|| "".to_string())),
-        allow_data_scope: Set(add_req.allow_data_scope),
+        component: Set(add_req.component),
         is_data_scope: Set(add_req.is_data_scope),
         is_frame: Set(add_req.is_frame),
-        module_type: Set(add_req.module_type),
-        model_id: Set(add_req.model_id),
+        is_cache: Set(add_req.is_cache),
         created_at: Set(Some(now)),
         ..Default::default()
     };
@@ -128,15 +145,18 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
         .await
         .map_err(BadRequest)?;
     txn.commit().await.map_err(BadRequest)?;
-    let resp = json!({ "id": uid });
-    Ok(RespData::with_data(resp))
+    let res = CudResData {
+        id: Some(uid.clone()),
+        msg: format!("{} 添加成功", uid),
+    };
+    Ok(res)
 }
 
 /// delete 完全删除
-pub async fn ddelete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
+pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<CudResData<String>> {
     let mut s = SysMenu::delete_many();
 
-    s = s.filter(sys_menu::Column::Id.is_in(delete_req.menu_ids));
+    s = s.filter(sys_menu::Column::Id.is_in(delete_req.ids));
 
     //开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
@@ -146,20 +166,28 @@ pub async fn ddelete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<R
             "删除失败,数据不存在",
             StatusCode::BAD_REQUEST,
         )),
-        i => Ok(RespData::with_msg(&format!("成功删除{}条数据", i))),
+        i => Ok(CudResData {
+            id: None,
+            msg: format!("删除成功,共删除 {} 条数据", i),
+        }),
     }
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData> {
+pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<CudResData<String>> {
     //  检查数据是否存在
-    if check_router_is_exist(edit_req.clone().name, db).await? {
-        return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
-    }
-    if edit_req.clone().path != "" {
-        if check_f_router_is_exist(edit_req.clone().path, db).await? {
-            return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
-        }
+    if check_router_is_exist_update(
+        db,
+        edit_req.clone().id,
+        edit_req.clone().path,
+        edit_req.clone().menu_name,
+    )
+    .await?
+    {
+        return Err(Error::from_string(
+            "路径或者名称重复",
+            StatusCode::BAD_REQUEST,
+        ));
     }
 
     let uid = edit_req.id;
@@ -172,31 +200,30 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
     let act = sys_menu::ActiveModel {
         id: Set(uid.clone()),
         pid: Set(edit_req.pid),
-        name: Set(edit_req.name),
-        title: Set(edit_req.title),
-        method: Set(edit_req.method),
-        icon: Set(edit_req.icon),
+        menu_name: Set(edit_req.menu_name),
+        icon: Set(edit_req.icon.unwrap_or_else(|| "".to_string())),
         remark: Set(edit_req.remark),
+        query: Set(edit_req.query),
         menu_type: Set(edit_req.menu_type),
         order_sort: Set(edit_req.order_sort),
         status: Set(edit_req.status),
-        hidden: Set(edit_req.hidden),
-        keep_alive: Set(edit_req.keep_alive),
+        visible: Set(edit_req.visible),
         path: Set(edit_req.path),
-        jump_path: Set(edit_req.jump_path),
         component: Set(edit_req.component),
-        allow_data_scope: Set(edit_req.allow_data_scope),
         is_data_scope: Set(edit_req.is_data_scope),
         is_frame: Set(edit_req.is_frame),
-        module_type: Set(edit_req.module_type),
-        model_id: Set(edit_req.model_id),
+        is_cache: Set(edit_req.is_cache),
         updated_at: Set(Some(now)),
         ..s_r
     };
     // 更新
     let _aa = act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
 
-    return Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)));
+    let res = CudResData {
+        id: Some(uid.clone()),
+        msg: format!("{} 修改成功", uid),
+    };
+    Ok(res)
 }
 
 /// get_user_by_id 获取用户Id获取用户   
@@ -237,11 +264,24 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<MenuResp>> {
         .map_err(BadRequest)?;
     Ok(s)
 }
-
+/// get_all 获取全部   
+/// db 数据库连接 使用db.0
+pub async fn get_all_router(db: &DatabaseConnection) -> Result<Vec<MenuResp>> {
+    let s = SysMenu::find()
+        .filter(sys_menu::Column::DeletedAt.is_null())
+        .filter(sys_menu::Column::Status.eq(1))
+        .filter(sys_menu::Column::MenuType.ne(2))
+        .order_by(sys_menu::Column::OrderSort, Order::Asc)
+        .into_model::<MenuResp>()
+        .all(db)
+        .await
+        .map_err(BadRequest)?;
+    Ok(s)
+}
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
 pub async fn get_all_menu_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTree>> {
-    let menus = get_all(db).await?;
+    let menus = get_all_router(db).await?;
     let menu_data = self::get_menu_data(menus);
     let menu_tree = self::get_menu_tree(menu_data, "0".to_string());
 
@@ -289,10 +329,10 @@ pub async fn get_admin_menu_by_role_ids(
 pub fn get_menu_tree(user_menus: Vec<SysMenuTree>, pid: String) -> Vec<SysMenuTree> {
     let mut menu_tree: Vec<SysMenuTree> = Vec::new();
     for mut user_menu in user_menus.clone() {
-        if user_menu.user_menu.menu.pid == pid {
+        if user_menu.user_menu.pid == pid {
             user_menu.children = Some(get_menu_tree(
                 user_menus.clone(),
-                user_menu.user_menu.menu.id.clone(),
+                user_menu.user_menu.id.clone(),
             ));
             menu_tree.push(user_menu.clone());
         }
@@ -307,11 +347,46 @@ pub fn get_menu_data(menus: Vec<MenuResp>) -> Vec<SysMenuTree> {
         menu.pid = menu.pid.trim().to_string();
         let meta = Meta {
             icon: menu.icon.clone(),
-            title: menu.title.clone(),
-            keep_alive: menu.keep_alive.clone(),
-            hidden: menu.hidden.clone(),
+            title: menu.menu_name.clone(),
+            hidden: if menu.visible.clone() == "1" {
+                true
+            } else {
+                false
+            },
+            link: if menu.path.clone().starts_with("http") {
+                Some(menu.path.clone())
+            } else {
+                None
+            },
+            no_cache: if menu.is_cache.clone() == "1" {
+                false
+            } else {
+                true
+            },
         };
-        let user_menu = UserMenu { menu, meta };
+        let user_menu = UserMenu {
+            meta,
+            id: menu.id.clone(),
+            pid: menu.pid.clone(),
+            path: if !menu.path.clone().starts_with("/") && menu.pid.clone() == "0" {
+                format!("/{}", menu.path.clone())
+            } else {
+                menu.path.clone()
+            },
+            name: menu.path.clone(),
+            menu_type: menu.menu_type.clone(),
+            always_show: if menu.is_cache.clone() == "1" && menu.pid.clone() == "0" {
+                Some(true)
+            } else {
+                None
+            },
+            component: menu.component.clone(),
+            hidden: if menu.visible.clone() == "0" {
+                false
+            } else {
+                true
+            },
+        };
         let menu_tree = SysMenuTree {
             user_menu,
             ..Default::default()

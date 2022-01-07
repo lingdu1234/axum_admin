@@ -7,9 +7,9 @@ pub struct SearchReq {
     #[validate(length(min = 1))]
     pub id: Option<String>,
     #[validate(length(min = 1))]
-    pub title: Option<String>,
-    pub menu_type: Option<i8>,
-    pub status: Option<i8>,
+    pub menu_name: Option<String>,
+    pub menu_type: Option<String>,
+    pub status: Option<String>,
     pub begin_time: Option<String>,
     pub end_time: Option<String>,
 }
@@ -18,30 +18,32 @@ pub struct SearchReq {
 pub struct MenuResp {
     pub id: String,
     pub pid: String,
-    pub name: String,
-    pub title: String,
-    pub method: String,
-    pub icon: String,
-    pub menu_type: i8,
-    pub order_sort: i32,
-    pub status: i8,
-    pub hidden: i8,
     pub path: String,
-    pub jump_path: String,
+    pub menu_name: String,
+    pub icon: String,
+    pub menu_type: String,
+    pub query: Option<String>,
+    pub order_sort: i32,
+    pub status: String,
+    pub perms: String,
     pub component: String,
-    pub allow_data_scope: i8,
-    pub is_data_scope: i8,
-    pub is_frame: i8,
-    pub module_type: String,
-    pub model_id: i32,
+    pub visible: String,
+    pub is_frame: String,
+    pub is_cache: String,
+    pub is_data_scope: String,
     pub remark: String,
-    pub keep_alive: i8,
 }
 
 #[derive(Serialize, Clone, Validate, Debug, Default)]
 pub struct UserMenu {
-    #[serde(flatten)]
-    pub menu: MenuResp,
+    pub id: String,
+    pub pid: String,
+    pub always_show: Option<bool>,
+    pub path: String,
+    pub name: String,
+    pub menu_type: String,
+    pub component: String,
+    pub hidden: bool,
     pub meta: Meta,
 }
 
@@ -49,8 +51,10 @@ pub struct UserMenu {
 pub struct Meta {
     pub icon: String,
     pub title: String,
-    pub keep_alive: i8,
-    pub hidden: i8,
+    pub link: Option<String>,
+    // pub keep_alive: bool,
+    pub no_cache: bool,
+    pub hidden: bool,
 }
 
 #[derive(Serialize, Clone, Validate, Debug, Default)]
@@ -63,51 +67,44 @@ pub struct SysMenuTree {
 #[derive(Deserialize, Serialize, Clone, Debug, Validate)]
 pub struct AddReq {
     pub pid: String,
-    pub name: String,
-    pub title: String,
-    pub method: String,
-    pub icon: Option<String>,
-    pub remark: Option<String>,
-    pub menu_type: i8,
-    pub order_sort: i32,
-    pub status: i8,
-    pub hidden: i8,
-    pub keep_alive: i8,
     pub path: Option<String>,
-    pub jump_path: Option<String>,
-    pub component: Option<String>,
-    pub allow_data_scope: i8,
-    pub is_data_scope: i8,
-    pub is_frame: i8,
-    pub module_type: String,
-    pub model_id: i32,
+    pub menu_name: String,
+    pub icon: Option<String>,
+    pub menu_type: String,
+    pub query: Option<String>,
+    pub order_sort: i32,
+    pub status: String,
+    pub perms: Option<String>,
+    pub component: String,
+    pub visible: String,
+    pub is_frame: String,
+    pub is_cache: String,
+    pub is_data_scope: String,
+    pub remark: String,
 }
 
-#[derive(Deserialize, Serialize, Validate)]
+#[derive(Debug, Deserialize, Serialize, Validate)]
 pub struct DeleteReq {
-    pub menu_ids: Vec<String>,
+    #[validate(length(min = 1, message = "至少要有一个id"))]
+    pub ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct EditReq {
     pub id: String,
     pub pid: String,
-    pub name: String,
-    pub title: String,
-    pub icon: String,
-    pub remark: String,
-    pub menu_type: i8,
-    pub method: String,
-    pub order_sort: i32,
-    pub status: i8,
-    pub hidden: i8,
-    pub keep_alive: i8,
     pub path: String,
-    pub jump_path: String,
+    pub menu_name: String,
+    pub icon: Option<String>,
+    pub menu_type: String,
+    pub query: Option<String>,
+    pub order_sort: i32,
+    pub status: String,
+    pub perms: Option<String>,
     pub component: String,
-    pub allow_data_scope: i8,
-    pub is_data_scope: i8,
-    pub is_frame: i8,
-    pub module_type: String,
-    pub model_id: i32,
+    pub visible: String,
+    pub is_frame: String,
+    pub is_cache: String,
+    pub is_data_scope: String,
+    pub remark: String,
 }

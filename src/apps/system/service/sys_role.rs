@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
@@ -107,16 +105,20 @@ pub async fn combine_permissions_data(
 ) -> Result<Vec<Vec<String>>> {
     // 获取全部菜单
     let menus = service::sys_menu::get_all(db).await?;
-    let menu_map = menus
-        .iter()
-        .map(|x| (x.id.clone(), x.method.clone()))
-        .collect::<HashMap<String, String>>();
+    // let menu_map = menus
+    //     .iter()
+    //     .map(|x| (x.id.clone(), x.method.clone()))
+    //     .collect::<HashMap<String, String>>();
     // 组装角色权限数据
     let mut permissions: Vec<Vec<String>> = Vec::new();
     for permission_id in permission_ids {
-        if let Some(method) = menu_map.get(&permission_id) {
-            permissions.push(vec![role_id.clone(), permission_id.clone(), method.clone()]);
-        }
+        // if let Some(method) = menu_map.get(&permission_id) {
+        permissions.push(vec![
+            role_id.clone(),
+            permission_id.clone(),
+            "ALL".to_string(),
+        ]);
+        // }
     }
     Ok(permissions)
 }

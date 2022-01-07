@@ -1,3 +1,5 @@
+pub mod common;
+
 pub mod auth; //用户授权
 
 //用户管理

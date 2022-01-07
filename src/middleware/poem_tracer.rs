@@ -42,10 +42,14 @@ impl<E: Endpoint> Endpoint for TracingEndpoint<E> {
 
             match (res, now.elapsed()) {
                 (Ok(resp), Ok(duration)) => {
-                    let resp = resp.into_response();
+                    let mut resp = resp.into_response();
+                    let data = resp.take_body().into_string().await.unwrap();
+                    // println!("{:#?}", data);
+                    resp.set_body(data);
                     tracing::info!(
                         status = %resp.status(),
                         duration = ?duration,
+                        header = ?resp.headers(),
                         "response"
                     );
                     Ok(resp)

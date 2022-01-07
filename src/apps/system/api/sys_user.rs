@@ -8,11 +8,14 @@ use poem::{
 use serde_json::json;
 use validator::Validate;
 
-use crate::apps::system::{
-    models::{sys_user::UserInfo, RespData},
-    service,
-};
 use crate::utils::jwt::Claims;
+use crate::{
+    apps::system::{
+        models::{sys_user::UserInfo, Res, RespData},
+        service,
+    },
+    utils::jwt::AuthBody,
+};
 use crate::{db_conn, DB};
 
 use super::super::models::{
@@ -55,16 +58,16 @@ pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<RespData>> {
 
 /// delete 完全删除
 #[handler]
-pub async fn ddelete(Json(delete_req): Json<DeleteReq>) -> Result<Json<RespData>> {
+pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Result<Json<RespData>> {
     delete_req.validate().map_err(BadRequest)?;
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::ddelete(db, delete_req).await?;
+    let res = service::sys_user::delete(db, delete_req).await?;
     Ok(Json(res))
 }
 
 /// delete 软删除
 #[handler]
-pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Result<Json<RespData>> {
+pub async fn delete_soft(Json(delete_req): Json<DeleteReq>) -> Result<Json<RespData>> {
     delete_req.validate().map_err(BadRequest)?;
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::delete_soft(db, delete_req).await?;
@@ -82,15 +85,20 @@ pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<RespData>> {
 
 /// 用户登录
 #[handler]
-pub async fn login(Json(login_req): Json<UserLoginReq>) -> Result<Json<RespData>> {
-    login_req.validate().map_err(BadRequest)?;
+pub async fn login(Json(login_req): Json<UserLoginReq>) -> Result<Json<Res<AuthBody>>> {
+    match login_req.validate() {
+        Ok(_) => {}
+        Err(e) => return Ok(Json(Res::with_err(&e.to_string()))),
+    }
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::login(db, login_req).await?;
-    Ok(Json(RespData::with_data(json!(res))))
+    match service::sys_user::login(db, login_req).await {
+        Ok(res) => return Ok(Json(Res::with_data(res))),
+        Err(e) => return Ok(Json(Res::with_err(&e.to_string()))),
+    };
 }
 /// 获取用户登录信息
 #[handler]
-pub async fn get_info(user: Claims) -> Result<Json<RespData>> {
+pub async fn get_info(user: Claims) -> Result<Json<Res<UserInfo>>> {
     let db = DB.get_or_init(db_conn).await;
     //  获取用户信息
     let user_info = service::sys_user::get_by_id_or_name(
@@ -119,5 +127,5 @@ pub async fn get_info(user: Claims) -> Result<Json<RespData>> {
         permissions,
     };
 
-    Ok(Json(RespData::with_data(json!(res))))
+    Ok(Json(Res::with_data(res)))
 }

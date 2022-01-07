@@ -105,14 +105,14 @@ pub async fn authorize(payload: AuthPayload) -> Result<AuthBody> {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthBody {
-    access_token: String,
+    token: String,
     token_type: String,
     exp: i64,
 }
 impl AuthBody {
     fn new(access_token: String, exp: i64) -> Self {
         Self {
-            access_token,
+            token: access_token,
             token_type: "Bearer".to_string(),
             exp,
         }

@@ -5,4 +5,4 @@ mod api;
 mod models;
 mod service;
 
-pub use api::system_api;
+pub use api::{get_captcha, login as SysLogin, system_api};

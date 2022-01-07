@@ -7,6 +7,8 @@ pub struct Configs {
     pub server: Server,
     /// 静态网站配置
     pub web: Web,
+    /// 系统配置
+    pub system: System,
     /// Casbin配置
     pub casbin: Casbin,
     ///  数据库 配置
@@ -37,6 +39,12 @@ pub struct Web {
     pub index: String,
     /// 文件上传路径
     pub upload_dir: String,
+}
+/// system 系统配置
+#[derive(Debug, Deserialize)]
+pub struct System {
+    /// 静态网站根目录
+    pub super_user: Vec<String>,
 }
 
 /// casbin 配置文件

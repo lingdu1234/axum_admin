@@ -1,7 +1,6 @@
 use headers::{authorization::Bearer, HeaderMapExt};
 use jsonwebtoken::{decode, errors::ErrorKind, Validation};
 use poem::{http::StatusCode, Endpoint, Error, Middleware, Request, Result};
-use sea_orm_casbin_adapter::casbin::prelude::*;
 
 use crate::utils::jwt::{Claims, KEYS};
 
@@ -25,10 +24,17 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
     type Output = E::Output;
 
     async fn call(&self, req: Request) -> Result<Self::Output> {
-        let req_path = req.uri().path().replacen("/", "", 1);
-        if req_path == "system/login" {
-            return self.ep.call(req).await;
-        }
+        // let req_path = req.uri().path().replacen("/", "", 1);
+        let req_vec = req.original_uri().path().split("/").collect::<Vec<&str>>();
+        let req_path = if req_vec.len() > 2 {
+            req_vec[2..].join("/")
+        } else {
+            "".to_string()
+        };
+
+        // if req_path == "system/login" {
+        //     return self.ep.call(req).await;
+        // }
         if let Some(auth) = req.headers().typed_get::<headers::Authorization<Bearer>>() {
             //  验证token
             // let validation = Validation {validate_exp: true,..Validation::default()};
@@ -72,6 +78,7 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
             //  if !casbin::is_permitted(&token_data.claims.role, req.path(), req.method()) {}
 
             println!("{:?}------req_path-{}", token_data.claims, req_path);
+
             return self.ep.call(req).await;
         }
 

@@ -15,6 +15,8 @@ policy_file = "config/casbin_conf/rbac_policy.csv"
 dir = "data/log" 
 file = "app_log" 
 log_level = "DEBUG" # DEBUG TRACE  INFO  WARN ERROR
+[system]
+super_user = ["00SMKOE227BDVKEF14N35ISQRT"]
 [jwt]
 # 单位 分钟
 jwt_exp = 1440

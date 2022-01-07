@@ -132,7 +132,7 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
 }
 
 /// delete 完全删除
-pub async fn ddelete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
+pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
     let mut s = SysUser::delete_many();
     let mut flag = false;
     if let Some(x) = delete_req.user_id {
