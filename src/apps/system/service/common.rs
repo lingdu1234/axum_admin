@@ -2,7 +2,7 @@ use captcha_rust::Captcha;
 
 use crate::utils;
 
-use super::super::models::common::CaptchaImage;
+use crate::apps::common::models::CaptchaImage;
 
 pub fn get_captcha() -> CaptchaImage {
     let captcha = Captcha::new(5, 130, 40);

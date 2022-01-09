@@ -6,14 +6,12 @@ use poem::{
     Result,
 };
 
+use crate::apps::common::models::{PageParams, RespData};
 use validator::Validate;
 
 use crate::database::{db_conn, DB};
 
-use super::super::models::{
-    sys_post::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
-    PageParams, RespData,
-};
+use super::super::models::sys_post::{AddReq, DeleteReq, EditReq, Resp, SearchReq};
 
 /// get_list 获取列表
 /// page_params 分页参数

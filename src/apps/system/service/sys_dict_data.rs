@@ -2,17 +2,14 @@ use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set,
+    PaginatorTrait, QueryFilter, QueryOrder, Set, Unset,
 };
 use serde_json::json;
 
-use crate::apps::system::models::RespData;
+use crate::apps::common::models::{CudResData, ListData, PageParams, RespData};
 
 use super::super::entities::{prelude::SysDictData, sys_dict_data};
-use super::super::models::{
-    sys_dict_data::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
-    PageParams,
-};
+use super::super::models::sys_dict_data::{AddReq, DeleteReq, EditReq, Resp, SearchReq};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -21,7 +18,7 @@ pub async fn get_sort_list(
     db: &DatabaseConnection,
     page_params: PageParams,
     search_req: SearchReq,
-) -> Result<RespData> {
+) -> Result<ListData<sys_dict_data::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -49,19 +46,19 @@ pub async fn get_sort_list(
     let paginator = s
         .order_by_asc(sys_dict_data::Column::DictDataId)
         .paginate(db, page_per_size);
-    let num_pages = paginator.num_pages().await.map_err(BadRequest)?;
+    let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
     let list = paginator
         .fetch_page(page_num - 1)
         .await
         .map_err(BadRequest)?;
 
-    let res = json!({
-            "list": list,
-            "total": total,
-            "total_pages": num_pages,
-            "page_num": page_num,
-    });
-    Ok(RespData::with_data(res))
+    let res = ListData {
+        list,
+        total,
+        total_pages,
+        page_num,
+    };
+    Ok(res)
 }
 
 pub async fn check_dict_data_is_exist(req: AddReq, db: &DatabaseConnection) -> Result<bool> {
@@ -93,9 +90,18 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
         dict_data_id: Set(uid.clone()),
         dict_label: Set(add_req.dict_label),
         dict_type: Set(add_req.dict_type),
+        dict_value: Set(add_req.dict_value),
         dict_sort: Set(add_req.dict_sort),
         is_default: Set(add_req.is_default),
-        status: Set(add_req.status.unwrap_or(1)),
+        css_class: match Some(add_req.css_class) {
+            Some(x) => Set(x),
+            None => Unset(None),
+        },
+        list_class: match Some(add_req.list_class) {
+            Some(x) => Set(x),
+            None => Unset(None),
+        },
+        status: Set(add_req.status.unwrap_or_else(|| "1".to_string())),
         remark: Set(Some(add_req.remark.unwrap_or_else(|| "".to_string()))),
         created_at: Set(Some(now)),
         ..Default::default()
@@ -112,10 +118,10 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
+pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<CudResData<String>> {
     let mut s = SysDictData::delete_many();
 
-    s = s.filter(sys_dict_data::Column::DictDataId.is_in(delete_req.dict_ids));
+    s = s.filter(sys_dict_data::Column::DictDataId.is_in(delete_req.dict_data_ids));
 
     //开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
@@ -125,7 +131,10 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<Re
             "你要删除的字典类型不存在",
             StatusCode::BAD_REQUEST,
         )),
-        i => Ok(RespData::with_msg(&format!("成功删除{}条数据", i))),
+        i => Ok(CudResData {
+            id: None,
+            msg: format!("成功删除{}条数据", i),
+        }),
     }
 }
 
@@ -142,6 +151,15 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
         dict_label: Set(edit_req.dict_label),
         dict_type: Set(edit_req.dict_type),
         dict_sort: Set(edit_req.dict_sort),
+        dict_value: Set(edit_req.dict_value),
+        css_class: match Some(edit_req.css_class) {
+            Some(x) => Set(x),
+            None => Unset(None),
+        },
+        list_class: match Some(edit_req.list_class) {
+            Some(x) => Set(x),
+            None => Unset(None),
+        },
         is_default: Set(edit_req.is_default),
         status: Set(edit_req.status),
         remark: Set(Some(edit_req.remark)),
@@ -157,10 +175,11 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 
-pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<Resp> {
+pub async fn get_by_id(
+    db: &DatabaseConnection,
+    search_req: SearchReq,
+) -> Result<sys_dict_data::Model> {
     let mut s = SysDictData::find();
-    s = s.filter(sys_dict_data::Column::DeletedAt.is_null());
-    //
     if let Some(x) = search_req.dict_data_id {
         s = s.filter(sys_dict_data::Column::DictDataId.eq(x));
     } else {
@@ -170,7 +189,7 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
         ));
     }
 
-    let res = match s.into_model::<Resp>().one(db).await.map_err(BadRequest)? {
+    let res = match s.one(db).await.map_err(BadRequest)? {
         Some(m) => m,
         None => {
             return Err(Error::from_string(
@@ -183,11 +202,29 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
     Ok(res)
 }
 
+pub async fn get_by_type(
+    db: &DatabaseConnection,
+    search_req: SearchReq,
+) -> Result<Vec<sys_dict_data::Model>> {
+    let mut s = SysDictData::find();
+    if let Some(x) = search_req.dict_type {
+        s = s.filter(sys_dict_data::Column::DictType.eq(x));
+    } else {
+        return Err(Error::from_string(
+            "请输入字典类型",
+            StatusCode::BAD_REQUEST,
+        ));
+    }
+
+    let res = s.all(db).await.map_err(BadRequest)?;
+    Ok(res)
+}
+
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
 pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
     let s = SysDictData::find()
-        .filter(sys_dict_data::Column::DeletedAt.is_null())
+        // .filter(sys_dict_data::Column::DeletedAt.is_null())
         .filter(sys_dict_data::Column::Status.eq(1))
         .order_by(sys_dict_data::Column::DictDataId, Order::Asc)
         .into_model::<Resp>()

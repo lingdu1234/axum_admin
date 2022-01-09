@@ -2,6 +2,7 @@ use poem::{post, EndpointExt, Route};
 
 use crate::middleware::Auth;
 
+pub mod common;
 pub mod system;
 
 pub fn api() -> Route {

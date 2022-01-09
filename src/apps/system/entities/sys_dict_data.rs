@@ -14,7 +14,7 @@ impl EntityName for Entity {
 
 #[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
 pub struct Model {
-    pub dict_code: String,
+    pub dict_data_id: String,
     pub dict_sort: i32,
     pub dict_label: String,
     pub dict_value: String,
@@ -24,15 +24,15 @@ pub struct Model {
     pub is_default: String,
     pub status: String,
     pub create_by: String,
-    pub create_time: Option<DateTime>,
+    pub created_at: Option<DateTime>,
     pub update_by: String,
-    pub update_time: Option<DateTime>,
+    pub updated_at: Option<DateTime>,
     pub remark: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
 pub enum Column {
-    DictCode,
+    DictDataId,
     DictSort,
     DictLabel,
     DictValue,
@@ -42,15 +42,15 @@ pub enum Column {
     IsDefault,
     Status,
     CreateBy,
-    CreateTime,
+    CreatedAt,
     UpdateBy,
-    UpdateTime,
+    UpdatedAt,
     Remark,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DerivePrimaryKey)]
 pub enum PrimaryKey {
-    DictCode,
+    DictDataId,
 }
 
 impl PrimaryKeyTrait for PrimaryKey {
@@ -67,7 +67,7 @@ impl ColumnTrait for Column {
     type EntityName = Entity;
     fn def(&self) -> ColumnDef {
         match self {
-            Self::DictCode => ColumnType::String(Some(32u32)).def(),
+            Self::DictDataId => ColumnType::String(Some(32u32)).def(),
             Self::DictSort => ColumnType::Integer.def(),
             Self::DictLabel => ColumnType::String(Some(100u32)).def(),
             Self::DictValue => ColumnType::String(Some(100u32)).def(),
@@ -77,9 +77,9 @@ impl ColumnTrait for Column {
             Self::IsDefault => ColumnType::Char(Some(1u32)).def(),
             Self::Status => ColumnType::Char(Some(1u32)).def(),
             Self::CreateBy => ColumnType::String(Some(64u32)).def(),
-            Self::CreateTime => ColumnType::DateTime.def().null(),
+            Self::CreatedAt => ColumnType::DateTime.def().null(),
             Self::UpdateBy => ColumnType::String(Some(64u32)).def(),
-            Self::UpdateTime => ColumnType::DateTime.def().null(),
+            Self::UpdatedAt => ColumnType::DateTime.def().null(),
             Self::Remark => ColumnType::String(Some(500u32)).def().null(),
         }
     }

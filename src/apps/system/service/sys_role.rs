@@ -1,3 +1,4 @@
+use crate::apps::common::models::{PageParams, RespData};
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
@@ -13,9 +14,8 @@ use super::super::entities::{
     prelude::{SysRole, SysRoleDept},
     sys_role, sys_role_dept,
 };
-use super::super::models::{
-    sys_role::{AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq},
-    PageParams, RespData,
+use super::super::models::sys_role::{
+    AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq,
 };
 use super::super::service;
 

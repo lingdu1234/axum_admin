@@ -1,4 +1,4 @@
-use crate::apps::system::{models::RespData, service};
+use crate::apps::system::service;
 use poem::{
     error::BadRequest,
     handler,
@@ -7,14 +7,14 @@ use poem::{
     Error, Result,
 };
 
+use crate::apps::common::models::{PageParams, RespData};
 use serde_json::json;
 use validator::Validate;
 
 use crate::database::{db_conn, DB};
 
-use super::super::models::{
-    sys_role::{AddReq, DataScopeReq, DeleteReq, EditReq, SearchReq, StatusReq},
-    PageParams,
+use super::super::models::sys_role::{
+    AddReq, DataScopeReq, DeleteReq, EditReq, SearchReq, StatusReq,
 };
 
 /// get_list 获取列表

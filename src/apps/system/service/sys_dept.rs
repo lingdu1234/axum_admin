@@ -1,3 +1,4 @@
+use crate::apps::common::models::{PageParams, RespData};
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
@@ -9,10 +10,7 @@ use serde_json::json;
 use crate::apps::system::models::sys_dept::RespTree;
 
 use super::super::entities::{prelude::*, sys_dept};
-use super::super::models::{
-    sys_dept::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
-    PageParams, RespData,
-};
+use super::super::models::sys_dept::{AddReq, DeleteReq, EditReq, Resp, SearchReq};
 
 /// get_list 获取列表
 /// page_params 分页参数

@@ -1,3 +1,4 @@
+use chrono::NaiveDateTime;
 use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -21,17 +22,19 @@ pub struct AddReq {
     pub dict_label: String,
     pub dict_value: String,
     pub dict_sort: i32,
-    #[validate(range(min = 0, max = 1))]
-    pub is_default: i8,
-    #[validate(range(min = 0, max = 1))]
-    pub status: Option<i8>,
+    pub css_class: Option<String>,
+    pub list_class: Option<String>,
+    #[validate(length(min = 1))]
+    pub is_default: String,
+    #[validate(length(min = 1))]
+    pub status: Option<String>,
     #[validate(length(min = 1))]
     pub remark: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Validate)]
 pub struct DeleteReq {
-    pub dict_ids: Vec<String>,
+    pub dict_data_ids: Vec<String>,
 }
 
 #[derive(Deserialize, Debug, Serialize, Validate)]
@@ -41,10 +44,10 @@ pub struct EditReq {
     pub dict_label: String,
     pub dict_value: String,
     pub dict_sort: i32,
-    #[validate(range(min = 0, max = 1))]
-    pub is_default: i8,
-    #[validate(range(min = 0, max = 1))]
-    pub status: i8,
+    pub css_class: Option<String>,
+    pub list_class: Option<String>,
+    pub is_default: String,
+    pub status: String,
     pub remark: String,
 }
 
@@ -54,8 +57,8 @@ pub struct Resp {
     pub dict_label: String,
     pub dict_value: String,
     pub dict_sort: i32,
-    pub is_default: i8,
-    pub status: i8,
+    pub is_default: String,
+    pub status: String,
     pub remark: String,
-    pub created_at: String,
+    pub created_at: NaiveDateTime,
 }

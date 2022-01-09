@@ -1,3 +1,4 @@
+use crate::apps::common::models::{CudResData, ListData, PageParams};
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
@@ -6,14 +7,11 @@ use sea_orm::{
 };
 use sea_orm_casbin_adapter::casbin::MgmtApi;
 
-use crate::apps::system::models::common::{CudResData, ListData};
-
 use crate::utils::CASBIN;
 
 use super::super::entities::{prelude::*, sys_menu};
-use super::super::models::{
-    sys_menu::{AddReq, DeleteReq, EditReq, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu},
-    PageParams,
+use super::super::models::sys_menu::{
+    AddReq, DeleteReq, EditReq, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu,
 };
 
 /// get_list 获取列表
@@ -349,9 +347,9 @@ pub fn get_menu_data(menus: Vec<MenuResp>) -> Vec<SysMenuTree> {
             icon: menu.icon.clone(),
             title: menu.menu_name.clone(),
             hidden: if menu.visible.clone() == "1" {
-                true
-            } else {
                 false
+            } else {
+                true
             },
             link: if menu.path.clone().starts_with("http") {
                 Some(menu.path.clone())
@@ -382,9 +380,9 @@ pub fn get_menu_data(menus: Vec<MenuResp>) -> Vec<SysMenuTree> {
             },
             component: menu.component.clone(),
             hidden: if menu.visible.clone() == "0" {
-                false
-            } else {
                 true
+            } else {
+                false
             },
         };
         let menu_tree = SysMenuTree {

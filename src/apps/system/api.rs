@@ -14,8 +14,8 @@ pub fn system_api() -> Route {
     Route::new()
         // .at("/login", post(sys_user::login)) //登录
         .nest("/user", sys_user_api()) //用户管理模块
-        .nest("/dict_type", sys_dict_type_api()) //字典类型模块
-        .nest("/dict_data", sys_dict_data_api()) //字典数据模块
+        .nest("/dict/type", sys_dict_type_api()) //字典类型模块
+        .nest("/dict/data", sys_dict_data_api()) //字典数据模块
         .nest("/post", sys_post_api()) //岗位模块
         .nest("/role", sys_role_api()) //角色模块
         .nest("/menu", sys_menu_api()) //路由 菜单 模块
@@ -34,24 +34,24 @@ fn sys_user_api() -> Route {
 
 fn sys_dict_type_api() -> Route {
     Route::new()
-        .at("/get", get(sys_dict_type::get_sort_list)) //获取筛选分页
+        .at("/list", get(sys_dict_type::get_sort_list)) //获取筛选分页
         .at("/get_all", get(sys_dict_type::get_all)) //获取筛选分页
         .at("/get_by_id", get(sys_dict_type::get_by_id)) //按id获取
         .at("/add", post(sys_dict_type::add)) //添加
-        .at("/edit", post(sys_dict_type::edit)) //更新
+        .at("/edit", put(sys_dict_type::edit)) //更新
         // .at("/delete", delete(sys_dict_type::delete)) //软删除
-        .at("/ddelete", delete(sys_dict_type::ddelete)) //硬删除
+        .at("/delete", delete(sys_dict_type::delete)) //硬删除
 }
 
 fn sys_dict_data_api() -> Route {
     Route::new()
-        .at("/get", get(sys_dict_data::get_sort_list)) //获取筛选分页
+        .at("/list", get(sys_dict_data::get_sort_list)) //获取筛选分页
         .at("/get_all", get(sys_dict_data::get_all)) //获取筛选分页
         .at("/get_by_id", get(sys_dict_data::get_by_id)) //按id获取
+        .at("/get_by_type", get(sys_dict_data::get_by_type)) //按id获取
         .at("/add", post(sys_dict_data::add)) //添加
-        .at("/edit", post(sys_dict_data::edit)) //更新
-        // .at("/delete", delete(sys_dict_data::delete)) //软删除
-        .at("/ddelete", delete(sys_dict_data::delete)) //硬删除
+        .at("/edit", put(sys_dict_data::edit)) //更新
+        .at("/delete", delete(sys_dict_data::delete)) //硬删除
 }
 
 fn sys_post_api() -> Route {

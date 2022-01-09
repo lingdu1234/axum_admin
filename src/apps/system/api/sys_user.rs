@@ -10,18 +10,16 @@ use validator::Validate;
 
 use crate::utils::jwt::Claims;
 use crate::{
-    apps::system::{
-        models::{sys_user::UserInfo, Res, RespData},
-        service,
-    },
+    apps::common::models::{PageParams, Res, RespData},
+    CFG,
+};
+use crate::{
+    apps::system::{models::sys_user::UserInfo, service},
     utils::jwt::AuthBody,
 };
 use crate::{db_conn, DB};
 
-use super::super::models::{
-    sys_user::{AddReq, DeleteReq, EditReq, SearchReq, UserLoginReq},
-    PageParams,
-};
+use super::super::models::sys_user::{AddReq, DeleteReq, EditReq, SearchReq, UserLoginReq};
 
 /// get_user_list 获取用户列表
 /// page_params 分页参数
@@ -115,11 +113,21 @@ pub async fn get_info(user: Claims) -> Result<Json<Res<UserInfo>>> {
     let roles = service::sys_role::get_admin_role(&user.id, all_roles).await?;
     // let mut role_names: Vec<String> = Vec::new();
     let mut role_ids: Vec<String> = Vec::new();
-    for role in roles {
-        // role_names.push(role.name);
-        role_ids.push(role.id);
+    if CFG.system.super_user.contains(&user.id) {
+        role_ids = vec!["".to_string()];
+    } else {
+        for role in roles {
+            // role_names.push(role.name);
+            role_ids.push(role.id);
+        }
     }
-    let permissions = service::sys_menu::get_permissions(role_ids.clone()).await;
+    // 检查是否超管用户
+    let permissions = if CFG.system.super_user.contains(&user.id) {
+        vec!["*:*:*".to_string()]
+    } else {
+        service::sys_menu::get_permissions(role_ids.clone()).await
+    };
+    // let permissions = service::sys_menu::get_permissions(role_ids.clone()).await;
     // 获取用户菜单信息
     let res = UserInfo {
         user: user_info,

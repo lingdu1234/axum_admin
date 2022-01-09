@@ -1,9 +1,7 @@
+use crate::apps::common::models::{CaptchaImage, Res};
 use poem::{handler, web::Json, Result};
 
-use crate::apps::system::{
-    models::{common::CaptchaImage, Res},
-    service,
-};
+use crate::apps::system::service;
 
 /// delete 完全删除
 #[handler]

@@ -4,12 +4,9 @@ use validator::Validate;
 #[derive(Deserialize, Debug, Serialize, Default, Validate)]
 pub struct SearchReq {
     pub dict_type_id: Option<String>,
-    #[validate(length(min = 1))]
     pub dict_name: Option<String>,
-    #[validate(length(min = 1))]
     pub dict_type: Option<String>,
-    #[validate(range(min = 0, max = 2))]
-    pub status: Option<i8>,
+    pub status: Option<String>,
     pub begin_time: Option<String>,
     pub end_time: Option<String>,
 }
@@ -18,8 +15,7 @@ pub struct SearchReq {
 pub struct AddReq {
     pub dict_name: String,
     pub dict_type: String,
-    #[validate(range(min = 0, max = 2))]
-    pub status: Option<i8>,
+    pub status: Option<String>,
     #[validate(length(min = 1))]
     pub remark: Option<String>,
 }
@@ -34,7 +30,7 @@ pub struct EditReq {
     pub dict_type_id: String,
     pub dict_name: String,
     pub dict_type: String,
-    pub status: i8,
+    pub status: String,
     pub remark: String,
 }
 
@@ -43,6 +39,6 @@ pub struct Resp {
     pub dict_type_id: String,
     pub dict_name: String,
     pub dict_type: String,
-    pub status: i8,
+    pub status: String,
     pub remark: String,
 }

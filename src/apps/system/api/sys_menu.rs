@@ -4,10 +4,9 @@ use poem::{handler, web::Json, Result};
 
 use validator::Validate;
 
+use crate::apps::common::models::{CudResData, ListData, PageParams, Res, RespData};
 use crate::apps::system::entities::sys_menu;
-use crate::apps::system::models::common::{CudResData, ListData};
 use crate::apps::system::models::sys_menu::MenuResp;
-use crate::apps::system::models::{PageParams, Res, RespData};
 use crate::apps::system::service;
 use crate::utils::jwt::Claims;
 use crate::{db_conn, CFG, DB};

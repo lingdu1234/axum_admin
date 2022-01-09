@@ -34,6 +34,7 @@ async fn main() -> Result<(), std::io::Error> {
 
     //日志追踪 将log转换到Tracing统一输出
     LogTracer::init().unwrap();
+
     // 系统变量设置
 
     //  日志设置

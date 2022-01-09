@@ -7,19 +7,14 @@ use sea_orm::{
 };
 use serde_json::json;
 
-use crate::{
-    apps::system::models::RespData,
-    utils::{
-        self,
-        jwt::{AuthBody, AuthPayload},
-    },
+use crate::apps::common::models::{PageParams, RespData};
+use crate::utils::{
+    self,
+    jwt::{AuthBody, AuthPayload},
 };
 
 use super::super::entities::{prelude::SysUser, sys_user};
-use super::super::models::{
-    sys_user::{AddReq, DeleteReq, EditReq, Resp, SearchReq, UserLoginReq},
-    PageParams,
-};
+use super::super::models::sys_user::{AddReq, DeleteReq, EditReq, Resp, SearchReq, UserLoginReq};
 
 /// get_user_list 获取用户列表
 /// page_params 分页参数
