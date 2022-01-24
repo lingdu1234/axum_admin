@@ -38,11 +38,17 @@ pub async fn get_sort_list(
 
 /// add 添加
 #[handler]
-pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<RespData>> {
-    add_req.validate().map_err(BadRequest)?;
+pub async fn add(Json(req): Json<AddReq>) -> Json<Res<String>> {
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_data::add(db, add_req).await?;
-    Ok(Json(res))
+    let res = service::sys_dict_data::add(db, req).await;
+    match res {
+        Ok(x) => Json(Res::with_data_msg(x.id, &x.msg)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// delete 完全删除
@@ -52,7 +58,6 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Json<Res<String>> {
         Ok(_) => {}
         Err(e) => return Json(Res::with_err(&e.to_string())),
     };
-    println!("{:?}", "vdsvsdvsdvsd");
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_data::delete(db, req).await;
     match res {
@@ -63,10 +68,10 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Json<Res<String>> {
 
 // edit 修改
 #[handler]
-pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<RespData>> {
-    edit_req.validate().map_err(BadRequest)?;
+pub async fn edit(Json(req): Json<EditReq>) -> Result<Json<RespData>> {
+    req.validate().map_err(BadRequest)?;
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_data::edit(db, edit_req).await?;
+    let res = service::sys_dict_data::edit(db, req).await?;
     Ok(Json(res))
 }
 

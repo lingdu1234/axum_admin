@@ -7,7 +7,7 @@ use sea_orm::{
 };
 use serde_json::json;
 
-use crate::apps::common::models::{PageParams, RespData};
+use crate::apps::common::models::{ListData, PageParams, RespData};
 use crate::utils::{
     self,
     jwt::{AuthBody, AuthPayload},
@@ -23,28 +23,31 @@ use super::super::models::sys_user::{AddReq, DeleteReq, EditReq, Resp, SearchReq
 pub async fn get_sort_list(
     db: &DatabaseConnection,
     page_params: PageParams,
-    search_req: SearchReq,
-) -> Result<RespData> {
+    req: SearchReq,
+) -> Result<ListData<Resp>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     let mut s = SysUser::find();
     // 不查找删除数据
     s = s.filter(sys_user::Column::DeletedAt.is_null());
     // 查询条件
-    if let Some(x) = search_req.user_id {
+    if let Some(x) = req.user_id {
         s = s.filter(sys_user::Column::Id.eq(x));
     }
 
-    if let Some(x) = search_req.user_name {
-        s = s.filter(sys_user::Column::UserName.eq(x));
+    if let Some(x) = req.user_name {
+        s = s.filter(sys_user::Column::UserName.contains(&x));
     }
-    if let Some(x) = search_req.user_status {
+    if let Some(x) = req.user_status {
         s = s.filter(sys_user::Column::UserStatus.eq(x));
     }
-    if let Some(x) = search_req.begin_time {
+    if let Some(x) = req.dept_id {
+        s = s.filter(sys_user::Column::DeptId.eq(x));
+    }
+    if let Some(x) = req.begin_time {
         s = s.filter(sys_user::Column::CreatedAt.gte(x));
     }
-    if let Some(x) = search_req.end_time {
+    if let Some(x) = req.end_time {
         s = s.filter(sys_user::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
@@ -54,18 +57,18 @@ pub async fn get_sort_list(
         .order_by_asc(sys_user::Column::Id)
         .into_model::<Resp>()
         .paginate(db, page_per_size);
-    let num_pages = paginator.num_pages().await.map_err(BadRequest)?;
+    let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
     let list = paginator
         .fetch_page(page_num - 1)
         .await
         .map_err(BadRequest)?;
-    let res = json!({
-            "list": list,
-            "total": total,
-            "total_pages": num_pages,
-            "page_num": page_num,
-    });
-    Ok(RespData::with_data(res))
+    let res = ListData {
+        total,
+        list,
+        total_pages,
+        page_num,
+    };
+    Ok(res)
 }
 
 /// get_user_by_id 获取用户Id获取用户   
@@ -92,28 +95,28 @@ pub async fn get_by_id_or_name(db: &DatabaseConnection, search_req: SearchReq) -
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
+pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
     let uid = scru128::scru128().to_string();
     let salt = utils::rand_s(10);
-    let passwd = utils::encrypt_password(&add_req.user_password, &salt);
+    let passwd = utils::encrypt_password(&req.user_password, &salt);
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_user::ActiveModel {
         id: Set(uid.clone()),
         user_salt: Set(salt),
-        user_name: Set(add_req.user_name),
-        user_nickname: Set(add_req.user_nickname.unwrap_or_else(|| "".to_string())),
+        user_name: Set(req.user_name),
+        user_nickname: Set(req.user_nickname.unwrap_or_else(|| "".to_string())),
         user_password: Set(passwd),
-        mobile: Set(add_req.mobile),
-        birthday: Set(add_req.birthday.unwrap_or(0)),
-        user_status: Set(add_req.user_status.unwrap_or(1)),
-        user_email: Set(add_req.user_email),
-        sex: Set(add_req.sex.unwrap_or(0)),
-        dept_id: Set(add_req.dept_id),
-        remark: Set(add_req.remark.unwrap_or_else(|| "".to_string())),
-        is_admin: Set(add_req.is_admin.unwrap_or(1)),
-        address: Set(add_req.address.unwrap_or_else(|| "".to_string())),
-        describe: Set(add_req.describe.unwrap_or_else(|| "".to_string())),
-        phone_num: Set(add_req.phone_num.unwrap_or_else(|| "".to_string())),
+        mobile: Set(req.mobile),
+        birthday: Set(req.birthday.unwrap_or(0)),
+        user_status: Set(req.user_status.unwrap_or_else(|| "1".to_string())),
+        user_email: Set(req.user_email),
+        sex: Set(req.sex.unwrap_or_else(|| "0".to_string())),
+        dept_id: Set(req.dept_id),
+        remark: Set(req.remark.unwrap_or_else(|| "".to_string())),
+        is_admin: Set(req.is_admin.unwrap_or_else(|| "1".to_string())),
+        address: Set(req.address.unwrap_or_else(|| "".to_string())),
+        describe: Set(req.describe.unwrap_or_else(|| "".to_string())),
+        phone_num: Set(req.phone_num.unwrap_or_else(|| "".to_string())),
         created_at: Set(Some(now)),
         ..Default::default()
     };
@@ -193,8 +196,8 @@ pub async fn delete_soft(db: &DatabaseConnection, delete_req: DeleteReq) -> Resu
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData> {
-    let uid = edit_req.user_id;
+pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
+    let uid = req.user_id;
     let s_u = SysUser::find_by_id(uid.clone())
         .one(db)
         .await
@@ -202,19 +205,19 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
     let s_user: sys_user::ActiveModel = s_u.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_user::ActiveModel {
-        user_name: Set(edit_req.user_name),
-        user_nickname: Set(edit_req.user_nickname),
-        mobile: Set(edit_req.mobile),
-        birthday: Set(edit_req.birthday),
-        user_status: Set(edit_req.user_status),
-        user_email: Set(edit_req.user_email),
-        sex: Set(edit_req.sex),
-        dept_id: Set(edit_req.dept_id),
-        remark: Set(edit_req.remark),
-        is_admin: Set(edit_req.is_admin),
-        address: Set(edit_req.address),
-        describe: Set(edit_req.describe),
-        phone_num: Set(edit_req.phone_num),
+        user_name: Set(req.user_name),
+        user_nickname: Set(req.user_nickname),
+        mobile: Set(req.mobile),
+        birthday: Set(req.birthday),
+        user_status: Set(req.user_status),
+        user_email: Set(req.user_email),
+        sex: Set(req.sex),
+        dept_id: Set(req.dept_id),
+        remark: Set(req.remark),
+        is_admin: Set(req.is_admin),
+        address: Set(req.address),
+        describe: Set(req.describe),
+        phone_num: Set(req.phone_num),
         updated_at: Set(Some(now)),
         ..s_user
     };

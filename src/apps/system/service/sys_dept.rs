@@ -1,11 +1,11 @@
-use crate::apps::common::models::{PageParams, RespData};
+use crate::apps::common::models::{CudResData, ListData, PageParams, RespData};
+use crate::apps::system::entities::sys_role_dept;
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
     PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
-use serde_json::json;
 
 use crate::apps::system::models::sys_dept::RespTree;
 
@@ -18,27 +18,27 @@ use super::super::models::sys_dept::{AddReq, DeleteReq, EditReq, Resp, SearchReq
 pub async fn get_sort_list(
     db: &DatabaseConnection,
     page_params: PageParams,
-    search_req: SearchReq,
-) -> Result<RespData> {
+    req: SearchReq,
+) -> Result<ListData<sys_dept::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
     let mut s = SysDept::find();
 
-    if let Some(x) = search_req.dept_id {
+    if let Some(x) = req.dept_id {
         s = s.filter(sys_dept::Column::DeptId.eq(x));
     }
 
-    if let Some(x) = search_req.dept_name {
-        s = s.filter(sys_dept::Column::DeptName.eq(x));
+    if let Some(x) = req.dept_name {
+        s = s.filter(sys_dept::Column::DeptName.contains(&x));
     }
-    if let Some(x) = search_req.status {
+    if let Some(x) = req.status {
         s = s.filter(sys_dept::Column::Status.eq(x));
     }
-    if let Some(x) = search_req.begin_time {
+    if let Some(x) = req.begin_time {
         s = s.filter(sys_dept::Column::CreatedAt.gte(x));
     }
-    if let Some(x) = search_req.end_time {
+    if let Some(x) = req.end_time {
         s = s.filter(sys_dept::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
@@ -47,19 +47,19 @@ pub async fn get_sort_list(
     let paginator = s
         .order_by_asc(sys_dept::Column::OrderNum)
         .paginate(db, page_per_size);
-    let num_pages = paginator.num_pages().await.map_err(BadRequest)?;
+    let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
     let list = paginator
         .fetch_page(page_num - 1)
         .await
         .map_err(BadRequest)?;
 
-    let res = json!({
-            "list": list,
-            "total": total,
-            "total_pages": num_pages,
-            "page_num": page_num,
-    });
-    Ok(RespData::with_data(res))
+    let res = ListData {
+        total,
+        page_num,
+        list,
+        total_pages,
+    };
+    Ok(res)
 }
 
 pub async fn check_data_is_exist(dept_name: String, db: &DatabaseConnection) -> Result<bool> {
@@ -70,9 +70,9 @@ pub async fn check_data_is_exist(dept_name: String, db: &DatabaseConnection) -> 
 
 /// add 添加
 
-pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
+pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<CudResData<String>> {
     //  检查字典类型是否存在
-    if check_data_is_exist(add_req.clone().dept_name, db).await? {
+    if check_data_is_exist(req.clone().dept_name, db).await? {
         return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
     }
 
@@ -80,11 +80,13 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_dept::ActiveModel {
         dept_id: Set(uid.clone()),
-        dept_name: Set(add_req.dept_name),
-        order_num: Set(add_req.order_num),
-        status: Set(add_req.status),
-        phone: Set(add_req.phone),
-        email: Set(add_req.email),
+        parent_id: Set(req.parent_id),
+        dept_name: Set(req.dept_name),
+        order_num: Set(req.order_num),
+        leader: Set(req.leader),
+        status: Set(req.status),
+        phone: Set(req.phone),
+        email: Set(req.email),
         created_at: Set(Some(now)),
         ..Default::default()
     };
@@ -92,15 +94,18 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
     //  let re =   user.insert(db).await?; 这个多查询一次结果
     let _ = SysDept::insert(user).exec(&txn).await.map_err(BadRequest)?;
     txn.commit().await.map_err(BadRequest)?;
-    let res = json!({ "id": uid });
-    Ok(RespData::with_data(res))
+    let res = CudResData {
+        id: Some(uid),
+        msg: "添加成功".to_string(),
+    };
+    Ok(res)
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
+pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
     let mut s = SysDept::delete_many();
 
-    s = s.filter(sys_dept::Column::DeptId.is_in(delete_req.dept_ids));
+    s = s.filter(sys_dept::Column::DeptId.eq(req.dept_id));
 
     //开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
@@ -110,17 +115,23 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<Re
             "删除失败,数据不存在",
             StatusCode::BAD_REQUEST,
         )),
-        i => Ok(RespData::with_msg(&format!("成功删除{}条数据", i))),
+        i => Ok(format!("成功删除{}条数据", i)),
     }
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData> {
+pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
     //  检查字典类型是否存在
-    if check_data_is_exist(edit_req.clone().dept_name, db).await? {
+    let s1 = SysDept::find()
+        .filter(sys_dept::Column::DeptName.eq(req.clone().dept_name))
+        .filter(sys_dept::Column::DeptId.ne(req.clone().dept_id))
+        .count(db)
+        .await
+        .map_err(BadRequest)?;
+    if s1 > 0 {
         return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
     }
-    let uid = edit_req.dept_id;
+    let uid = req.dept_id;
     let s_s = SysDept::find_by_id(uid.clone())
         .one(db)
         .await
@@ -128,26 +139,28 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
     let s_r: sys_dept::ActiveModel = s_s.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
     let act = sys_dept::ActiveModel {
-        dept_name: Set(edit_req.dept_name),
-        order_num: Set(edit_req.order_num),
-        status: Set(edit_req.status),
-        phone: Set(edit_req.phone),
-        email: Set(edit_req.email),
+        parent_id: Set(req.parent_id),
+        dept_name: Set(req.dept_name),
+        order_num: Set(req.order_num),
+        status: Set(req.status),
+        leader: Set(req.leader),
+        phone: Set(req.phone),
+        email: Set(req.email),
         updated_at: Set(Some(now)),
         ..s_r
     };
     // 更新
-    let _aa = act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
-    Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)))
+    act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
+    Ok(format!("用户<{}>数据更新成功", uid))
 }
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<Resp> {
+pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> {
     let mut s = SysDept::find();
     s = s.filter(sys_dept::Column::DeletedAt.is_null());
     //
-    if let Some(x) = search_req.dept_id {
+    if let Some(x) = req.dept_id {
         s = s.filter(sys_dept::Column::DeptId.eq(x));
     } else {
         return Err(Error::from_string("请求参数错误", StatusCode::BAD_REQUEST));
@@ -157,8 +170,6 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
         Some(m) => m,
         None => return Err(Error::from_string("数据不存在", StatusCode::BAD_REQUEST)),
     };
-
-    // let result: Resp = serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
 
     Ok(res)
 }
@@ -180,6 +191,7 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
 pub async fn get_dept_tree(db: &DatabaseConnection) -> Result<Vec<RespTree>> {
     // 获取全部数据
     let dept_list = get_all(db).await.unwrap();
+
     // 创建树
     let mut tree: Vec<RespTree> = Vec::new();
     for item in dept_list {
@@ -196,10 +208,22 @@ pub async fn get_dept_tree(db: &DatabaseConnection) -> Result<Vec<RespTree>> {
 pub fn creat_menu_tree(depts: Vec<RespTree>, pid: String) -> Vec<RespTree> {
     let mut tree: Vec<RespTree> = Vec::new();
     for mut t in depts.clone() {
-        if t.data.dept_id == pid {
+        if t.data.parent_id == pid {
             t.children = Some(creat_menu_tree(depts.clone(), t.data.dept_id.clone()));
             tree.push(t.clone());
         }
     }
     tree
+}
+
+//  根据角色id获取授权部门
+pub async fn get_dept_by_role_id(db: &DatabaseConnection, role_id: String) -> Result<Vec<String>> {
+    let mut dept_ids: Vec<String> = Vec::new();
+    let mut s = SysRoleDept::find();
+    s = s.filter(sys_role_dept::Column::RoleId.eq(role_id));
+    let res = s.all(db).await.map_err(BadRequest)?;
+    for item in res {
+        dept_ids.push(item.dept_id);
+    }
+    Ok(dept_ids)
 }

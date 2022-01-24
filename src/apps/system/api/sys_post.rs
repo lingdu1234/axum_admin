@@ -1,4 +1,7 @@
-use crate::apps::system::service;
+use crate::apps::{
+    common::models::{ListData, Res},
+    system::{entities::sys_post, service},
+};
 use poem::{
     error::BadRequest,
     handler,
@@ -19,21 +22,33 @@ use super::super::models::sys_post::{AddReq, DeleteReq, EditReq, Resp, SearchReq
 #[handler]
 pub async fn get_sort_list(
     Query(page_params): Query<PageParams>,
-    Query(search_req): Query<SearchReq>,
-) -> Result<Json<RespData>> {
-    search_req.validate().map_err(BadRequest)?;
+    Query(req): Query<SearchReq>,
+) -> Json<Res<ListData<sys_post::Model>>> {
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_post::get_sort_list(db, page_params, search_req).await?;
-    Ok(Json(res))
+    let res = service::sys_post::get_sort_list(db, page_params, req).await;
+    match res {
+        Ok(x) => Json(Res::with_data(x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// add 添加
 #[handler]
-pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<RespData>> {
-    add_req.validate().map_err(BadRequest)?;
+pub async fn add(Json(req): Json<AddReq>) -> Json<Res<String>> {
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_post::add(db, add_req).await?;
-    Ok(Json(res))
+    let res = service::sys_post::add(db, req).await;
+    match res {
+        Ok(x) => Json(Res::with_msg(&x.msg)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// delete 完全删除
@@ -57,11 +72,17 @@ pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<RespData>> {
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Result<Json<Resp>> {
-    search_req.validate().map_err(BadRequest)?;
+pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<Resp>> {
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_post::get_by_id(db, search_req).await?;
-    Ok(Json(res))
+    let res = service::sys_post::get_by_id(db, req).await;
+    match res {
+        Ok(x) => Json(Res::with_data(x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// get_all 获取全部   

@@ -1,4 +1,4 @@
-use crate::apps::common::models::{PageParams, RespData};
+use crate::apps::common::models::{ListData, PageParams, RespData};
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
@@ -17,7 +17,7 @@ use super::super::entities::{
 use super::super::models::sys_role::{
     AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq,
 };
-use super::super::service;
+
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -25,18 +25,18 @@ use super::super::service;
 pub async fn get_sort_list(
     db: &DatabaseConnection,
     page_params: PageParams,
-    search_req: SearchReq,
-) -> Result<RespData> {
+    req: SearchReq,
+) -> Result<ListData<sys_role::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
     let mut s = SysRole::find();
 
-    if let Some(x) = search_req.name {
-        s = s.filter(sys_role::Column::Name.eq(x));
+    if let Some(x) = req.name {
+        s = s.filter(sys_role::Column::RoleName.contains(&x));
     }
 
-    if let Some(x) = search_req.status {
+    if let Some(x) = req.status {
         s = s.filter(sys_role::Column::Status.eq(x));
     }
     // 获取全部数据条数
@@ -44,35 +44,33 @@ pub async fn get_sort_list(
     // 分页获取数据
     let paginator = s
         .order_by_asc(sys_role::Column::ListOrder)
-        .order_by_asc(sys_role::Column::Id)
+        .order_by_asc(sys_role::Column::RoleId)
         .paginate(db, page_per_size);
-    let num_pages = paginator.num_pages().await.map_err(BadRequest)?;
+    let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
     let list = paginator
         .fetch_page(page_num - 1)
         .await
         .map_err(BadRequest)?;
-    let res = json!({
-
-        "list": list,
-        "total": total,
-        "total_pages": num_pages,
-        "page_num": page_num,
-
-    });
-    Ok(RespData::with_data(res))
+    let res = ListData {
+        list,
+        total,
+        total_pages,
+        page_num,
+    };
+    Ok(res)
 }
 
 pub async fn check_data_is_exist(role_name: String, db: &DatabaseConnection) -> Result<bool> {
-    let s1 = SysRole::find().filter(sys_role::Column::Name.eq(role_name));
+    let s1 = SysRole::find().filter(sys_role::Column::RoleName.eq(role_name));
 
     let count1 = s1.count(db).await.map_err(BadRequest)?;
     Ok(count1 > 0)
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
+pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
     //  检查字典类型是否存在
-    if check_data_is_exist(add_req.clone().name, db).await? {
+    if check_data_is_exist(req.clone().role_name, db).await? {
         return Err(Error::from_string(
             "数据已存在，请检查后重试",
             StatusCode::BAD_REQUEST,
@@ -82,10 +80,10 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
     // 开启事务
     let txn = db.begin().await.map_err(BadRequest)?;
     // 添加角色数据
-    let role_id = self::add_role(&txn, add_req.clone()).await?;
+    let role_id = self::add_role(&txn, req.clone()).await?;
     // 获取组合角色权限数据
     let permissions =
-        self::combine_permissions_data(db, role_id.clone(), add_req.menu_ids.clone()).await?;
+        self::combine_permissions_data(db, role_id.clone(), req.menu_ids.clone()).await?;
     // 添加角色权限数据
     unsafe {
         let e = CASBIN.get_mut().unwrap();
@@ -104,7 +102,7 @@ pub async fn combine_permissions_data(
     permission_ids: Vec<String>,
 ) -> Result<Vec<Vec<String>>> {
     // 获取全部菜单
-    let menus = service::sys_menu::get_all(db).await?;
+    // let menus = service::sys_menu::get_all(db).await?;
     // let menu_map = menus
     //     .iter()
     //     .map(|x| (x.id.clone(), x.method.clone()))
@@ -124,17 +122,18 @@ pub async fn combine_permissions_data(
 }
 
 /// 添加角色数据
-pub async fn add_role(txn: &DatabaseTransaction, add_req: AddReq) -> Result<String> {
+pub async fn add_role(txn: &DatabaseTransaction, req: AddReq) -> Result<String> {
     let uid = scru128::scru128_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_role::ActiveModel {
-        id: Set(uid.clone()),
-        name: Set(add_req.name),
-        list_order: Set(add_req.list_order),
-        data_scope: Set(add_req.data_scope),
+        role_id: Set(uid.clone()),
+        role_name: Set(req.role_name),
+        role_key: Set(req.role_key),
+        list_order: Set(req.list_order),
+        data_scope: Set(req.data_scope.unwrap_or_else(|| "3".to_string())),
         created_at: Set(Some(now)),
-        status: Set(add_req.status.unwrap_or(1)),
-        remark: Set(add_req.remark.unwrap_or_else(|| "".to_string())),
+        status: Set(req.status.unwrap_or_else(|| "1".to_string())),
+        remark: Set(req.remark.unwrap_or_else(|| "".to_string())),
         ..Default::default()
     };
     SysRole::insert(user).exec(txn).await.map_err(BadRequest)?;
@@ -145,7 +144,7 @@ pub async fn add_role(txn: &DatabaseTransaction, add_req: AddReq) -> Result<Stri
 pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
     let txn = db.begin().await.map_err(BadRequest)?;
     let mut s = SysRole::delete_many();
-    s = s.filter(sys_role::Column::Id.is_in(delete_req.role_ids.clone()));
+    s = s.filter(sys_role::Column::RoleId.is_in(delete_req.role_ids.clone()));
     //开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
     // 删除角色权限数据 和 部门权限数据
@@ -174,16 +173,45 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<Re
     }
 }
 
+pub async fn eidt_check_data_is_exist(
+    db: &DatabaseConnection,
+    role_id: String,
+    role_name: String,
+    role_key: String,
+) -> Result<bool> {
+    let c1 = SysRole::find()
+        .filter(sys_role::Column::RoleName.eq(role_name))
+        .filter(sys_role::Column::RoleId.ne(role_id.clone()))
+        .count(db)
+        .await
+        .map_err(BadRequest)?;
+    let c2 = SysRole::find()
+        .filter(sys_role::Column::RoleName.eq(role_key))
+        .filter(sys_role::Column::RoleId.ne(role_id.clone()))
+        .count(db)
+        .await
+        .map_err(BadRequest)?;
+
+    Ok(c1 > 0 || c2 > 0)
+}
+
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData> {
+pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
     //  检查字典类型是否存在
-    if check_data_is_exist(edit_req.clone().name, db).await? {
+    if eidt_check_data_is_exist(
+        db,
+        req.clone().role_id,
+        req.clone().role_name,
+        req.clone().role_key,
+    )
+    .await?
+    {
         return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
     }
     // 开启事务
     let txn = db.begin().await.map_err(BadRequest)?;
     // 修改数据
-    let uid = edit_req.id;
+    let uid = req.role_id;
     let s_s = SysRole::find_by_id(uid.clone())
         .one(&txn)
         .await
@@ -191,11 +219,12 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
     let s_r: sys_role::ActiveModel = s_s.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
     let act = sys_role::ActiveModel {
-        name: Set(edit_req.name),
-        data_scope: Set(edit_req.data_scope),
-        list_order: Set(edit_req.list_order),
-        status: Set(edit_req.status),
-        remark: Set(edit_req.remark),
+        role_name: Set(req.role_name),
+        role_key: Set(req.role_key),
+        data_scope: Set(req.data_scope),
+        list_order: Set(req.list_order),
+        status: Set(req.status),
+        remark: Set(req.remark),
         updated_at: Set(Some(now)),
         ..s_r
     };
@@ -203,8 +232,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
     act.update(&txn).await.map_err(BadRequest)?;
 
     // 获取组合角色权限数据
-    let permissions =
-        self::combine_permissions_data(db, uid.clone(), edit_req.menu_ids.clone()).await?;
+    let permissions = self::combine_permissions_data(db, uid.clone(), req.menu_ids.clone()).await?;
     unsafe {
         let e = CASBIN.get_mut().unwrap();
         // 删除全部权限 按角色id删除
@@ -226,7 +254,7 @@ pub async fn set_status(db: &DatabaseConnection, status_req: StatusReq) -> Resul
     // 开启事务
     let txn = db.begin().await.map_err(BadRequest)?;
     // 修改数据
-    let uid = status_req.id;
+    let uid = status_req.role_id;
     let s_s = SysRole::find_by_id(uid.clone())
         .one(&txn)
         .await
@@ -244,14 +272,11 @@ pub async fn set_status(db: &DatabaseConnection, status_req: StatusReq) -> Resul
 }
 
 // set_status 状态修改
-pub async fn set_data_scope(
-    db: &DatabaseConnection,
-    data_scope_req: DataScopeReq,
-) -> Result<RespData> {
+pub async fn set_data_scope(db: &DatabaseConnection, req: DataScopeReq) -> Result<String> {
     // 开启事务
     let txn = db.begin().await.map_err(BadRequest)?;
     // 修改数据
-    let uid = data_scope_req.id;
+    let uid = req.role_id;
     let s_s = SysRole::find_by_id(uid.clone())
         .one(&txn)
         .await
@@ -259,15 +284,15 @@ pub async fn set_data_scope(
     let s_r: sys_role::ActiveModel = s_s.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
     // 更新数据权限
-    let data_scope = data_scope_req.data_scope;
+    let data_scope = req.data_scope;
     let act = sys_role::ActiveModel {
-        data_scope: Set(data_scope),
+        data_scope: Set(data_scope.clone()),
         updated_at: Set(Some(now)),
         ..s_r
     };
     act.update(&txn).await.map_err(BadRequest)?;
     // 当数据权限为自定义数据时，删除全部权限，重新添加部门权限
-    if data_scope == 2 {
+    if data_scope == "2" {
         // 删除全部部门权限
         SysRoleDept::delete_many()
             .filter(sys_role_dept::Column::RoleId.eq(uid.clone()))
@@ -276,7 +301,7 @@ pub async fn set_data_scope(
             .map_err(BadRequest)?;
         // 添加部门权限
         let mut act_datas: Vec<sys_role_dept::ActiveModel> = Vec::new();
-        for dept in data_scope_req.dept_ids {
+        for dept in req.dept_ids {
             let act_data = sys_role_dept::ActiveModel {
                 role_id: Set(uid.clone()),
                 dept_id: Set(dept.clone()),
@@ -291,7 +316,7 @@ pub async fn set_data_scope(
             .map_err(BadRequest)?;
     }
     txn.commit().await.map_err(BadRequest)?;
-    return Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)));
+    return Ok(format!("用户<{}>数据更新成功", uid));
 }
 
 /// get_user_by_id 获取用户Id获取用户   
@@ -299,8 +324,8 @@ pub async fn set_data_scope(
 pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<Resp> {
     let mut s = SysRole::find();
     //
-    if let Some(x) = search_req.id {
-        s = s.filter(sys_role::Column::Id.eq(x));
+    if let Some(x) = search_req.role_id {
+        s = s.filter(sys_role::Column::RoleId.eq(x));
     } else {
         return Err(Error::from_string("id不能为空", StatusCode::BAD_REQUEST));
     }
@@ -318,7 +343,7 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
 pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
     let s = SysRole::find()
         .order_by_asc(sys_role::Column::ListOrder)
-        .order_by_asc(sys_role::Column::Id)
+        .order_by_asc(sys_role::Column::RoleId)
         .into_model::<Resp>()
         .all(db)
         .await
@@ -332,7 +357,7 @@ pub async fn get_admin_role(user_id: &str, all_roles: Vec<Resp>) -> Result<Vec<R
     let role_ids = self::get_admin_role_ids(user_id).await;
     let mut roles: Vec<Resp> = Vec::new();
     for role in all_roles {
-        if role_ids.contains(&role.id) {
+        if role_ids.contains(&role.role_id) {
             roles.push(role);
         }
     }

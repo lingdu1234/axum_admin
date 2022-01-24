@@ -41,6 +41,7 @@ pub struct UserMenu {
     pub always_show: Option<bool>,
     pub path: String,
     pub name: String,
+    pub menu_name: String,
     pub menu_type: String,
     pub component: String,
     pub hidden: bool,

@@ -7,8 +7,7 @@ pub struct SearchReq {
     pub dept_id: Option<String>,
     #[validate(length(min = 1))]
     pub dept_name: Option<String>,
-    #[validate(range(min = 0, max = 2))]
-    pub status: Option<i8>,
+    pub status: Option<String>,
     pub begin_time: Option<String>,
     pub end_time: Option<String>,
 }
@@ -21,13 +20,12 @@ pub struct AddReq {
     pub leader: String,
     pub phone: String,
     pub email: String,
-    pub status: i8,
+    pub status: String,
 }
 
 #[derive(Deserialize, Serialize, Validate)]
 pub struct DeleteReq {
-    #[validate(length(min = 1))]
-    pub dept_ids: Vec<String>,
+    pub dept_id: String,
 }
 
 #[derive(Deserialize, Clone, Debug, Serialize, Validate)]
@@ -39,10 +37,10 @@ pub struct EditReq {
     pub leader: String,
     pub phone: String,
     pub email: String,
-    pub status: i8,
+    pub status: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Validate, FromQueryResult, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromQueryResult, Default)]
 pub struct Resp {
     pub dept_id: String,
     pub parent_id: String,
@@ -51,11 +49,10 @@ pub struct Resp {
     pub leader: String,
     pub phone: String,
     pub email: String,
-    pub status: i8,
-    pub created_at: String,
+    pub status: String,
 }
 
-#[derive(Deserialize, Clone, Debug, Serialize, Validate, Default)]
+#[derive(Deserialize, Clone, Debug, Serialize, Default)]
 pub struct RespTree {
     #[serde(flatten)]
     pub data: Resp,

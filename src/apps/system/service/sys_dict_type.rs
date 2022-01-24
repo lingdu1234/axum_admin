@@ -5,7 +5,6 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait,
     QueryFilter, QueryOrder, Set,
 };
-use serde_json::json;
 
 use super::super::entities::{prelude::SysDictType, sys_dict_type};
 use super::super::models::sys_dict_type::{AddReq, DeleteReq, EditReq, Resp, SearchReq};
@@ -68,9 +67,9 @@ pub async fn check_dict_type_is_exist(dict_type: &str, db: &DatabaseConnection) 
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
+pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<CudResData<String>> {
     //  检查字典类型是否存在
-    if check_dict_type_is_exist(&add_req.dict_type, db).await? {
+    if check_dict_type_is_exist(&req.dict_type, db).await? {
         return Err(Error::from_string(
             "字典类型已存在",
             StatusCode::BAD_REQUEST,
@@ -81,18 +80,21 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_dict_type::ActiveModel {
         dict_type_id: Set(uid.clone()),
-        dict_name: Set(add_req.dict_name),
-        dict_type: Set(add_req.dict_type),
-        status: Set(add_req.status.unwrap_or_else(|| "1".to_string())),
-        remark: Set(Some(add_req.remark.unwrap_or_else(|| "".to_string()))),
+        dict_name: Set(req.dict_name),
+        dict_type: Set(req.dict_type),
+        status: Set(req.status.unwrap_or_else(|| "1".to_string())),
+        remark: Set(Some(req.remark.unwrap_or_else(|| "".to_string()))),
         created_at: Set(Some(now)),
         ..Default::default()
     };
 
     //  let re =   user.insert(db).await?; 这个多查询一次结果
     let _ = SysDictType::insert(user).exec(db).await.map_err(BadRequest);
-    let res = json!({ "id": uid });
-    Ok(RespData::with_data(res))
+    let res = CudResData {
+        id: Some(uid),
+        msg: "添加成功".to_string(),
+    };
+    Ok(res)
 }
 
 /// delete 完全删除
@@ -146,11 +148,11 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<Resp> {
+pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> {
     let mut s = SysDictType::find();
     // s = s.filter(sys_dict_type::Column::DeletedAt.is_null());
     //
-    if let Some(x) = search_req.dict_type_id {
+    if let Some(x) = req.dict_type_id {
         s = s.filter(sys_dict_type::Column::DictTypeId.eq(x));
     } else {
         return Err(Error::from_string(

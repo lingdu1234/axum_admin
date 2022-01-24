@@ -1,4 +1,7 @@
-use crate::apps::system::service;
+use crate::apps::{
+    common::models::{ListData, Res},
+    system::{entities::sys_role, service},
+};
 use poem::{
     error::BadRequest,
     handler,
@@ -14,7 +17,7 @@ use validator::Validate;
 use crate::database::{db_conn, DB};
 
 use super::super::models::sys_role::{
-    AddReq, DataScopeReq, DeleteReq, EditReq, SearchReq, StatusReq,
+    AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq,
 };
 
 /// get_list 获取列表
@@ -22,20 +25,26 @@ use super::super::models::sys_role::{
 #[handler]
 pub async fn get_sort_list(
     Query(page_params): Query<PageParams>,
-    Query(search_req): Query<SearchReq>,
-) -> Result<Json<RespData>> {
-    search_req.validate().map_err(BadRequest)?;
+    Query(req): Query<SearchReq>,
+) -> Json<Res<ListData<sys_role::Model>>> {
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::get_sort_list(db, page_params, search_req).await?;
-    Ok(Json(res))
+    let res = service::sys_role::get_sort_list(db, page_params, req).await;
+    match res {
+        Ok(x) => Json(Res::with_data(x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// add 添加
 #[handler]
-pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<RespData>> {
-    add_req.validate().map_err(BadRequest)?;
+pub async fn add(Json(req): Json<AddReq>) -> Result<Json<RespData>> {
+    req.validate().map_err(BadRequest)?;
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::add(db, add_req).await?;
+    let res = service::sys_role::add(db, req).await?;
     Ok(Json(res))
 }
 
@@ -69,21 +78,33 @@ pub async fn set_status(Json(status_req): Json<StatusReq>) -> Result<Json<RespDa
 }
 // set_data_scope 修改数据权限范围
 #[handler]
-pub async fn set_data_scope(Json(data_scope_req): Json<DataScopeReq>) -> Result<Json<RespData>> {
+pub async fn set_data_scope(Json(req): Json<DataScopeReq>) -> Json<Res<String>> {
     //  数据验证
-    data_scope_req.validate().map_err(BadRequest)?;
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::set_data_scope(db, data_scope_req).await?;
-    Ok(Json(res))
+    let res = service::sys_role::set_data_scope(db, req).await;
+    match res {
+        Ok(x) => Json(Res::with_msg(&x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// get_user_by_id 获取用户Id获取用户   
 #[handler]
-pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Result<Json<RespData>> {
-    search_req.validate().map_err(BadRequest)?;
+pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<Resp>> {
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::get_by_id(db, search_req).await?;
-    Ok(Json(RespData::with_data(json!(res))))
+    let res = service::sys_role::get_by_id(db, req).await;
+    match res {
+        Ok(x) => Json(Res::with_data(x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// get_all 获取全部   
@@ -96,13 +117,36 @@ pub async fn get_all() -> Result<Json<RespData>> {
 
 /// get_role_menu 获取角色授权菜单id数组   
 #[handler]
-pub async fn get_role_menu(Query(search_req): Query<SearchReq>) -> Result<Json<RespData>> {
-    search_req.validate().map_err(BadRequest)?;
-    match search_req.id {
-        None => return Err(Error::from_string("id不能为空", StatusCode::BAD_REQUEST)),
+pub async fn get_role_menu(Query(req): Query<SearchReq>) -> Json<Res<Vec<String>>> {
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
+    match req.role_id {
+        None => return Json(Res::with_msg("role_id不能为空")),
         Some(id) => {
             let res = service::sys_menu::get_permissions(vec![id]).await;
-            return Ok(Json(RespData::with_data(json!(res))));
+            return Json(Res::with_data(res));
+        }
+    };
+}
+
+/// get_role_dept 获取角色授权部门id数组   
+#[handler]
+pub async fn get_role_dept(Query(req): Query<SearchReq>) -> Json<Res<Vec<String>>> {
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
+    match req.role_id {
+        None => return Json(Res::with_msg("role_id不能为空")),
+        Some(id) => {
+            let db = DB.get_or_init(db_conn).await;
+            let res = service::sys_dept::get_dept_by_role_id(db, id).await;
+            match res {
+                Ok(x) => return Json(Res::with_data(x)),
+                Err(e) => return Json(Res::with_err(&e.to_string())),
+            }
         }
     };
 }

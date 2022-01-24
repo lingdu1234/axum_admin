@@ -1,11 +1,10 @@
-use crate::apps::common::models::{PageParams, RespData};
+use crate::apps::common::models::{CudResData, ListData, PageParams, RespData};
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
     PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
-use serde_json::json;
 
 use super::super::entities::{prelude::*, sys_post};
 use super::super::models::sys_post::{AddReq, DeleteReq, EditReq, Resp, SearchReq};
@@ -16,27 +15,27 @@ use super::super::models::sys_post::{AddReq, DeleteReq, EditReq, Resp, SearchReq
 pub async fn get_sort_list(
     db: &DatabaseConnection,
     page_params: PageParams,
-    search_req: SearchReq,
-) -> Result<RespData> {
+    req: SearchReq,
+) -> Result<ListData<sys_post::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
     let mut s = SysPost::find();
 
-    if let Some(x) = search_req.post_code {
-        s = s.filter(sys_post::Column::PostCode.eq(x));
+    if let Some(x) = req.post_code {
+        s = s.filter(sys_post::Column::PostCode.contains(&x));
     }
 
-    if let Some(x) = search_req.post_name {
-        s = s.filter(sys_post::Column::PostName.eq(x));
+    if let Some(x) = req.post_name {
+        s = s.filter(sys_post::Column::PostName.contains(&x));
     }
-    if let Some(x) = search_req.status {
+    if let Some(x) = req.status {
         s = s.filter(sys_post::Column::Status.eq(x));
     }
-    if let Some(x) = search_req.begin_time {
+    if let Some(x) = req.begin_time {
         s = s.filter(sys_post::Column::CreatedAt.gte(x));
     }
-    if let Some(x) = search_req.end_time {
+    if let Some(x) = req.end_time {
         s = s.filter(sys_post::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
@@ -45,19 +44,19 @@ pub async fn get_sort_list(
     let paginator = s
         .order_by_asc(sys_post::Column::PostId)
         .paginate(db, page_per_size);
-    let num_pages = paginator.num_pages().await.map_err(BadRequest)?;
+    let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
     let list = paginator
         .fetch_page(page_num - 1)
         .await
         .map_err(BadRequest)?;
 
-    let res = json!({
-            "list": list,
-            "total": total,
-            "total_pages": num_pages,
-            "page_num": page_num,
-    });
-    Ok(RespData::with_data(res))
+    let res = ListData {
+        total,
+        total_pages,
+        list,
+        page_num,
+    };
+    Ok(res)
 }
 
 pub async fn check_data_is_exist(
@@ -74,9 +73,9 @@ pub async fn check_data_is_exist(
 
 /// add 添加
 
-pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
+pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<CudResData<String>> {
     //  检查字典类型是否存在
-    if check_data_is_exist(add_req.clone().post_code, add_req.clone().post_name, db).await? {
+    if check_data_is_exist(req.clone().post_code, req.clone().post_name, db).await? {
         return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
     }
 
@@ -84,10 +83,11 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_post::ActiveModel {
         post_id: Set(uid.clone()),
-        post_code: Set(add_req.post_code),
-        post_sort: Set(add_req.post_sort),
-        status: Set(add_req.status.unwrap_or(1)),
-        remark: Set(Some(add_req.remark.unwrap_or_else(|| "".to_string()))),
+        post_code: Set(req.post_code),
+        post_sort: Set(req.post_sort),
+        post_name: Set(req.post_name),
+        status: Set(req.status.unwrap_or_else(|| "1".to_string())),
+        remark: Set(Some(req.remark.unwrap_or_else(|| "".to_string()))),
         created_at: Set(Some(now)),
         ..Default::default()
     };
@@ -95,8 +95,11 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
     //  let re =   user.insert(db).await?; 这个多查询一次结果
     let _ = SysPost::insert(user).exec(&txn).await.map_err(BadRequest)?;
     txn.commit().await.map_err(BadRequest)?;
-    let res = json!({ "id": uid });
-    Ok(RespData::with_data(res))
+    let res = CudResData {
+        id: Some(uid),
+        msg: format!("添加成功"),
+    };
+    Ok(res)
 }
 
 /// delete 完全删除

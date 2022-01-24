@@ -100,12 +100,12 @@ pub async fn check_router_is_exist_add(
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<CudResData<String>> {
+pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<CudResData<String>> {
     //  检查数据是否存在
     if check_router_is_exist_add(
         db,
-        add_req.clone().path.unwrap_or_else(|| "".to_string()),
-        add_req.clone().menu_name,
+        req.clone().path.unwrap_or_else(|| "".to_string()),
+        req.clone().menu_name,
     )
     .await?
     {
@@ -118,21 +118,21 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<CudResData<
     let now: NaiveDateTime = Local::now().naive_local();
     let active_model = sys_menu::ActiveModel {
         id: Set(uid.clone()),
-        pid: Set(add_req.pid),
-        menu_name: Set(add_req.menu_name),
-        icon: Set(add_req.icon.unwrap_or_else(|| "".to_string())),
-        remark: Set(add_req.remark),
-        menu_type: Set(add_req.menu_type),
-        query: Set(add_req.query),
-        perms: Set(add_req.perms.unwrap_or_else(|| "".to_string())),
-        order_sort: Set(add_req.order_sort),
-        status: Set(add_req.status),
-        visible: Set(add_req.visible),
-        path: Set(add_req.path.unwrap_or_else(|| "".to_string())),
-        component: Set(add_req.component),
-        is_data_scope: Set(add_req.is_data_scope),
-        is_frame: Set(add_req.is_frame),
-        is_cache: Set(add_req.is_cache),
+        pid: Set(req.pid),
+        menu_name: Set(req.menu_name),
+        icon: Set(req.icon.unwrap_or_else(|| "".to_string())),
+        remark: Set(req.remark),
+        menu_type: Set(req.menu_type),
+        query: Set(req.query),
+        perms: Set(req.perms.unwrap_or_else(|| "".to_string())),
+        order_sort: Set(req.order_sort),
+        status: Set(req.status),
+        visible: Set(req.visible),
+        path: Set(req.path.unwrap_or_else(|| "".to_string())),
+        component: Set(req.component),
+        is_data_scope: Set(req.is_data_scope),
+        is_frame: Set(req.is_frame),
+        is_cache: Set(req.is_cache),
         created_at: Set(Some(now)),
         ..Default::default()
     };
@@ -172,15 +172,10 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<Cu
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<CudResData<String>> {
+pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<CudResData<String>> {
     //  检查数据是否存在
-    if check_router_is_exist_update(
-        db,
-        edit_req.clone().id,
-        edit_req.clone().path,
-        edit_req.clone().menu_name,
-    )
-    .await?
+    if check_router_is_exist_update(db, req.clone().id, req.clone().path, req.clone().menu_name)
+        .await?
     {
         return Err(Error::from_string(
             "路径或者名称重复",
@@ -188,7 +183,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<CudResDa
         ));
     }
 
-    let uid = edit_req.id;
+    let uid = req.id;
     let s_s = SysMenu::find_by_id(uid.clone())
         .one(db)
         .await
@@ -197,20 +192,21 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<CudResDa
     let now: NaiveDateTime = Local::now().naive_local();
     let act = sys_menu::ActiveModel {
         id: Set(uid.clone()),
-        pid: Set(edit_req.pid),
-        menu_name: Set(edit_req.menu_name),
-        icon: Set(edit_req.icon.unwrap_or_else(|| "".to_string())),
-        remark: Set(edit_req.remark),
-        query: Set(edit_req.query),
-        menu_type: Set(edit_req.menu_type),
-        order_sort: Set(edit_req.order_sort),
-        status: Set(edit_req.status),
-        visible: Set(edit_req.visible),
-        path: Set(edit_req.path),
-        component: Set(edit_req.component),
-        is_data_scope: Set(edit_req.is_data_scope),
-        is_frame: Set(edit_req.is_frame),
-        is_cache: Set(edit_req.is_cache),
+        pid: Set(req.pid),
+        menu_name: Set(req.menu_name),
+        icon: Set(req.icon.unwrap_or_else(|| "".to_string())),
+        remark: Set(req.remark),
+        perms: Set(req.perms.unwrap_or_else(|| "".to_string())),
+        query: Set(req.query),
+        menu_type: Set(req.menu_type),
+        order_sort: Set(req.order_sort),
+        status: Set(req.status),
+        visible: Set(req.visible),
+        path: Set(req.path),
+        component: Set(req.component),
+        is_data_scope: Set(req.is_data_scope),
+        is_frame: Set(req.is_frame),
+        is_cache: Set(req.is_cache),
         updated_at: Set(Some(now)),
         ..s_r
     };
@@ -372,6 +368,7 @@ pub fn get_menu_data(menus: Vec<MenuResp>) -> Vec<SysMenuTree> {
                 menu.path.clone()
             },
             name: menu.path.clone(),
+            menu_name: menu.menu_name.clone(),
             menu_type: menu.menu_type.clone(),
             always_show: if menu.is_cache.clone() == "1" && menu.pid.clone() == "0" {
                 Some(true)

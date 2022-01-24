@@ -4,18 +4,20 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "sys_dict_data")]
+#[sea_orm(table_name = "sys_job")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub dict_data_id: String,
-    pub dict_sort: i32,
-    pub dict_label: String,
-    pub dict_value: String,
-    pub dict_type: String,
-    pub css_class: Option<String>,
-    pub list_class: Option<String>,
-    pub is_default: String,
-    pub status: String,
+    pub job_id: String,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub job_name: String,
+    pub job_params: Option<String>,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub job_group: String,
+    pub invoke_target: String,
+    pub cron_expression: Option<String>,
+    pub misfire_policy: Option<i8>,
+    pub concurrent: Option<i8>,
+    pub status: Option<i8>,
     pub create_by: Option<String>,
     pub update_by: Option<String>,
     pub remark: Option<String>,

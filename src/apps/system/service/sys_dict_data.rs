@@ -4,7 +4,6 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
     PaginatorTrait, QueryFilter, QueryOrder, Set, Unset,
 };
-use serde_json::json;
 
 use crate::apps::common::models::{CudResData, ListData, PageParams, RespData};
 
@@ -75,7 +74,7 @@ pub async fn check_dict_data_is_exist(req: AddReq, db: &DatabaseConnection) -> R
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
+pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<CudResData<String>> {
     //  检查字典类型是否存在
     if check_dict_data_is_exist(add_req.clone(), db).await? {
         return Err(Error::from_string(
@@ -113,8 +112,11 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<RespData> {
         .await
         .map_err(BadRequest)?;
     txn.commit().await.map_err(BadRequest)?;
-    let res = json!({ "id": uid });
-    Ok(RespData::with_data(res))
+    let res = CudResData {
+        id: Some(uid.clone()),
+        msg: "数据添加成功".to_string(),
+    };
+    Ok(res)
 }
 
 /// delete 完全删除

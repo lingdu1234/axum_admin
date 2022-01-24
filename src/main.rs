@@ -1,7 +1,5 @@
-use poem::{
-    endpoint::StaticFiles, listener::TcpListener, middleware::Cors, EndpointExt, Result, Route,
-    Server,
-};
+use poem::endpoint::StaticFilesEndpoint;
+use poem::{listener::TcpListener, middleware::Cors, EndpointExt, Result, Route, Server};
 use std::time::Duration;
 use tracing_subscriber::fmt::time::LocalTime;
 
@@ -82,6 +80,7 @@ async fn main() -> Result<(), std::io::Error> {
 
     //  跨域
     let cors = Cors::new();
+    println!("dvsdvdsvdsv------------------------------");
     //  Swagger
     let listener = TcpListener::bind(&CFG.server.address);
     // 启动app  注意中间件顺序 最后的先执行，尤其AddData 顺序不对可能会导致数据丢失，无法在某些位置获取数据
@@ -90,7 +89,7 @@ async fn main() -> Result<(), std::io::Error> {
         .nest("/api", apps::api())
         .nest(
             "/",
-            StaticFiles::new(&CFG.web.dir).index_file(&CFG.web.index),
+            StaticFilesEndpoint::new(&CFG.web.dir).index_file(&CFG.web.index),
         )
         .with(Tracing)
         .with(cors);

@@ -20,20 +20,17 @@ pub struct AddReq {
     pub user_nickname: Option<String>,
     pub birthday: Option<i32>,
     pub user_password: String,
-    #[validate(range(min = 0_i8, max = 2_i8))]
-    pub user_status: Option<i8>,
+    pub user_status: Option<String>,
     #[validate(email)]
     pub user_email: String,
-    #[validate(range(min = 0, max = 2))]
-    pub sex: Option<i8>,
+    pub sex: Option<String>,
     #[validate(length(min = 1))]
     pub avatar: Option<String>,
     #[validate(length(min = 1))]
     pub dept_id: String,
     #[validate(length(min = 1))]
     pub remark: Option<String>,
-    #[validate(range(min = 0, max = 1))]
-    pub is_admin: Option<i8>,
+    pub is_admin: Option<String>,
     #[validate(length(min = 1))]
     pub address: Option<String>,
     #[validate(length(min = 1))]
@@ -49,13 +46,13 @@ pub struct EditReq {
     pub mobile: String,
     pub user_nickname: String,
     pub birthday: i32,
-    pub user_status: i8,
+    pub user_status: String,
     pub user_email: String,
-    pub sex: i8,
+    pub sex: String,
     pub avatar: String,
     pub dept_id: String,
     pub remark: String,
-    pub is_admin: i8,
+    pub is_admin: String,
     pub address: String,
     pub describe: String,
     pub phone_num: String,
@@ -65,17 +62,18 @@ pub struct EditReq {
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize, FromQueryResult)]
 pub struct Resp {
+    pub id: String,
     pub user_name: String,
     pub mobile: String,
     pub user_nickname: String,
     pub birthday: i32,
-    pub user_status: i8,
+    pub user_status: String,
     pub user_email: String,
-    pub sex: i8,
+    pub sex: String,
     pub avatar: String,
     pub dept_id: String,
     pub remark: String,
-    pub is_admin: i8,
+    pub is_admin: String,
     pub address: String,
     pub describe: String,
     pub phone_num: String,
@@ -89,8 +87,7 @@ pub struct SearchReq {
     pub user_name: Option<String>,
     #[validate(length(min = 1))]
     pub user_nickname: Option<String>,
-    #[validate(range(min = 0, max = 1))]
-    pub user_status: Option<i8>,
+    pub user_status: Option<String>,
     #[validate(length(min = 1))]
     pub dept_id: Option<String>,
     pub begin_time: Option<String>,

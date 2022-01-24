@@ -8,14 +8,17 @@ use poem::{
 use serde_json::json;
 use validator::Validate;
 
-use crate::utils::jwt::Claims;
-use crate::{
-    apps::common::models::{PageParams, Res, RespData},
-    CFG,
-};
+use crate::{apps::common::models::ListData, utils::jwt::Claims};
 use crate::{
     apps::system::{models::sys_user::UserInfo, service},
     utils::jwt::AuthBody,
+};
+use crate::{
+    apps::{
+        common::models::{PageParams, Res, RespData},
+        system::models::sys_user::Resp,
+    },
+    CFG,
 };
 use crate::{db_conn, DB};
 
@@ -27,12 +30,18 @@ use super::super::models::sys_user::{AddReq, DeleteReq, EditReq, SearchReq, User
 #[handler]
 pub async fn get_sort_list(
     Query(page_params): Query<PageParams>,
-    Query(search_req): Query<SearchReq>,
-) -> Result<Json<RespData>> {
-    search_req.validate().map_err(BadRequest)?;
+    Query(req): Query<SearchReq>,
+) -> Json<Res<ListData<Resp>>> {
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::get_sort_list(db, page_params, search_req).await?;
-    Ok(Json(res))
+    let res = service::sys_user::get_sort_list(db, page_params, req).await;
+    match res {
+        Ok(x) => Json(Res::with_data(x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// get_user_by_id 获取用户Id获取用户   
@@ -118,7 +127,7 @@ pub async fn get_info(user: Claims) -> Result<Json<Res<UserInfo>>> {
     } else {
         for role in roles {
             // role_names.push(role.name);
-            role_ids.push(role.id);
+            role_ids.push(role.role_id);
         }
     }
     // 检查是否超管用户

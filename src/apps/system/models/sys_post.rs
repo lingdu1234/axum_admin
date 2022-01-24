@@ -1,3 +1,4 @@
+use chrono::NaiveDateTime;
 use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -9,8 +10,7 @@ pub struct SearchReq {
     pub post_code: Option<String>,
     #[validate(length(min = 1))]
     pub post_name: Option<String>,
-    #[validate(range(min = 0, max = 2))]
-    pub status: Option<i8>,
+    pub status: Option<String>,
     pub begin_time: Option<String>,
     pub end_time: Option<String>,
 }
@@ -20,8 +20,7 @@ pub struct AddReq {
     pub post_code: String,
     pub post_name: String,
     pub post_sort: i32,
-    #[validate(range(min = 0, max = 1))]
-    pub status: Option<i8>,
+    pub status: Option<String>,
     #[validate(length(min = 1))]
     pub remark: Option<String>,
 }
@@ -38,8 +37,7 @@ pub struct EditReq {
     pub post_code: String,
     pub post_name: String,
     pub post_sort: i32,
-    #[validate(range(min = 0, max = 1))]
-    pub status: i8,
+    pub status: String,
     pub remark: String,
 }
 
@@ -49,7 +47,7 @@ pub struct Resp {
     pub post_code: String,
     pub post_name: String,
     pub post_sort: i32,
-    pub status: i8,
+    pub status: String,
     pub remark: String,
-    pub created_at: String,
+    pub created_at: NaiveDateTime,
 }

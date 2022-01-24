@@ -4,7 +4,7 @@ use poem::{handler, web::Json, Result};
 
 use validator::Validate;
 
-use crate::apps::common::models::{CudResData, ListData, PageParams, Res, RespData};
+use crate::apps::common::models::{ListData, PageParams, Res};
 use crate::apps::system::entities::sys_menu;
 use crate::apps::system::models::sys_menu::MenuResp;
 use crate::apps::system::service;
@@ -81,12 +81,14 @@ pub async fn edit(Json(edit_req): Json<EditReq>) -> Json<Res<String>> {
 
 /// get_all_menu_tree 获取全部菜单树
 #[handler]
-pub async fn get_all_menu_tree() -> Result<Json<Vec<SysMenuTree>>> {
+pub async fn get_all_menu_tree() -> Json<Res<Vec<SysMenuTree>>> {
     let db = DB.get_or_init(db_conn).await;
-    let result = service::sys_menu::get_all_menu_tree(db).await?;
-    Ok(Json(result))
+    let res = service::sys_menu::get_all_menu_tree(db).await;
+    match res {
+        Ok(res) => Json(Res::with_data(res)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
-
 /// 获取用户路由
 #[handler]
 pub async fn get_routers(user: Claims) -> Result<Json<Res<Vec<SysMenuTree>>>> {
@@ -95,7 +97,10 @@ pub async fn get_routers(user: Claims) -> Result<Json<Res<Vec<SysMenuTree>>>> {
     let all_roles = service::sys_role::get_all(db).await?;
     //  获取 用户角色
     let roles = service::sys_role::get_admin_role(&user.id, all_roles).await?;
-    let role_ids = roles.iter().map(|v| v.id.clone()).collect::<Vec<String>>();
+    let role_ids = roles
+        .iter()
+        .map(|v| v.role_id.clone())
+        .collect::<Vec<String>>();
     // 检查是否超管用户
     let res = if CFG.system.super_user.contains(&user.id) {
         service::sys_menu::get_all_menu_tree(db).await
