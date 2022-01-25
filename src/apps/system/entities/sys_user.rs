@@ -10,10 +10,7 @@ pub struct Model {
     pub id: String,
     #[sea_orm(unique)]
     pub user_name: String,
-    #[sea_orm(unique)]
-    pub mobile: String,
     pub user_nickname: String,
-    pub birthday: i32,
     pub user_password: String,
     pub user_salt: String,
     pub user_status: String,

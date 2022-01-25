@@ -51,7 +51,7 @@ async fn main() -> Result<(), std::io::Error> {
     let collector = tracing_subscriber::registry()
         .with(EnvFilter::from_default_env().add_directive(tracing::Level::DEBUG.into()))
         .with(
-            fmt::Subscriber::new()
+            fmt::Subscriber::new() 
                 .event_format(format.clone())
                 .with_writer(std_non_blocking)
                 .pretty(),

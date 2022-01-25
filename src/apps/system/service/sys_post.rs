@@ -1,9 +1,10 @@
 use crate::apps::common::models::{CudResData, ListData, PageParams, RespData};
+use crate::apps::system::entities::sys_user_post;
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
+    EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
 
 use super::super::entities::{prelude::*, sys_post};
@@ -169,6 +170,25 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
     Ok(res)
 }
 
+pub async fn get_post_ids_by_user_id(
+    db: &DatabaseConnection,
+    user_id: String,
+) -> Result<Vec<String>> {
+    let s = SysUserPost::find()
+        .filter(sys_user_post::Column::UserId.eq(user_id))
+        .all(db)
+        .await
+        .map_err(BadRequest)?;
+
+    let mut res = Vec::new();
+
+    for x in s {
+        res.push(x.post_id);
+    }
+
+    Ok(res)
+}
+
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
 pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
@@ -181,4 +201,37 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
         .await
         .map_err(BadRequest)?;
     Ok(s)
+}
+
+pub async fn delete_post_by_user_id<'a, C>(db: &'a C, user_id: String) -> Result<()>
+where
+    C: ConnectionTrait<'a>,
+{
+    SysUserPost::delete_many()
+        .filter(sys_user_post::Column::UserId.eq(user_id))
+        .exec(db)
+        .await
+        .map_err(BadRequest)?;
+    Ok(())
+}
+
+pub async fn add_post_by_user_id<'a, C>(db: &'a C, user_id: String, post: Vec<String>) -> Result<()>
+where
+    C: ConnectionTrait<'a>,
+{
+    let mut inser_data: Vec<sys_user_post::ActiveModel> = Vec::new();
+    for x in post {
+        let now: NaiveDateTime = Local::now().naive_local();
+        let act = sys_user_post::ActiveModel {
+            user_id: Set(user_id.clone()),
+            post_id: Set(x),
+            created_at: Set(Some(now)),
+        };
+        inser_data.push(act);
+    }
+    SysUserPost::insert_many(inser_data)
+        .exec(db)
+        .await
+        .map_err(BadRequest)?;
+    Ok(())
 }

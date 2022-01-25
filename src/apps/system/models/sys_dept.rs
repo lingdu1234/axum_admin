@@ -41,7 +41,7 @@ pub struct EditReq {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromQueryResult, Default)]
-pub struct Resp {
+pub struct DeptResp {
     pub dept_id: String,
     pub parent_id: String,
     pub dept_name: String,
@@ -55,6 +55,6 @@ pub struct Resp {
 #[derive(Deserialize, Clone, Debug, Serialize, Default)]
 pub struct RespTree {
     #[serde(flatten)]
-    pub data: Resp,
+    pub data: DeptResp,
     pub children: Option<Vec<RespTree>>,
 }

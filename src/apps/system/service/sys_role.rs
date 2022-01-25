@@ -18,7 +18,6 @@ use super::super::models::sys_role::{
     AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq,
 };
 
-
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
@@ -82,8 +81,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
     // 添加角色数据
     let role_id = self::add_role(&txn, req.clone()).await?;
     // 获取组合角色权限数据
-    let permissions =
-        self::combine_permissions_data(db, role_id.clone(), req.menu_ids.clone()).await?;
+    let permissions = self::combine_permissions_data(role_id.clone(), req.menu_ids.clone()).await?;
     // 添加角色权限数据
     unsafe {
         let e = CASBIN.get_mut().unwrap();
@@ -97,7 +95,6 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
 
 // 组合角色数据
 pub async fn combine_permissions_data(
-    db: &DatabaseConnection,
     role_id: String,
     permission_ids: Vec<String>,
 ) -> Result<Vec<Vec<String>>> {
@@ -232,7 +229,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
     act.update(&txn).await.map_err(BadRequest)?;
 
     // 获取组合角色权限数据
-    let permissions = self::combine_permissions_data(db, uid.clone(), req.menu_ids.clone()).await?;
+    let permissions = self::combine_permissions_data(uid.clone(), req.menu_ids.clone()).await?;
     unsafe {
         let e = CASBIN.get_mut().unwrap();
         // 删除全部权限 按角色id删除
@@ -321,10 +318,10 @@ pub async fn set_data_scope(db: &DatabaseConnection, req: DataScopeReq) -> Resul
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<Resp> {
+pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> {
     let mut s = SysRole::find();
     //
-    if let Some(x) = search_req.role_id {
+    if let Some(x) = req.role_id {
         s = s.filter(sys_role::Column::RoleId.eq(x));
     } else {
         return Err(Error::from_string("id不能为空", StatusCode::BAD_REQUEST));
@@ -354,7 +351,7 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
 //  获取用户角色
 pub async fn get_admin_role(user_id: &str, all_roles: Vec<Resp>) -> Result<Vec<Resp>> {
     let user_id = user_id.trim();
-    let role_ids = self::get_admin_role_ids(user_id).await;
+    let role_ids = self::get_role_ids_by_user_id(user_id).await;
     let mut roles: Vec<Resp> = Vec::new();
     for role in all_roles {
         if role_ids.contains(&role.role_id) {
@@ -365,7 +362,7 @@ pub async fn get_admin_role(user_id: &str, all_roles: Vec<Resp>) -> Result<Vec<R
 }
 
 //  获取用户角色ids
-pub async fn get_admin_role_ids(user_id: &str) -> Vec<String> {
+pub async fn get_role_ids_by_user_id(user_id: &str) -> Vec<String> {
     let user_id = user_id.trim();
     // 查询角色关联规则
     unsafe {
@@ -379,4 +376,36 @@ pub async fn get_admin_role_ids(user_id: &str) -> Vec<String> {
         }
         role_ids
     }
+}
+
+pub async fn delete_role_by_user_id(user_id: &str) -> Result<()> {
+    let user_id = user_id.trim();
+    unsafe {
+        let e = CASBIN.get_mut().unwrap();
+        // 1. 先删除用户角色关联
+        e.remove_filtered_named_policy("g", 0, vec![user_id.to_string()])
+            .await
+            .map_err(BadRequest)?;
+    }
+    Ok(())
+}
+
+pub async fn add_role_by_user_id(user_id: &str, role_ids: Vec<String>) -> Result<()> {
+    let user_id = user_id.trim();
+    unsafe {
+        let e = CASBIN.get_mut().unwrap();
+        // 1. 先删除用户角色关联
+        e.remove_filtered_named_policy("g", 0, vec![user_id.to_string()])
+            .await
+            .map_err(BadRequest)?;
+        // 2. 添加用户角色关联
+        let mut policies: Vec<Vec<String>> = Vec::new();
+        for p in role_ids {
+            policies.push(vec![user_id.to_string(), p.clone()]);
+        }
+        e.add_grouping_policies(policies)
+            .await
+            .map_err(BadRequest)?;
+    }
+    Ok(())
 }

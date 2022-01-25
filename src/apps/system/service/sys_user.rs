@@ -2,29 +2,32 @@ use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 
 use sea_orm::{
-    sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
-    EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
+    PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
 use serde_json::json;
 
 use crate::apps::common::models::{ListData, PageParams, RespData};
+use crate::apps::system::models::sys_user::UserWithDept;
 use crate::utils::{
     self,
     jwt::{AuthBody, AuthPayload},
 };
 
 use super::super::entities::{prelude::SysUser, sys_user};
-use super::super::models::sys_user::{AddReq, DeleteReq, EditReq, Resp, SearchReq, UserLoginReq};
+use super::super::models::sys_user::{
+    AddReq, DeleteReq, EditReq, SearchReq, UserLoginReq, UserResp,
+};
+use super::{sys_post, sys_role};
 
 /// get_user_list 获取用户列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-// #[handler]
 pub async fn get_sort_list(
     db: &DatabaseConnection,
     page_params: PageParams,
     req: SearchReq,
-) -> Result<ListData<Resp>> {
+) -> Result<ListData<UserWithDept>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     let mut s = SysUser::find();
@@ -55,13 +58,18 @@ pub async fn get_sort_list(
     // 获取全部数据条数
     let paginator = s
         .order_by_asc(sys_user::Column::Id)
-        .into_model::<Resp>()
+        .into_model::<UserResp>()
         .paginate(db, page_per_size);
     let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
-    let list = paginator
+    let users = paginator
         .fetch_page(page_num - 1)
         .await
         .map_err(BadRequest)?;
+    let mut list: Vec<UserWithDept> = Vec::new();
+    for user in users {
+        let dept = super::sys_dept::get_by_id(db, user.clone().dept_id).await?;
+        list.push(UserWithDept { user, dept });
+    }
     let res = ListData {
         total,
         list,
@@ -73,7 +81,7 @@ pub async fn get_sort_list(
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-pub async fn get_by_id_or_name(db: &DatabaseConnection, search_req: SearchReq) -> Result<Resp> {
+pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<UserResp> {
     let mut s = SysUser::find();
     // 不查找删除数据
     s = s.filter(sys_user::Column::DeletedAt.is_null());
@@ -82,15 +90,15 @@ pub async fn get_by_id_or_name(db: &DatabaseConnection, search_req: SearchReq) -
         s = s.filter(sys_user::Column::Id.eq(x));
     }
 
-    if let Some(x) = search_req.user_name {
-        s = s.filter(sys_user::Column::UserName.eq(x));
-    }
-
-    let result = match s.into_model::<Resp>().one(db).await.map_err(BadRequest)? {
+    let result = match s
+        .into_model::<UserResp>()
+        .one(db)
+        .await
+        .map_err(BadRequest)?
+    {
         Some(m) => m,
         None => return Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
     };
-
     Ok(result)
 }
 
@@ -106,8 +114,6 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
         user_name: Set(req.user_name),
         user_nickname: Set(req.user_nickname.unwrap_or_else(|| "".to_string())),
         user_password: Set(passwd),
-        mobile: Set(req.mobile),
-        birthday: Set(req.birthday.unwrap_or(0)),
         user_status: Set(req.user_status.unwrap_or_else(|| "1".to_string())),
         user_email: Set(req.user_email),
         sex: Set(req.sex.unwrap_or_else(|| "0".to_string())),
@@ -122,7 +128,16 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
     };
 
     let txn = db.begin().await.map_err(BadRequest)?;
-    let _ = SysUser::insert(user).exec(&txn).await.map_err(BadRequest)?;
+    SysUser::insert(user).exec(&txn).await.map_err(BadRequest)?;
+    // 添加职位信息
+    if let Some(x) = req.post_ids {
+        sys_post::add_post_by_user_id(&txn, uid.clone(), x).await?;
+    }
+    // 添加角色信息
+    if let Some(x) = req.role_ids {
+        sys_role::add_role_by_user_id(&uid, x).await?;
+    }
+
     txn.commit().await.map_err(BadRequest)?;
     let res = json!({ "user_id": uid });
 
@@ -130,65 +145,22 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
+pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<RespData> {
     let mut s = SysUser::delete_many();
-    let mut flag = false;
-    if let Some(x) = delete_req.user_id {
-        s = s.filter(sys_user::Column::Id.is_in(x));
-        flag = true;
-    }
 
-    if let Some(x) = delete_req.user_name {
-        s = s.filter(sys_user::Column::UserName.is_in(x));
-        flag = true;
-    }
-    if !flag {
-        return Err(Error::from_string(
-            "用户名或者用户Id必须存在一个",
-            StatusCode::BAD_REQUEST,
-        ));
-    }
+    s = s.filter(sys_user::Column::Id.is_in(req.clone().user_id));
 
     //开始删除
-    let d = s.exec(db).await.map_err(BadRequest)?;
-
-    return match d.rows_affected {
-        0 => Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
-        i => Ok(RespData::with_msg(&format!("成功删除{}条用户数据", i))),
-    };
-}
-
-/// delete 软删除
-pub async fn delete_soft(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
-    let mut s = SysUser::update_many();
-    s = s.filter(sys_user::Column::DeletedAt.is_null());
-    let mut flag = false;
-    if let Some(x) = delete_req.user_id {
-        s = s.filter(sys_user::Column::Id.is_in(x));
-        flag = true;
+    let txn = db.begin().await.map_err(BadRequest)?;
+    //删除用户
+    let d = s.exec(&txn).await.map_err(BadRequest)?;
+    for x in req.clone().user_id {
+        // 删除用户职位数据
+        sys_post::delete_post_by_user_id(&txn, x.clone()).await?;
+        // 删除用户角色数据
+        sys_role::delete_role_by_user_id(&x).await?;
     }
-
-    if let Some(x) = delete_req.user_name {
-        s = s.filter(sys_user::Column::UserName.is_in(x));
-        flag = true;
-    }
-    if !flag {
-        return Err(Error::from_string(
-            "用户名或者用户Id必须存在一个",
-            StatusCode::BAD_REQUEST,
-        ));
-    }
-
-    //开始软删除，将用户删除时间设置为当前时间
-    let d = s
-        .col_expr(
-            sys_user::Column::DeletedAt,
-            Expr::value(Local::now().naive_local() as NaiveDateTime),
-        )
-        .exec(db)
-        .await
-        .map_err(BadRequest)?;
-
+    txn.commit().await.map_err(BadRequest)?;
     return match d.rows_affected {
         0 => Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
         i => Ok(RespData::with_msg(&format!("成功删除{}条用户数据", i))),
@@ -197,7 +169,7 @@ pub async fn delete_soft(db: &DatabaseConnection, delete_req: DeleteReq) -> Resu
 
 // edit 修改
 pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
-    let uid = req.user_id;
+    let uid = req.id;
     let s_u = SysUser::find_by_id(uid.clone())
         .one(db)
         .await
@@ -207,8 +179,6 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
     let user = sys_user::ActiveModel {
         user_name: Set(req.user_name),
         user_nickname: Set(req.user_nickname),
-        mobile: Set(req.mobile),
-        birthday: Set(req.birthday),
         user_status: Set(req.user_status),
         user_email: Set(req.user_email),
         sex: Set(req.sex),
@@ -222,10 +192,18 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
         ..s_user
     };
     // 更新
-    let _aa = user.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
-                                                          // let _bb = SysUser::update(user).exec(db).await?;
-                                                          //  后续更新 角色  职位等信息
+    let txn = db.begin().await.map_err(BadRequest)?;
+    // 更新用户信息
+    user.update(&txn).await.map_err(BadRequest)?;
+    //  更新岗位信息
+    // 1.先删除用户岗位关系
+    sys_post::delete_post_by_user_id(&txn, uid.clone()).await?;
+    // 2.插入用户岗位关系
+    sys_post::add_post_by_user_id(&txn, uid.clone(), req.post_ids).await?;
+    // 更新用户角色信息
+    sys_role::add_role_by_user_id(&uid, req.role_ids).await?;
 
+    txn.commit().await.map_err(BadRequest)?;
     Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)))
 }
 

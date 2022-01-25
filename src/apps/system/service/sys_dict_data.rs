@@ -1,8 +1,9 @@
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
+use sea_orm::ActiveValue::NotSet;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set, Unset,
+    PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
 
 use crate::apps::common::models::{CudResData, ListData, PageParams, RespData};
@@ -94,11 +95,11 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<CudResData<
         is_default: Set(add_req.is_default),
         css_class: match Some(add_req.css_class) {
             Some(x) => Set(x),
-            None => Unset(None),
+            None => NotSet,
         },
         list_class: match Some(add_req.list_class) {
             Some(x) => Set(x),
-            None => Unset(None),
+            None => NotSet,
         },
         status: Set(add_req.status.unwrap_or_else(|| "1".to_string())),
         remark: Set(Some(add_req.remark.unwrap_or_else(|| "".to_string()))),
@@ -156,11 +157,11 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
         dict_value: Set(edit_req.dict_value),
         css_class: match Some(edit_req.css_class) {
             Some(x) => Set(x),
-            None => Unset(None),
+            None => NotSet,
         },
         list_class: match Some(edit_req.list_class) {
             Some(x) => Set(x),
-            None => Unset(None),
+            None => NotSet,
         },
         is_default: Set(edit_req.is_default),
         status: Set(edit_req.status),

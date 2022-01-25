@@ -12,7 +12,7 @@ async fn test_time() {
 
 #[tokio::test]
 async fn scu_test() {
-    for i in 1..20 {
+    for _i in 1..20 {
         println!("{}", scru128_string());
     }
 }

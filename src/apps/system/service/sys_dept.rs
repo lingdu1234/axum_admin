@@ -1,4 +1,4 @@
-use crate::apps::common::models::{CudResData, ListData, PageParams, RespData};
+use crate::apps::common::models::{CudResData, ListData, PageParams};
 use crate::apps::system::entities::sys_role_dept;
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
@@ -10,7 +10,7 @@ use sea_orm::{
 use crate::apps::system::models::sys_dept::RespTree;
 
 use super::super::entities::{prelude::*, sys_dept};
-use super::super::models::sys_dept::{AddReq, DeleteReq, EditReq, Resp, SearchReq};
+use super::super::models::sys_dept::{AddReq, DeleteReq, DeptResp, EditReq, SearchReq};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -156,17 +156,18 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> {
+pub async fn get_by_id(db: &DatabaseConnection, id: String) -> Result<DeptResp> {
     let mut s = SysDept::find();
     s = s.filter(sys_dept::Column::DeletedAt.is_null());
     //
-    if let Some(x) = req.dept_id {
-        s = s.filter(sys_dept::Column::DeptId.eq(x));
-    } else {
-        return Err(Error::from_string("请求参数错误", StatusCode::BAD_REQUEST));
-    }
+    s = s.filter(sys_dept::Column::DeptId.eq(id));
 
-    let res = match s.into_model::<Resp>().one(db).await.map_err(BadRequest)? {
+    let res = match s
+        .into_model::<DeptResp>()
+        .one(db)
+        .await
+        .map_err(BadRequest)?
+    {
         Some(m) => m,
         None => return Err(Error::from_string("数据不存在", StatusCode::BAD_REQUEST)),
     };
@@ -176,12 +177,12 @@ pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> 
 
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
-pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
+pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<DeptResp>> {
     let s = SysDept::find()
         .filter(sys_dept::Column::DeletedAt.is_null())
         .filter(sys_dept::Column::Status.eq(1))
         .order_by(sys_dept::Column::OrderNum, Order::Asc)
-        .into_model::<Resp>()
+        .into_model::<DeptResp>()
         .all(db)
         .await
         .map_err(BadRequest)?;

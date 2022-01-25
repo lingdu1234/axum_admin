@@ -342,27 +342,19 @@ pub fn get_menu_data(menus: Vec<MenuResp>) -> Vec<SysMenuTree> {
         let meta = Meta {
             icon: menu.icon.clone(),
             title: menu.menu_name.clone(),
-            hidden: if menu.visible.clone() == "1" {
-                false
-            } else {
-                true
-            },
+            hidden: menu.visible.clone() != "1",
             link: if menu.path.clone().starts_with("http") {
                 Some(menu.path.clone())
             } else {
                 None
             },
-            no_cache: if menu.is_cache.clone() == "1" {
-                false
-            } else {
-                true
-            },
+            no_cache: menu.is_cache.clone() != "1",
         };
         let user_menu = UserMenu {
             meta,
             id: menu.id.clone(),
             pid: menu.pid.clone(),
-            path: if !menu.path.clone().starts_with("/") && menu.pid.clone() == "0" {
+            path: if !menu.path.clone().starts_with('/') && menu.pid.clone() == "0" {
                 format!("/{}", menu.path.clone())
             } else {
                 menu.path.clone()
@@ -376,11 +368,7 @@ pub fn get_menu_data(menus: Vec<MenuResp>) -> Vec<SysMenuTree> {
                 None
             },
             component: menu.component.clone(),
-            hidden: if menu.visible.clone() == "0" {
-                true
-            } else {
-                false
-            },
+            hidden: menu.visible.clone() == "0",
         };
         let menu_tree = SysMenuTree {
             user_menu,

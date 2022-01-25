@@ -5,9 +5,7 @@ use crate::apps::{
 use poem::{
     error::BadRequest,
     handler,
-    http::StatusCode,
-    web::{Json, Query},
-    Error, Result,
+    web::{Json, Query}, Result,
 };
 
 use crate::apps::common::models::{PageParams, RespData};
@@ -123,12 +121,12 @@ pub async fn get_role_menu(Query(req): Query<SearchReq>) -> Json<Res<Vec<String>
         Err(e) => return Json(Res::with_err(&e.to_string())),
     };
     match req.role_id {
-        None => return Json(Res::with_msg("role_id不能为空")),
+        None => Json(Res::with_msg("role_id不能为空")),
         Some(id) => {
             let res = service::sys_menu::get_permissions(vec![id]).await;
-            return Json(Res::with_data(res));
+            Json(Res::with_data(res))
         }
-    };
+    }
 }
 
 /// get_role_dept 获取角色授权部门id数组   
@@ -139,14 +137,14 @@ pub async fn get_role_dept(Query(req): Query<SearchReq>) -> Json<Res<Vec<String>
         Err(e) => return Json(Res::with_err(&e.to_string())),
     };
     match req.role_id {
-        None => return Json(Res::with_msg("role_id不能为空")),
+        None => Json(Res::with_msg("role_id不能为空")),
         Some(id) => {
             let db = DB.get_or_init(db_conn).await;
             let res = service::sys_dept::get_dept_by_role_id(db, id).await;
             match res {
-                Ok(x) => return Json(Res::with_data(x)),
-                Err(e) => return Json(Res::with_err(&e.to_string())),
+                Ok(x) => Json(Res::with_data(x)),
+                Err(e) => Json(Res::with_err(&e.to_string())),
             }
         }
-    };
+    }
 }

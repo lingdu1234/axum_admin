@@ -5,18 +5,22 @@ use poem::{
     Result,
 };
 
-use serde_json::json;
 use validator::Validate;
 
-use crate::{apps::common::models::ListData, utils::jwt::Claims};
 use crate::{
-    apps::system::{models::sys_user::UserInfo, service},
+    apps::system::{
+        models::sys_user::{UserInfo, UserWithDept},
+        service,
+    },
     utils::jwt::AuthBody,
+};
+use crate::{
+    apps::{common::models::ListData, system::models::sys_user::UserInfomaion},
+    utils::jwt::Claims,
 };
 use crate::{
     apps::{
         common::models::{PageParams, Res, RespData},
-        system::models::sys_user::Resp,
     },
     CFG,
 };
@@ -31,7 +35,7 @@ use super::super::models::sys_user::{AddReq, DeleteReq, EditReq, SearchReq, User
 pub async fn get_sort_list(
     Query(page_params): Query<PageParams>,
     Query(req): Query<SearchReq>,
-) -> Json<Res<ListData<Resp>>> {
+) -> Json<Res<ListData<UserWithDept>>> {
     match req.validate() {
         Ok(_) => {}
         Err(e) => return Json(Res::with_err(&e.to_string())),
@@ -47,11 +51,28 @@ pub async fn get_sort_list(
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_by_id_or_name(Query(search_req): Query<SearchReq>) -> Result<Json<RespData>> {
-    search_req.validate().map_err(BadRequest)?;
+pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<UserInfomaion>> {
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::get_by_id_or_name(db, search_req).await?;
-    Ok(Json(RespData::with_data(json!(res))))
+    match service::sys_user::get_by_id(db, req).await {
+        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(user) => {
+            let post_ids = service::sys_post::get_post_ids_by_user_id(db, user.clone().id)
+                .await
+                .unwrap();
+            let role_ids = service::sys_role::get_role_ids_by_user_id(&user.clone().id).await;
+            let res = UserInfomaion {
+                user_info: user.clone(),
+                dept_id: user.dept_id,
+                post_ids,
+                role_ids,
+            };
+            Json(Res::with_data(res))
+        }
+    }
 }
 
 /// add 添加
@@ -66,18 +87,8 @@ pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<RespData>> {
 /// delete 完全删除
 #[handler]
 pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Result<Json<RespData>> {
-    delete_req.validate().map_err(BadRequest)?;
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::delete(db, delete_req).await?;
-    Ok(Json(res))
-}
-
-/// delete 软删除
-#[handler]
-pub async fn delete_soft(Json(delete_req): Json<DeleteReq>) -> Result<Json<RespData>> {
-    delete_req.validate().map_err(BadRequest)?;
-    let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::delete_soft(db, delete_req).await?;
     Ok(Json(res))
 }
 
@@ -99,16 +110,16 @@ pub async fn login(Json(login_req): Json<UserLoginReq>) -> Result<Json<Res<AuthB
     }
     let db = DB.get_or_init(db_conn).await;
     match service::sys_user::login(db, login_req).await {
-        Ok(res) => return Ok(Json(Res::with_data(res))),
-        Err(e) => return Ok(Json(Res::with_err(&e.to_string()))),
-    };
+        Ok(res) => Ok(Json(Res::with_data(res))),
+        Err(e) => Ok(Json(Res::with_err(&e.to_string()))),
+    }
 }
 /// 获取用户登录信息
 #[handler]
 pub async fn get_info(user: Claims) -> Result<Json<Res<UserInfo>>> {
     let db = DB.get_or_init(db_conn).await;
     //  获取用户信息
-    let user_info = service::sys_user::get_by_id_or_name(
+    let user_info = service::sys_user::get_by_id(
         db,
         SearchReq {
             user_id: Some(user.id.clone()),

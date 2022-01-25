@@ -4,21 +4,19 @@ use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
+use super::sys_dept::DeptResp;
+
 static PHONE_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^([1]\d{10}|([\(（]?0[0-9]{2,3}[）\)]?[-]?)?([2-9][0-9]{6,7})+(\-[0-9]{1,4})?)$")
         .unwrap()
 });
-static MOBILE_REGEX: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^1([358][0-9]|4[579]|66|7[0135678]|9[89])[0-9]{8}$").unwrap());
+// static MOBILE_REGEX: Lazy<Regex> =
+//     Lazy::new(|| Regex::new(r"^1([358][0-9]|4[579]|66|7[0135678]|9[89])[0-9]{8}$").unwrap());
 #[derive(Serialize, Deserialize, Default, Debug, Validate)]
 pub struct AddReq {
     pub user_name: String,
-    // #[validate(phone)]
-    #[validate(regex(path = "MOBILE_REGEX", code = "mobile_phone_num is invalid"))]
-    pub mobile: String,
     #[validate(length(min = 1))]
     pub user_nickname: Option<String>,
-    pub birthday: Option<i32>,
     pub user_password: String,
     pub user_status: Option<String>,
     #[validate(email)]
@@ -37,15 +35,15 @@ pub struct AddReq {
     pub describe: Option<String>,
     #[validate(regex(path = "PHONE_REGEX", code = "phone_num is invalid"))]
     pub phone_num: Option<String>,
+    pub post_ids: Option<Vec<String>>,
+    pub role_ids: Option<Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize, Default, Debug, Validate)]
 pub struct EditReq {
-    pub user_id: String,
+    pub id: String,
     pub user_name: String,
-    pub mobile: String,
     pub user_nickname: String,
-    pub birthday: i32,
     pub user_status: String,
     pub user_email: String,
     pub sex: String,
@@ -56,17 +54,15 @@ pub struct EditReq {
     pub address: String,
     pub describe: String,
     pub phone_num: String,
-    // pub post_ids: Vec<String>,
-    // pub role_ids: Vec<String>,
+    pub post_ids: Vec<String>,
+    pub role_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize, FromQueryResult)]
-pub struct Resp {
+pub struct UserResp {
     pub id: String,
     pub user_name: String,
-    pub mobile: String,
     pub user_nickname: String,
-    pub birthday: i32,
     pub user_status: String,
     pub user_email: String,
     pub sex: String,
@@ -77,6 +73,20 @@ pub struct Resp {
     pub address: String,
     pub describe: String,
     pub phone_num: String,
+}
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct UserWithDept {
+    #[serde(flatten)]
+    pub user: UserResp,
+    pub dept: DeptResp,
+}
+
+#[derive(Deserialize, Debug, Serialize, Default)]
+pub struct UserInfomaion {
+    pub user_info: UserResp,
+    pub post_ids: Vec<String>,
+    pub role_ids: Vec<String>,
+    pub dept_id: String,
 }
 
 #[derive(Deserialize, Debug, Serialize, Default, Validate)]
@@ -94,12 +104,9 @@ pub struct SearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Serialize, Default, Validate)]
+#[derive(Deserialize, Debug, Serialize, Clone)]
 pub struct DeleteReq {
-    #[validate(length(min = 1))]
-    pub user_id: Option<Vec<String>>,
-    #[validate(length(min = 1))]
-    pub user_name: Option<Vec<String>>,
+    pub user_id: Vec<String>,
 }
 
 ///  用户登录
@@ -115,7 +122,7 @@ pub struct UserLoginReq {
 
 #[derive(Serialize, Debug)]
 pub struct UserInfo {
-    pub user: Resp,
+    pub user: UserResp,
     pub roles: Vec<String>,
     pub permissions: Vec<String>,
 }

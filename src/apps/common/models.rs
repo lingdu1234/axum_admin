@@ -105,7 +105,7 @@ impl<T: Serialize> Res<T> {
     pub fn with_data_msg(data: Option<T>, msg: &str) -> Self {
         Self {
             code: Some(200),
-            data: data,
+            data,
             msg: Some(msg.to_string()),
         }
     }

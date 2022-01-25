@@ -25,7 +25,7 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
 
     async fn call(&self, req: Request) -> Result<Self::Output> {
         // let req_path = req.uri().path().replacen("/", "", 1);
-        let req_vec = req.original_uri().path().split("/").collect::<Vec<&str>>();
+        let req_vec = req.original_uri().path().split('/').collect::<Vec<&str>>();
         let req_path = if req_vec.len() > 2 {
             req_vec[2..].join("/")
         } else {

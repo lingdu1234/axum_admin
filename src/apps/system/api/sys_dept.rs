@@ -10,7 +10,7 @@ use validator::Validate;
 
 use crate::database::{db_conn, DB};
 
-use super::super::models::sys_dept::{AddReq, DeleteReq, EditReq, Resp, SearchReq};
+use super::super::models::sys_dept::{AddReq, DeleteReq, DeptResp, EditReq, SearchReq};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -81,23 +81,27 @@ pub async fn edit(Json(req): Json<EditReq>) -> Json<Res<String>> {
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<Resp>> {
+pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<DeptResp>> {
     match req.validate() {
         Ok(_) => {}
         Err(e) => return Json(Res::with_err(&e.to_string())),
     };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dept::get_by_id(db, req).await;
-    match res {
-        Ok(x) => Json(Res::with_data(x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+    if let Some(x) = req.dept_id {
+        let res = service::sys_dept::get_by_id(db, x).await;
+        match res {
+            Ok(x) => Json(Res::with_data(x)),
+            Err(e) => Json(Res::with_err(&e.to_string())),
+        }
+    } else {
+        Json(Res::with_err("参数错误"))
     }
 }
 
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_all() -> Json<Res<Vec<Resp>>> {
+pub async fn get_all() -> Json<Res<Vec<DeptResp>>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dept::get_all(db).await;
     match res {

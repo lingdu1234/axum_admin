@@ -101,9 +101,9 @@ pub async fn get_by_type(Query(req): Query<SearchReq>) -> Json<Res<Vec<sys_dict_
     };
     let db = DB.get_or_init(db_conn).await;
     match service::sys_dict_data::get_by_type(db, req).await {
-        Ok(res) => return Json(Res::with_data(res)),
-        Err(e) => return Json(Res::with_err(&e.to_string())),
-    };
+        Ok(res) => Json(Res::with_data(res)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// get_all 获取全部   
