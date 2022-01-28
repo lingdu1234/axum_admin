@@ -76,7 +76,7 @@ pub struct AddReq {
     pub order_sort: i32,
     pub status: String,
     pub perms: Option<String>,
-    pub component: String,
+    pub component: Option<String>,
     pub visible: String,
     pub is_frame: String,
     pub is_cache: String,

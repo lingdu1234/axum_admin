@@ -8,6 +8,10 @@ use poem::{
 use validator::Validate;
 
 use crate::{
+    apps::common::models::{PageParams, Res, RespData},
+    CFG,
+};
+use crate::{
     apps::system::{
         models::sys_user::{UserInfo, UserWithDept},
         service,
@@ -17,12 +21,6 @@ use crate::{
 use crate::{
     apps::{common::models::ListData, system::models::sys_user::UserInfomaion},
     utils::jwt::Claims,
-};
-use crate::{
-    apps::{
-        common::models::{PageParams, Res, RespData},
-    },
-    CFG,
 };
 use crate::{db_conn, DB};
 

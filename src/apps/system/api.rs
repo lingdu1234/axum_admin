@@ -84,6 +84,7 @@ fn sys_role_api() -> Route {
         .at("/get_by_id", get(sys_role::get_by_id)) //按id获取
         .at("/add", post(sys_role::add)) //添加
         .at("/edit", put(sys_role::edit)) //更新
+        .at("/update_auth_role", put(sys_role::update_auth_role)) //更新角色授权
         .at("/set_status", post(sys_role::set_status)) //设置状态
         .at("/set_data_scope", put(sys_role::set_data_scope)) //设置数据权限范围
         .at("/delete", delete(sys_role::delete)) //硬删除

@@ -12,7 +12,7 @@ use crate::database::{db_conn, DB};
 
 //路由日志追踪
 use crate::middleware::Tracing;
-use crate::utils::{get_enforcer, CASBIN};
+use crate::utils::get_enforcer;
 
 mod apps;
 //  配置文件
@@ -51,7 +51,7 @@ async fn main() -> Result<(), std::io::Error> {
     let collector = tracing_subscriber::registry()
         .with(EnvFilter::from_default_env().add_directive(tracing::Level::DEBUG.into()))
         .with(
-            fmt::Subscriber::new() 
+            fmt::Subscriber::new()
                 .event_format(format.clone())
                 .with_writer(std_non_blocking)
                 .pretty(),
@@ -68,9 +68,7 @@ async fn main() -> Result<(), std::io::Error> {
     // 数据库初始化
     database::db_init().await;
     //  casbin设置
-    unsafe {
-        CASBIN.get_or_init(get_enforcer).await;
-    }
+    get_enforcer().await;
     //     .await
     //     .expect("casbin init error");
     // let e = &casbin_service.enforcer;

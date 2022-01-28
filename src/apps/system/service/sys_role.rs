@@ -1,4 +1,7 @@
-use crate::apps::common::models::{ListData, PageParams, RespData};
+use crate::{
+    apps::common::models::{ListData, PageParams, RespData},
+    utils::get_enforcer,
+};
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
@@ -7,8 +10,6 @@ use sea_orm::{
 };
 use sea_orm_casbin_adapter::casbin::MgmtApi;
 use serde_json::json;
-
-use crate::utils::CASBIN;
 
 use super::super::entities::{
     prelude::{SysRole, SysRoleDept},
@@ -83,10 +84,8 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
     // 获取组合角色权限数据
     let permissions = self::combine_permissions_data(role_id.clone(), req.menu_ids.clone()).await?;
     // 添加角色权限数据
-    unsafe {
-        let e = CASBIN.get_mut().unwrap();
-        e.add_policies(permissions).await.map_err(BadRequest)?;
-    }
+    let mut e = get_enforcer().await;
+    e.add_policies(permissions).await.map_err(BadRequest)?;
 
     txn.commit().await.map_err(BadRequest)?;
     let res = json!({ "id": role_id });
@@ -144,14 +143,12 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<Re
     s = s.filter(sys_role::Column::RoleId.is_in(delete_req.role_ids.clone()));
     //开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
+    let mut e = get_enforcer().await;
     // 删除角色权限数据 和 部门权限数据
     for it in delete_req.role_ids.clone() {
-        unsafe {
-            let e = CASBIN.get_mut().unwrap();
-            e.remove_filtered_policy(0, vec![it.clone()])
-                .await
-                .map_err(BadRequest)?;
-        }
+        e.remove_filtered_policy(0, vec![it.clone()])
+            .await
+            .map_err(BadRequest)?;
     }
     SysRoleDept::delete_many()
         .filter(sys_role_dept::Column::RoleId.is_in(delete_req.role_ids.clone()))
@@ -230,15 +227,14 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
 
     // 获取组合角色权限数据
     let permissions = self::combine_permissions_data(uid.clone(), req.menu_ids.clone()).await?;
-    unsafe {
-        let e = CASBIN.get_mut().unwrap();
-        // 删除全部权限 按角色id删除
-        e.remove_filtered_policy(0, vec![uid.clone()])
-            .await
-            .map_err(BadRequest)?;
-        // 添加角色权限数据
-        e.add_policies(permissions).await.map_err(BadRequest)?;
-    }
+    let mut e = get_enforcer().await;
+
+    // 删除全部权限 按角色id删除
+    e.remove_filtered_policy(0, vec![uid.clone()])
+        .await
+        .map_err(BadRequest)?;
+    // 添加角色权限数据
+    e.add_policies(permissions).await.map_err(BadRequest)?;
 
     // 提交事务
     txn.commit().await.map_err(BadRequest)?;
@@ -365,47 +361,42 @@ pub async fn get_admin_role(user_id: &str, all_roles: Vec<Resp>) -> Result<Vec<R
 pub async fn get_role_ids_by_user_id(user_id: &str) -> Vec<String> {
     let user_id = user_id.trim();
     // 查询角色关联规则
-    unsafe {
-        let e = CASBIN.get().unwrap();
-        let group_policy = e.get_filtered_grouping_policy(0, vec![user_id.to_string()]);
-        let mut role_ids = vec![];
-        if !group_policy.is_empty() {
-            for p in group_policy {
-                role_ids.push(p[1].clone());
-            }
+
+    let e = get_enforcer().await;
+    let group_policy = e.get_filtered_grouping_policy(0, vec![user_id.to_string()]);
+    let mut role_ids = vec![];
+    if !group_policy.is_empty() {
+        for p in group_policy {
+            role_ids.push(p[1].clone());
         }
-        role_ids
     }
+    role_ids
 }
 
 pub async fn delete_role_by_user_id(user_id: &str) -> Result<()> {
     let user_id = user_id.trim();
-    unsafe {
-        let e = CASBIN.get_mut().unwrap();
-        // 1. 先删除用户角色关联
-        e.remove_filtered_named_policy("g", 0, vec![user_id.to_string()])
-            .await
-            .map_err(BadRequest)?;
-    }
+    let mut e = get_enforcer().await;
+    // 1. 先删除用户角色关联
+    e.remove_filtered_named_policy("g", 0, vec![user_id.to_string()])
+        .await
+        .map_err(BadRequest)?;
     Ok(())
 }
 
 pub async fn add_role_by_user_id(user_id: &str, role_ids: Vec<String>) -> Result<()> {
     let user_id = user_id.trim();
-    unsafe {
-        let e = CASBIN.get_mut().unwrap();
-        // 1. 先删除用户角色关联
-        e.remove_filtered_named_policy("g", 0, vec![user_id.to_string()])
-            .await
-            .map_err(BadRequest)?;
-        // 2. 添加用户角色关联
-        let mut policies: Vec<Vec<String>> = Vec::new();
-        for p in role_ids {
-            policies.push(vec![user_id.to_string(), p.clone()]);
-        }
-        e.add_grouping_policies(policies)
-            .await
-            .map_err(BadRequest)?;
+    let mut e = get_enforcer().await;
+    // 1. 先删除用户角色关联
+    e.remove_filtered_named_policy("g", 0, vec![user_id.to_string()])
+        .await
+        .map_err(BadRequest)?;
+    // 2. 添加用户角色关联
+    let mut policies: Vec<Vec<String>> = Vec::new();
+    for p in role_ids {
+        policies.push(vec![user_id.to_string(), p.clone()]);
     }
+    e.add_grouping_policies(policies)
+        .await
+        .map_err(BadRequest)?;
     Ok(())
 }

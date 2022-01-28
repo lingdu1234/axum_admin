@@ -1,4 +1,5 @@
 use crate::apps::common::models::{CudResData, ListData, PageParams};
+use crate::utils::get_enforcer;
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
@@ -6,8 +7,6 @@ use sea_orm::{
     PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
 use sea_orm_casbin_adapter::casbin::MgmtApi;
-
-use crate::utils::CASBIN;
 
 use super::super::entities::{prelude::*, sys_menu};
 use super::super::models::sys_menu::{
@@ -129,7 +128,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<CudResData<Stri
         status: Set(req.status),
         visible: Set(req.visible),
         path: Set(req.path.unwrap_or_else(|| "".to_string())),
-        component: Set(req.component),
+        component: Set(req.component.unwrap_or_else(|| "".to_string())),
         is_data_scope: Set(req.is_data_scope),
         is_frame: Set(req.is_frame),
         is_cache: Set(req.is_cache),
@@ -285,13 +284,11 @@ pub async fn get_all_menu_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTre
 /// 获取授权菜单信息
 pub async fn get_permissions(role_ids: Vec<String>) -> Vec<String> {
     let mut menu_ids: Vec<String> = Vec::new();
+    let e = get_enforcer().await;
     for role_id in role_ids {
-        unsafe {
-            let e = CASBIN.get_mut().unwrap();
-            let policies = e.get_filtered_policy(0, vec![role_id]);
-            for policy in policies {
-                menu_ids.push(policy[1].clone());
-            }
+        let policies = e.get_filtered_policy(0, vec![role_id]);
+        for policy in policies {
+            menu_ids.push(policy[1].clone());
         }
     }
     menu_ids

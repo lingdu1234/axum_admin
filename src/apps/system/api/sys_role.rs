@@ -5,7 +5,8 @@ use crate::apps::{
 use poem::{
     error::BadRequest,
     handler,
-    web::{Json, Query}, Result,
+    web::{Json, Query},
+    IntoResponse, Result,
 };
 
 use crate::apps::common::models::{PageParams, RespData};
@@ -15,7 +16,7 @@ use validator::Validate;
 use crate::database::{db_conn, DB};
 
 use super::super::models::sys_role::{
-    AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq,
+    AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq, UpdateAuthRoleReq,
 };
 
 /// get_list 获取列表
@@ -63,6 +64,15 @@ pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<RespData>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::edit(db, edit_req).await?;
     Ok(Json(res))
+}
+
+// edit 修改
+#[handler]
+pub async fn update_auth_role(Json(req): Json<UpdateAuthRoleReq>) -> Json<Res<String>> {
+    match service::sys_role::add_role_by_user_id(&req.user_id, req.role_ids).await {
+        Ok(_) => Json(Res::with_msg("角色授权更新成功")),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 // set_status 修改状态
