@@ -16,7 +16,7 @@ use crate::utils::{
 
 use super::super::entities::{prelude::SysUser, sys_user};
 use super::super::models::sys_user::{
-    AddReq, DeleteReq, EditReq, SearchReq, UserLoginReq, UserResp,
+    AddReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq, UserResp,
 };
 use super::{sys_post, sys_role};
 
@@ -142,6 +142,32 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
     let res = json!({ "user_id": uid });
 
     Ok(RespData::with_data(res))
+}
+
+pub async fn reset_passwd(db: &DatabaseConnection, req: ResetPasswdReq) -> Result<String> {
+    let salt = utils::rand_s(10);
+    let passwd = utils::encrypt_password(&req.new_passwd, &salt);
+    let now: NaiveDateTime = Local::now().naive_local();
+    let uid = req.user_id;
+    let s_u = SysUser::find_by_id(uid.clone())
+        .one(db)
+        .await
+        .map_err(BadRequest)?;
+    let s_user: sys_user::ActiveModel = s_u.unwrap().into();
+    let now: NaiveDateTime = Local::now().naive_local();
+    let user = sys_user::ActiveModel {
+        user_password: Set(passwd),
+        updated_at: Set(Some(now)),
+        ..s_user
+    };
+    // 更新
+    let txn = db.begin().await.map_err(BadRequest)?;
+    // 更新用户信息
+    user.update(&txn).await.map_err(BadRequest)?;
+    txn.commit().await.map_err(BadRequest)?;
+    let res = format!("密码更新成功");
+
+    Ok(res)
 }
 
 /// delete 完全删除

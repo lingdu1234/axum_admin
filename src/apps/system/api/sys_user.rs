@@ -24,7 +24,9 @@ use crate::{
 };
 use crate::{db_conn, DB};
 
-use super::super::models::sys_user::{AddReq, DeleteReq, EditReq, SearchReq, UserLoginReq};
+use super::super::models::sys_user::{
+    AddReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq,
+};
 
 /// get_user_list 获取用户列表
 /// page_params 分页参数
@@ -154,4 +156,15 @@ pub async fn get_info(user: Claims) -> Result<Json<Res<UserInfo>>> {
     };
 
     Ok(Json(Res::with_data(res)))
+}
+
+// edit 修改
+#[handler]
+pub async fn reset_passwd(Json(request): Json<ResetPasswdReq>) -> Json<Res<String>> {
+    let db = DB.get_or_init(db_conn).await;
+    let res = service::sys_user::reset_passwd(db, req).await;
+    match res {
+        Ok(x) => Json(Res::with_msg(&x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }

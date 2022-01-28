@@ -29,7 +29,7 @@ async fn main() -> Result<(), std::io::Error> {
         std::env::set_var("RUST_LOG", &CFG.log.log_level);
     }
     env::setup();
-
+  
     //日志追踪 将log转换到Tracing统一输出
     LogTracer::init().unwrap();
 

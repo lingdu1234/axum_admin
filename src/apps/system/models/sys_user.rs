@@ -74,6 +74,7 @@ pub struct UserResp {
     pub describe: String,
     pub phone_num: String,
 }
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct UserWithDept {
     #[serde(flatten)]
@@ -125,4 +126,9 @@ pub struct UserInfo {
     pub user: UserResp,
     pub roles: Vec<String>,
     pub permissions: Vec<String>,
+}
+#[derive(Deserialize)]
+pub struct ResetPasswdReq {
+    pub user_id: String,
+    pub new_passwd: String,
 }
