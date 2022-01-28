@@ -38,8 +38,14 @@ pub async fn get_sort_list(
     if let Some(x) = req.user_id {
         s = s.filter(sys_user::Column::Id.eq(x));
     }
+    if let Some(x) = req.user_ids {
+        s = s.filter(sys_user::Column::Id.is_in(x));
+    }
 
     if let Some(x) = req.user_name {
+        s = s.filter(sys_user::Column::UserName.contains(&x));
+    }
+    if let Some(x) = req.phone_num {
         s = s.filter(sys_user::Column::UserName.contains(&x));
     }
     if let Some(x) = req.user_status {
@@ -71,6 +77,47 @@ pub async fn get_sort_list(
         let dept = super::sys_dept::get_by_id(db, user.clone().dept_id).await?;
         list.push(UserWithDept { user, dept });
     }
+    let res = ListData {
+        total,
+        list,
+        total_pages,
+        page_num,
+    };
+    Ok(res)
+}
+
+pub async fn get_un_auth_user(
+    db: &DatabaseConnection,
+    page_params: PageParams,
+    req: SearchReq,
+) -> Result<ListData<UserResp>> {
+    let page_num = page_params.page_num.unwrap_or(1);
+    let page_per_size = page_params.page_size.unwrap_or(10);
+    let mut s = SysUser::find();
+    // 不查找删除数据
+    s = s.filter(sys_user::Column::DeletedAt.is_null());
+    // 查询条件
+    if let Some(x) = req.user_ids {
+        s = s.filter(sys_user::Column::Id.is_not_in(x));
+    }
+    if let Some(x) = req.user_name {
+        s = s.filter(sys_user::Column::UserName.contains(&x));
+    }
+    if let Some(x) = req.phone_num {
+        s = s.filter(sys_user::Column::UserName.contains(&x));
+    }
+    // 获取全部数据条数
+    let total = s.clone().count(db).await.map_err(BadRequest)?;
+    // 获取全部数据条数
+    let paginator = s
+        .order_by_asc(sys_user::Column::Id)
+        .into_model::<UserResp>()
+        .paginate(db, page_per_size);
+    let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
+    let list = paginator
+        .fetch_page(page_num - 1)
+        .await
+        .map_err(BadRequest)?;
     let res = ListData {
         total,
         list,

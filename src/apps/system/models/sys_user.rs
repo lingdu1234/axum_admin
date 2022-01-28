@@ -94,8 +94,11 @@ pub struct UserInfomaion {
 pub struct SearchReq {
     #[validate(length(min = 1))]
     pub user_id: Option<String>,
+    pub role_id: Option<String>,
+    pub user_ids: Option<Vec<String>>,
     #[validate(length(min = 1))]
     pub user_name: Option<String>,
+    pub phone_num: Option<String>,
     #[validate(length(min = 1))]
     pub user_nickname: Option<String>,
     pub user_status: Option<String>,

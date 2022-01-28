@@ -57,6 +57,12 @@ pub struct UpdateAuthRoleReq {
     pub role_ids: Vec<String>,
 }
 
+#[derive(Deserialize, Clone, Serialize)]
+pub struct AddOrCancelAuthRoleReq {
+    pub user_ids: Vec<String>,
+    pub role_id: String,
+}
+
 #[derive(Debug, Serialize, Deserialize, Validate, FromQueryResult, Clone)]
 pub struct Resp {
     pub role_id: String,

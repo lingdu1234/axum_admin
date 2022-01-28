@@ -5,8 +5,8 @@ use crate::{
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, DatabaseTransaction,
-    EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
+    sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
+    DatabaseTransaction, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
 use sea_orm_casbin_adapter::casbin::MgmtApi;
 use serde_json::json;
@@ -16,7 +16,7 @@ use super::super::entities::{
     sys_role, sys_role_dept,
 };
 use super::super::models::sys_role::{
-    AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq,
+    AddOrCancelAuthRoleReq, AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq,
 };
 
 /// get_list 获取列表
@@ -243,25 +243,34 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
 }
 
 // set_status 状态修改
-pub async fn set_status(db: &DatabaseConnection, status_req: StatusReq) -> Result<RespData> {
+pub async fn set_status(db: &DatabaseConnection, status_req: StatusReq) -> Result<String> {
     // 开启事务
     let txn = db.begin().await.map_err(BadRequest)?;
     // 修改数据
     let uid = status_req.role_id;
-    let s_s = SysRole::find_by_id(uid.clone())
-        .one(&txn)
+    let now: NaiveDateTime = Local::now().naive_local();
+    // let s_s = SysRole::find_by_id(uid.clone())
+    //     .one(&txn)
+    //     .await
+    //     .map_err(BadRequest)?;
+    // let s_r: sys_role::ActiveModel = s_s.unwrap().into();
+
+    // let act = sys_role::ActiveModel {
+    //     status: Set(status_req.status),
+    //     updated_at: Set(Some(now)),
+    //     ..s_r
+    // };
+    // act.update(&txn).await.map_err(BadRequest)?;
+    SysRole::update_many()
+        .col_expr(sys_role::Column::Status, Expr::value(status_req.status))
+        .col_expr(sys_role::Column::UpdatedAt, Expr::value(now))
+        .filter(sys_role::Column::RoleId.eq(uid.clone()))
+        .exec(&txn)
         .await
         .map_err(BadRequest)?;
-    let s_r: sys_role::ActiveModel = s_s.unwrap().into();
-    let now: NaiveDateTime = Local::now().naive_local();
-    let act = sys_role::ActiveModel {
-        status: Set(status_req.status),
-        updated_at: Set(Some(now)),
-        ..s_r
-    };
-    act.update(&txn).await.map_err(BadRequest)?;
     txn.commit().await.map_err(BadRequest)?;
-    return Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)));
+    let res = format!("用户<{}>状态更新成功", uid);
+    Ok(res)
 }
 
 // set_status 状态修改
@@ -373,6 +382,21 @@ pub async fn get_role_ids_by_user_id(user_id: &str) -> Vec<String> {
     role_ids
 }
 
+//  获取角色的所有用户
+pub async fn get_auth_users_by_role_id(role_id: &str) -> Vec<String> {
+    let role_id = role_id.trim();
+    // 查询角色关联规则
+    let e = get_enforcer().await;
+    let group_policy = e.get_filtered_grouping_policy(1, vec![role_id.to_string()]);
+    let mut user_ids = vec![];
+    if !group_policy.is_empty() {
+        for p in group_policy {
+            user_ids.push(p[0].clone());
+        }
+    }
+    user_ids
+}
+
 pub async fn delete_role_by_user_id(user_id: &str) -> Result<()> {
     let user_id = user_id.trim();
     let mut e = get_enforcer().await;
@@ -383,6 +407,19 @@ pub async fn delete_role_by_user_id(user_id: &str) -> Result<()> {
     Ok(())
 }
 
+pub async fn cancel_auth_user(req: AddOrCancelAuthRoleReq) -> Result<()> {
+    let mut e = get_enforcer().await;
+    // 1. 先删除用户角色关联
+    for user_id in req.clone().user_ids {
+        e.remove_filtered_named_policy("g", 0, vec![user_id, req.clone().role_id])
+            .await
+            .map_err(BadRequest)?;
+    }
+
+    Ok(())
+}
+
+//  为用户授权角色 先删除 再添加
 pub async fn add_role_by_user_id(user_id: &str, role_ids: Vec<String>) -> Result<()> {
     let user_id = user_id.trim();
     let mut e = get_enforcer().await;
@@ -394,6 +431,20 @@ pub async fn add_role_by_user_id(user_id: &str, role_ids: Vec<String>) -> Result
     let mut policies: Vec<Vec<String>> = Vec::new();
     for p in role_ids {
         policies.push(vec![user_id.to_string(), p.clone()]);
+    }
+    e.add_grouping_policies(policies)
+        .await
+        .map_err(BadRequest)?;
+    Ok(())
+}
+
+//  添加多个用户到一个角色
+pub async fn add_role_with_user_ids(user_ids: Vec<String>, role_id: String) -> Result<()> {
+    let mut e = get_enforcer().await;
+    //  添加用户角色关联
+    let mut policies: Vec<Vec<String>> = Vec::new();
+    for user_id in user_ids {
+        policies.push(vec![user_id.to_string(), role_id.clone()]);
     }
     e.add_grouping_policies(policies)
         .await

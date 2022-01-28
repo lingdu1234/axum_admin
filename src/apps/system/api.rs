@@ -87,11 +87,21 @@ fn sys_role_api() -> Route {
         .at("/add", post(sys_role::add)) //添加
         .at("/edit", put(sys_role::edit)) //更新
         .at("/update_auth_role", put(sys_role::update_auth_role)) //更新角色授权
-        .at("/set_status", post(sys_role::set_status)) //设置状态
+        .at("/change_status", put(sys_role::change_status)) //设置状态
         .at("/set_data_scope", put(sys_role::set_data_scope)) //设置数据权限范围
         .at("/delete", delete(sys_role::delete)) //硬删除
         .at("/get_role_menu", get(sys_role::get_role_menu)) //获取角色菜单
         .at("/get_role_dept", get(sys_role::get_role_dept)) //获取角色部门
+        .at("/cancel_auth_user", put(sys_role::cancel_auth_user)) //批量用户取消角色授权
+        .at("/add_auth_user", put(sys_role::add_auth_user)) //批量用户角色授权
+        .at(
+            "/get_auth_users_by_role_id",
+            get(sys_role::get_auth_users_by_role_id),
+        ) //获取角色对应用户
+        .at(
+            "/get_un_auth_users_by_role_id",
+            get(sys_role::get_un_auth_users_by_role_id),
+        ) //获取角色对应未授权用户
 }
 
 fn sys_menu_api() -> Route {
