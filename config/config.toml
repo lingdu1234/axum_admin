@@ -23,5 +23,5 @@ jwt_exp = 1440
 jwt_secret = 'secret'
 [database]
 db_type = 'mysql'
-link = 'mysql://root:lingdu515639@127.0.0.1:13306/wk'
+link = 'mysql://root:lingdu515639@192.168.1.11:13306/wk'
 # link = 'postgres://postgres:lingdu515639@127.0.0.1:25432/wk'

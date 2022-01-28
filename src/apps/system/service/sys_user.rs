@@ -1,6 +1,7 @@
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 
+use sea_orm::sea_query::Expr;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
     PaginatorTrait, QueryFilter, QueryOrder, Set,
@@ -8,7 +9,6 @@ use sea_orm::{
 use serde_json::json;
 
 use crate::apps::common::models::{ListData, PageParams, RespData};
-use crate::apps::system::models::sys_user::UserWithDept;
 use crate::utils::{
     self,
     jwt::{AuthBody, AuthPayload},
@@ -16,7 +16,8 @@ use crate::utils::{
 
 use super::super::entities::{prelude::SysUser, sys_user};
 use super::super::models::sys_user::{
-    AddReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq, UserResp,
+    AddReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq, UserResp,
+    UserWithDept,
 };
 use super::{sys_post, sys_role};
 
@@ -148,24 +149,65 @@ pub async fn reset_passwd(db: &DatabaseConnection, req: ResetPasswdReq) -> Resul
     let salt = utils::rand_s(10);
     let passwd = utils::encrypt_password(&req.new_passwd, &salt);
     let now: NaiveDateTime = Local::now().naive_local();
-    let uid = req.user_id;
-    let s_u = SysUser::find_by_id(uid.clone())
-        .one(db)
-        .await
-        .map_err(BadRequest)?;
-    let s_user: sys_user::ActiveModel = s_u.unwrap().into();
-    let now: NaiveDateTime = Local::now().naive_local();
-    let user = sys_user::ActiveModel {
-        user_password: Set(passwd),
-        updated_at: Set(Some(now)),
-        ..s_user
-    };
+    // let uid = req.user_id;
+    // let s_u = SysUser::find_by_id(uid.clone())
+    //     .one(db)
+    //     .await
+    //     .map_err(BadRequest)?;
+    // let s_user: sys_user::ActiveModel = s_u.unwrap().into();
+    // let now: NaiveDateTime = Local::now().naive_local();
+    // let user = sys_user::ActiveModel {
+    //     user_password: Set(passwd),
+    //     updated_at: Set(Some(now)),
+    //     ..s_user
+    // };
     // 更新
     let txn = db.begin().await.map_err(BadRequest)?;
     // 更新用户信息
-    user.update(&txn).await.map_err(BadRequest)?;
+    SysUser::update_many()
+        .col_expr(sys_user::Column::UserPassword, Expr::value(passwd))
+        .col_expr(sys_user::Column::UpdatedAt, Expr::value(now))
+        .filter(sys_user::Column::Id.eq(req.user_id))
+        .exec(&txn)
+        .await
+        .map_err(BadRequest)?;
+    // user.update(&txn).await.map_err(BadRequest)?;
     txn.commit().await.map_err(BadRequest)?;
     let res = format!("密码更新成功");
+
+    Ok(res)
+}
+
+pub async fn change_status(db: &DatabaseConnection, req: ChangeStatusReq) -> Result<String> {
+    let now: NaiveDateTime = Local::now().naive_local();
+    // let uid = req.user_id;
+    // let s_u = SysUser::find_by_id(uid.clone())
+    //     .one(db)
+    //     .await
+    //     .map_err(BadRequest)?;
+    // let s_user: sys_user::ActiveModel = s_u.unwrap().into();
+    // let now: NaiveDateTime = Local::now().naive_local();
+    // let user = sys_user::ActiveModel {
+    //     user_status: Set(req.status),
+    //     updated_at: Set(Some(now)),
+    //     ..s_user
+    // };
+    // 更新
+    let txn = db.begin().await.map_err(BadRequest)?;
+    // 更新用户信息
+    SysUser::update_many()
+        .col_expr(
+            sys_user::Column::UserStatus,
+            Expr::value(req.clone().status),
+        )
+        .col_expr(sys_user::Column::UpdatedAt, Expr::value(now))
+        .filter(sys_user::Column::Id.eq(req.user_id))
+        .exec(&txn)
+        .await
+        .map_err(BadRequest)?;
+    // user.update(&txn).await.map_err(BadRequest)?;
+    txn.commit().await.map_err(BadRequest)?;
+    let res = format!("用户状态更新成功");
 
     Ok(res)
 }

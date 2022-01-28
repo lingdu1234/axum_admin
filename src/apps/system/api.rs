@@ -31,7 +31,8 @@ fn sys_user_api() -> Route {
         .at("/edit", put(sys_user::edit)) //更新用户
         .at("/delete", delete(sys_user::delete)) //硬删除用户
         .at("/get_info", get(sys_user::get_info)) //获取用户信息
-        .at("/reset_passwd", put(sys_user::reset_passwd)) //获取用户信息
+        .at("/reset_passwd", put(sys_user::reset_passwd)) //重置密码
+        .at("/change_status", put(sys_user::change_status)) //修改状态
 }
 
 fn sys_dict_type_api() -> Route {

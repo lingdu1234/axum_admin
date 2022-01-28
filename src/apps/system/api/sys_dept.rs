@@ -1,4 +1,4 @@
-use crate::apps::common::models::{ListData, PageParams, Res, RespData};
+use crate::apps::common::models::{ListData, PageParams, Res};
 use crate::apps::system::entities::sys_dept;
 use crate::apps::system::models::sys_dept::RespTree;
 use crate::apps::system::service;

@@ -132,3 +132,9 @@ pub struct ResetPasswdReq {
     pub user_id: String,
     pub new_passwd: String,
 }
+
+#[derive(Deserialize, Clone)]
+pub struct ChangeStatusReq {
+    pub user_id: String,
+    pub status: String,
+}
