@@ -63,9 +63,9 @@ fn sys_post_api() -> Route {
         .at("/get_all", get(sys_post::get_all)) //获取筛选分页
         .at("/get_by_id", get(sys_post::get_by_id)) //按id获取
         .at("/add", post(sys_post::add)) //添加
-        .at("/edit", post(sys_post::edit)) //更新
+        .at("/edit", put(sys_post::edit)) //更新
         // .at("/delete", delete(sys_post::delete)) //软删除
-        .at("/ddelete", delete(sys_post::delete)) //硬删除
+        .at("/delete", delete(sys_post::delete)) //硬删除
 }
 
 fn sys_dept_api() -> Route {

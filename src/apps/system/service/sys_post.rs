@@ -3,8 +3,8 @@ use crate::apps::system::entities::sys_user_post;
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
-    EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
+    PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
 
 use super::super::entities::{prelude::*, sys_post};
@@ -72,9 +72,34 @@ pub async fn check_data_is_exist(
     Ok(count1 > 0 || count2 > 0)
 }
 
+pub async fn eidt_check_data_is_exist(
+    post_id: String,
+    post_code: String,
+    post_name: String,
+    db: &DatabaseConnection,
+) -> Result<bool> {
+    let count1 = SysPost::find()
+        .filter(sys_post::Column::PostCode.eq(post_code))
+        .filter(sys_post::Column::PostId.ne(post_id.clone()))
+        .count(db)
+        .await
+        .map_err(BadRequest)?;
+    let count2 = SysPost::find()
+        .filter(sys_post::Column::PostName.eq(post_name))
+        .filter(sys_post::Column::PostId.ne(post_id))
+        .count(db)
+        .await
+        .map_err(BadRequest)?;
+    Ok(count1 > 0 || count2 > 0)
+}
+
 /// add 添加
 
-pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<CudResData<String>> {
+pub async fn add(
+    db: &DatabaseConnection,
+    req: AddReq,
+    user_id: String,
+) -> Result<CudResData<String>> {
     //  检查字典类型是否存在
     if check_data_is_exist(req.clone().post_code, req.clone().post_name, db).await? {
         return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
@@ -89,6 +114,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<CudResData<Stri
         post_name: Set(req.post_name),
         status: Set(req.status.unwrap_or_else(|| "1".to_string())),
         remark: Set(Some(req.remark.unwrap_or_else(|| "".to_string()))),
+        created_by: Set(user_id),
         created_at: Set(Some(now)),
         ..Default::default()
     };
@@ -122,9 +148,16 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<Re
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData> {
+pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<RespData> {
     //  检查字典类型是否存在
-    if check_data_is_exist(edit_req.clone().post_code, edit_req.clone().post_name, db).await? {
+    if eidt_check_data_is_exist(
+        edit_req.clone().post_id,
+        edit_req.clone().post_code,
+        edit_req.clone().post_name,
+        db,
+    )
+    .await?
+    {
         return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
     }
     let uid = edit_req.post_id;
@@ -140,6 +173,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
         post_sort: Set(edit_req.post_sort),
         status: Set(edit_req.status),
         remark: Set(Some(edit_req.remark)),
+        updated_by: Set(Some(user_id)),
         updated_at: Set(Some(now)),
         ..s_r
     };

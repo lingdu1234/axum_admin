@@ -2,6 +2,7 @@ use crate::apps::{
     common::models::{ListData, Res},
     system::{entities::sys_dict_data, service},
 };
+use crate::utils::jwt::Claims;
 use poem::{
     error::BadRequest,
     handler,
@@ -38,13 +39,13 @@ pub async fn get_sort_list(
 
 /// add 添加
 #[handler]
-pub async fn add(Json(req): Json<AddReq>) -> Json<Res<String>> {
+pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Json<Res<String>> {
     match req.validate() {
         Ok(_) => {}
         Err(e) => return Json(Res::with_err(&e.to_string())),
     };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_data::add(db, req).await;
+    let res = service::sys_dict_data::add(db, req, user.id).await;
     match res {
         Ok(x) => Json(Res::with_data_msg(x.id, &x.msg)),
         Err(e) => Json(Res::with_err(&e.to_string())),
@@ -68,10 +69,10 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Json<Res<String>> {
 
 // edit 修改
 #[handler]
-pub async fn edit(Json(req): Json<EditReq>) -> Result<Json<RespData>> {
+pub async fn edit(Json(req): Json<EditReq>, user: Claims) -> Result<Json<RespData>> {
     req.validate().map_err(BadRequest)?;
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_data::edit(db, req).await?;
+    let res = service::sys_dict_data::edit(db, req, user.id).await?;
     Ok(Json(res))
 }
 

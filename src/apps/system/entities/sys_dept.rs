@@ -15,7 +15,7 @@ pub struct Model {
     pub phone: String,
     pub email: String,
     pub status: String,
-    pub created_by: Option<String>,
+    pub created_by: String,
     pub updated_by: Option<String>,
     pub created_at: Option<DateTime>,
     pub updated_at: Option<DateTime>,

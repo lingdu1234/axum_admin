@@ -75,7 +75,11 @@ pub async fn check_dict_data_is_exist(req: AddReq, db: &DatabaseConnection) -> R
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<CudResData<String>> {
+pub async fn add(
+    db: &DatabaseConnection,
+    add_req: AddReq,
+    user_id: String,
+) -> Result<CudResData<String>> {
     //  检查字典类型是否存在
     if check_dict_data_is_exist(add_req.clone(), db).await? {
         return Err(Error::from_string(
@@ -93,6 +97,7 @@ pub async fn add(db: &DatabaseConnection, add_req: AddReq) -> Result<CudResData<
         dict_value: Set(add_req.dict_value),
         dict_sort: Set(add_req.dict_sort),
         is_default: Set(add_req.is_default),
+        create_by: Set(user_id),
         css_class: match Some(add_req.css_class) {
             Some(x) => Set(x),
             None => NotSet,
@@ -142,7 +147,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<Cu
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData> {
+pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<RespData> {
     let uid = edit_req.dict_data_id;
     let s_s = SysDictData::find_by_id(uid.clone())
         .one(db)
@@ -155,6 +160,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
         dict_type: Set(edit_req.dict_type),
         dict_sort: Set(edit_req.dict_sort),
         dict_value: Set(edit_req.dict_value),
+        update_by: Set(Some(user_id)),
         css_class: match Some(edit_req.css_class) {
             Some(x) => Set(x),
             None => NotSet,

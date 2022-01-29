@@ -16,7 +16,7 @@ pub struct Model {
     pub list_class: Option<String>,
     pub is_default: String,
     pub status: String,
-    pub create_by: Option<String>,
+    pub create_by: String,
     pub update_by: Option<String>,
     pub remark: Option<String>,
     pub created_at: Option<DateTime>,

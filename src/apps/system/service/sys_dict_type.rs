@@ -8,6 +8,7 @@ use sea_orm::{
 
 use super::super::entities::{prelude::SysDictType, sys_dict_type};
 use super::super::models::sys_dict_type::{AddReq, DeleteReq, EditReq, Resp, SearchReq};
+use crate::utils::jwt::Claims;
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -67,7 +68,11 @@ pub async fn check_dict_type_is_exist(dict_type: &str, db: &DatabaseConnection) 
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<CudResData<String>> {
+pub async fn add(
+    db: &DatabaseConnection,
+    req: AddReq,
+    user_id: String,
+) -> Result<CudResData<String>> {
     //  检查字典类型是否存在
     if check_dict_type_is_exist(&req.dict_type, db).await? {
         return Err(Error::from_string(
@@ -75,21 +80,22 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<CudResData<Stri
             StatusCode::BAD_REQUEST,
         ));
     }
-
-    let uid = scru128::scru128().to_string();
+    let uid = scru128::scru128_string();
     let now: NaiveDateTime = Local::now().naive_local();
-    let user = sys_dict_type::ActiveModel {
+    let dict_type = sys_dict_type::ActiveModel {
         dict_type_id: Set(uid.clone()),
         dict_name: Set(req.dict_name),
         dict_type: Set(req.dict_type),
         status: Set(req.status.unwrap_or_else(|| "1".to_string())),
         remark: Set(Some(req.remark.unwrap_or_else(|| "".to_string()))),
+        create_by: Set(user_id),
         created_at: Set(Some(now)),
         ..Default::default()
     };
-
-    //  let re =   user.insert(db).await?; 这个多查询一次结果
-    let _ = SysDictType::insert(user).exec(db).await.map_err(BadRequest);
+    SysDictType::insert(dict_type)
+        .exec(db)
+        .await
+        .map_err(BadRequest);
     let res = CudResData {
         id: Some(uid),
         msg: "添加成功".to_string(),
@@ -124,7 +130,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<Cu
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData> {
+pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<RespData> {
     let uid = edit_req.dict_type_id;
     let s_s = SysDictType::find_by_id(uid.clone())
         .one(db)
@@ -137,6 +143,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq) -> Result<RespData
         dict_type: Set(edit_req.dict_type),
         status: Set(edit_req.status),
         remark: Set(Some(edit_req.remark)),
+        update_by: Set(Some(user_id)),
         updated_at: Set(Some(now)),
         ..s_r
     };

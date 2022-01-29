@@ -1,6 +1,9 @@
-use crate::apps::{
-    common::models::{ListData, Res},
-    system::{entities::sys_post, service},
+use crate::{
+    apps::{
+        common::models::{ListData, Res},
+        system::{entities::sys_post, service},
+    },
+    utils::jwt::Claims,
 };
 use poem::{
     error::BadRequest,
@@ -38,13 +41,13 @@ pub async fn get_sort_list(
 
 /// add 添加
 #[handler]
-pub async fn add(Json(req): Json<AddReq>) -> Json<Res<String>> {
+pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Json<Res<String>> {
     match req.validate() {
         Ok(_) => {}
         Err(e) => return Json(Res::with_err(&e.to_string())),
     };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_post::add(db, req).await;
+    let res = service::sys_post::add(db, req, user.id).await;
     match res {
         Ok(x) => Json(Res::with_msg(&x.msg)),
         Err(e) => Json(Res::with_err(&e.to_string())),
@@ -62,10 +65,10 @@ pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Result<Json<RespData>>
 
 // edit 修改
 #[handler]
-pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<RespData>> {
-    edit_req.validate().map_err(BadRequest)?;
+pub async fn edit(Json(req): Json<EditReq>, user: Claims) -> Result<Json<RespData>> {
+    req.validate().map_err(BadRequest)?;
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_post::edit(db, edit_req).await?;
+    let res = service::sys_post::edit(db, req, user.id).await?;
     Ok(Json(res))
 }
 

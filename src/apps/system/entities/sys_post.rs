@@ -13,7 +13,7 @@ pub struct Model {
     pub post_sort: i32,
     pub status: String,
     pub remark: Option<String>,
-    pub created_by: Option<String>,
+    pub created_by: String,
     pub updated_by: Option<String>,
     pub created_at: Option<DateTime>,
     pub updated_at: Option<DateTime>,

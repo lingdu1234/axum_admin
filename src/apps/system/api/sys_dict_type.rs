@@ -1,6 +1,7 @@
 use crate::apps::common::models::{ListData, PageParams, Res, RespData};
 use crate::apps::system::entities::sys_dict_type;
 use crate::apps::system::service;
+use crate::utils::jwt::Claims;
 use poem::{
     error::BadRequest,
     handler,
@@ -36,13 +37,13 @@ pub async fn get_sort_list(
 }
 /// add 添加
 #[handler]
-pub async fn add(Json(req): Json<AddReq>) -> Json<Res<String>> {
+pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Json<Res<String>> {
     match req.validate() {
         Ok(_) => {}
         Err(e) => return Json(Res::with_err(&e.to_string())),
     };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_type::add(db, req).await;
+    let res = service::sys_dict_type::add(db, req, user.id).await;
     match res {
         Ok(x) => Json(Res::with_msg(&x.msg)),
         Err(e) => Json(Res::with_err(&e.to_string())),
@@ -66,10 +67,10 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Json<Res<String>> {
 
 // edit 修改
 #[handler]
-pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<RespData>> {
+pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Result<Json<RespData>> {
     edit_req.validate().map_err(BadRequest)?;
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_type::edit(db, edit_req).await?;
+    let res = service::sys_dict_type::edit(db, edit_req,user.id).await?;
     Ok(Json(res))
 }
 

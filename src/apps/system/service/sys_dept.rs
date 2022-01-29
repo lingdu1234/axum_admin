@@ -70,7 +70,11 @@ pub async fn check_data_is_exist(dept_name: String, db: &DatabaseConnection) -> 
 
 /// add 添加
 
-pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<CudResData<String>> {
+pub async fn add(
+    db: &DatabaseConnection,
+    req: AddReq,
+    user_id: String,
+) -> Result<CudResData<String>> {
     //  检查字典类型是否存在
     if check_data_is_exist(req.clone().dept_name, db).await? {
         return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
@@ -87,6 +91,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<CudResData<Stri
         status: Set(req.status),
         phone: Set(req.phone),
         email: Set(req.email),
+        created_by: Set(user_id),
         created_at: Set(Some(now)),
         ..Default::default()
     };
@@ -120,7 +125,7 @@ pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
+pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
     let s1 = SysDept::find()
         .filter(sys_dept::Column::DeptName.eq(req.clone().dept_name))
@@ -146,6 +151,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
         leader: Set(req.leader),
         phone: Set(req.phone),
         email: Set(req.email),
+        updated_by: Set(Some(user_id)),
         updated_at: Set(Some(now)),
         ..s_r
     };

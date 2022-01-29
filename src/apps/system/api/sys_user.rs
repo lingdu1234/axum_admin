@@ -25,7 +25,7 @@ use crate::{
 use crate::{db_conn, DB};
 
 use super::super::models::sys_user::{
-    AddReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq,ChangeStatusReq
+    AddReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq,
 };
 
 /// get_user_list 获取用户列表
