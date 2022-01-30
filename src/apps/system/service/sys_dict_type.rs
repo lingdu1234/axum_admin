@@ -2,13 +2,12 @@ use crate::apps::common::models::{CudResData, ListData, PageParams, RespData};
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait,
-    QueryFilter, QueryOrder, Set,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
+    PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
 
 use super::super::entities::{prelude::SysDictType, sys_dict_type};
 use super::super::models::sys_dict_type::{AddReq, DeleteReq, EditReq, Resp, SearchReq};
-use crate::utils::jwt::Claims;
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -60,7 +59,10 @@ pub async fn get_sort_list(
     Ok(res)
 }
 
-pub async fn check_dict_type_is_exist(dict_type: &str, db: &DatabaseConnection) -> Result<bool> {
+pub async fn check_dict_type_is_exist<'a, C>(dict_type: &str, db: &'a C) -> Result<bool>
+where
+    C: ConnectionTrait<'a>,
+{
     let mut s = SysDictType::find();
     s = s.filter(sys_dict_type::Column::DictType.eq(dict_type));
     let count = s.count(db).await.map_err(BadRequest)?;
@@ -68,11 +70,10 @@ pub async fn check_dict_type_is_exist(dict_type: &str, db: &DatabaseConnection) 
 }
 
 /// add 添加
-pub async fn add(
-    db: &DatabaseConnection,
-    req: AddReq,
-    user_id: String,
-) -> Result<CudResData<String>> {
+pub async fn add<'a, C>(db: &'a C, req: AddReq, user_id: String) -> Result<CudResData<String>>
+where
+    C: ConnectionTrait<'a>,
+{
     //  检查字典类型是否存在
     if check_dict_type_is_exist(&req.dict_type, db).await? {
         return Err(Error::from_string(
@@ -95,7 +96,7 @@ pub async fn add(
     SysDictType::insert(dict_type)
         .exec(db)
         .await
-        .map_err(BadRequest);
+        .map_err(BadRequest)?;
     let res = CudResData {
         id: Some(uid),
         msg: "添加成功".to_string(),

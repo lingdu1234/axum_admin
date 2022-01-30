@@ -152,7 +152,7 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
 
 /// add 添加
 pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
-    let uid = scru128::scru128().to_string();
+    let uid = scru128::scru128_string();
     let salt = utils::rand_s(10);
     let passwd = utils::encrypt_password(&req.user_password, &salt);
     let now: NaiveDateTime = Local::now().naive_local();
@@ -168,8 +168,6 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
         dept_id: Set(req.dept_id),
         remark: Set(req.remark.unwrap_or_else(|| "".to_string())),
         is_admin: Set(req.is_admin.unwrap_or_else(|| "1".to_string())),
-        address: Set(req.address.unwrap_or_else(|| "".to_string())),
-        describe: Set(req.describe.unwrap_or_else(|| "".to_string())),
         phone_num: Set(req.phone_num.unwrap_or_else(|| "".to_string())),
         created_at: Set(Some(now)),
         ..Default::default()
@@ -300,8 +298,6 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
         dept_id: Set(req.dept_id),
         remark: Set(req.remark),
         is_admin: Set(req.is_admin),
-        address: Set(req.address),
-        describe: Set(req.describe),
         phone_num: Set(req.phone_num),
         updated_at: Set(Some(now)),
         ..s_user

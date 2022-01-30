@@ -2,7 +2,7 @@ use poem::{
     error::BadRequest,
     handler,
     web::{Json, Query},
-    Result,
+    Request, Result,
 };
 
 use validator::Validate;
@@ -51,7 +51,10 @@ pub async fn get_sort_list(
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<UserInfomaion>> {
+pub async fn get_by_id(
+    Query(req): Query<SearchReq>,
+    request: &Request,
+) -> Json<Res<UserInfomaion>> {
     match req.validate() {
         Ok(_) => {}
         Err(e) => return Json(Res::with_err(&e.to_string())),
@@ -103,7 +106,10 @@ pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<RespData>> {
 
 /// 用户登录
 #[handler]
-pub async fn login(Json(login_req): Json<UserLoginReq>) -> Result<Json<Res<AuthBody>>> {
+pub async fn login(
+    Json(login_req): Json<UserLoginReq>,
+    req: &Request,
+) -> Result<Json<Res<AuthBody>>> {
     match login_req.validate() {
         Ok(_) => {}
         Err(e) => return Ok(Json(Res::with_err(&e.to_string()))),

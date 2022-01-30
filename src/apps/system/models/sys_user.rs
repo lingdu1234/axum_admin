@@ -29,10 +29,6 @@ pub struct AddReq {
     #[validate(length(min = 1))]
     pub remark: Option<String>,
     pub is_admin: Option<String>,
-    #[validate(length(min = 1))]
-    pub address: Option<String>,
-    #[validate(length(min = 1))]
-    pub describe: Option<String>,
     #[validate(regex(path = "PHONE_REGEX", code = "phone_num is invalid"))]
     pub phone_num: Option<String>,
     pub post_ids: Option<Vec<String>>,
@@ -51,8 +47,6 @@ pub struct EditReq {
     pub dept_id: String,
     pub remark: String,
     pub is_admin: String,
-    pub address: String,
-    pub describe: String,
     pub phone_num: String,
     pub post_ids: Vec<String>,
     pub role_ids: Vec<String>,
@@ -70,8 +64,6 @@ pub struct UserResp {
     pub dept_id: String,
     pub remark: String,
     pub is_admin: String,
-    pub address: String,
-    pub describe: String,
     pub phone_num: String,
 }
 

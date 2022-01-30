@@ -82,11 +82,14 @@ pub async fn check_router_is_exist_update(
     Ok(count1 > 0 || count2 > 0)
 }
 
-pub async fn check_router_is_exist_add(
-    db: &DatabaseConnection,
+pub async fn check_router_is_exist_add<'a, C>(
+    db: &'a C,
     route_path: String,
     route_name: String,
-) -> Result<bool> {
+) -> Result<bool>
+where
+    C: ConnectionTrait<'a>,
+{
     let s1 = SysMenu::find()
         .filter(sys_menu::Column::Path.eq(route_path))
         .filter(sys_menu::Column::MenuType.ne("F"));
@@ -99,7 +102,10 @@ pub async fn check_router_is_exist_add(
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<CudResData<String>> {
+pub async fn add<'a, C>(db: &'a C, req: AddReq) -> Result<CudResData<String>>
+where
+    C: ConnectionTrait<'a>,
+{
     //  检查数据是否存在
     if check_router_is_exist_add(
         db,

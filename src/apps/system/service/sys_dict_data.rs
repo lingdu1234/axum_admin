@@ -61,7 +61,10 @@ pub async fn get_sort_list(
     Ok(res)
 }
 
-pub async fn check_dict_data_is_exist(req: AddReq, db: &DatabaseConnection) -> Result<bool> {
+pub async fn check_dict_data_is_exist<'a, C>(req: AddReq, db: &'a C) -> Result<bool>
+where
+    C: ConnectionTrait<'a>,
+{
     let s = SysDictData::find().filter(sys_dict_data::Column::DictType.eq(req.dict_type));
     let s1 = s
         .clone()
@@ -75,11 +78,10 @@ pub async fn check_dict_data_is_exist(req: AddReq, db: &DatabaseConnection) -> R
 }
 
 /// add 添加
-pub async fn add(
-    db: &DatabaseConnection,
-    add_req: AddReq,
-    user_id: String,
-) -> Result<CudResData<String>> {
+pub async fn add<'a, C>(db: &'a C, add_req: AddReq, user_id: String) -> Result<CudResData<String>>
+where
+    C: ConnectionTrait<'a>,
+{
     //  检查字典类型是否存在
     if check_dict_data_is_exist(add_req.clone(), db).await? {
         return Err(Error::from_string(

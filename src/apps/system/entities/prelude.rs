@@ -2,6 +2,7 @@
 
 pub use super::casbin_rule::Entity as CasbinRule;
 pub use super::sys_config::Entity as SysConfig;
+pub use super::sys_db_version::Entity as SysDbVersion;
 pub use super::sys_dept::Entity as SysDept;
 pub use super::sys_dict_data::Entity as SysDictData;
 pub use super::sys_dict_type::Entity as SysDictType;
@@ -13,7 +14,6 @@ pub use super::sys_oper_log::Entity as SysOperLog;
 pub use super::sys_post::Entity as SysPost;
 pub use super::sys_role::Entity as SysRole;
 pub use super::sys_role_dept::Entity as SysRoleDept;
-pub use super::sys_update_info::Entity as SysUpdateInfo;
 pub use super::sys_user::Entity as SysUser;
 pub use super::sys_user_online::Entity as SysUserOnline;
 pub use super::sys_user_post::Entity as SysUserPost;

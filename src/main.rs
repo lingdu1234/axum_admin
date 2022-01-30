@@ -29,7 +29,7 @@ async fn main() -> Result<(), std::io::Error> {
         std::env::set_var("RUST_LOG", &CFG.log.log_level);
     }
     env::setup();
-  
+
     //日志追踪 将log转换到Tracing统一输出
     LogTracer::init().unwrap();
 
@@ -66,15 +66,9 @@ async fn main() -> Result<(), std::io::Error> {
     //  数据库联机
 
     // 数据库初始化
-    database::db_init().await;
+    database::migration::db_init().await;
     //  casbin设置
     get_enforcer().await;
-    //     .await
-    //     .expect("casbin init error");
-    // let e = &casbin_service.enforcer;
-    // let e_result = e.enforce(("a", "b", "c")).unwrap();
-    // println!("e_result-----------{}", e_result);
-    // -------------------------------------------------------
 
     //  跨域
     let cors = Cors::new();

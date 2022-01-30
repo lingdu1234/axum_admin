@@ -13,7 +13,8 @@ pub async fn db_conn() -> DatabaseConnection {
     opt.max_connections(1000)
         .min_connections(5)
         .connect_timeout(Duration::from_secs(8))
-        .idle_timeout(Duration::from_secs(8));
+        .idle_timeout(Duration::from_secs(8))
+        .sqlx_logging(true);
     let db = Database::connect(opt).await.expect("数据库打开失败");
     tracing::info!("Database connected");
     db

@@ -6,7 +6,7 @@ use poem::{
     error::BadRequest,
     handler,
     web::{Json, Query},
-    IntoResponse, Result,
+    Result,
 };
 
 use crate::apps::common::models::{PageParams, RespData};
