@@ -15,25 +15,29 @@ impl EntityName for Entity {
 #[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
 pub struct Model {
     pub info_id: String,
-    pub login_name: Option<String>,
-    pub ipaddr: Option<String>,
-    pub login_location: Option<String>,
-    pub browser: Option<String>,
-    pub os: Option<String>,
-    pub status: Option<i8>,
-    pub msg: Option<String>,
-    pub login_time: Option<DateTime>,
-    pub module: Option<String>,
+    pub login_name: String,
+    pub net: String,
+    pub ipaddr: String,
+    pub login_location: String,
+    pub browser: String,
+    pub os: String,
+    pub device: String,
+    pub status: String,
+    pub msg: String,
+    pub login_time: DateTime,
+    pub module: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
 pub enum Column {
     InfoId,
     LoginName,
+    Net,
     Ipaddr,
     LoginLocation,
     Browser,
     Os,
+    Device,
     Status,
     Msg,
     LoginTime,
@@ -60,15 +64,17 @@ impl ColumnTrait for Column {
     fn def(&self) -> ColumnDef {
         match self {
             Self::InfoId => ColumnType::String(Some(32u32)).def(),
-            Self::LoginName => ColumnType::String(Some(50u32)).def().null(),
-            Self::Ipaddr => ColumnType::String(Some(50u32)).def().null(),
-            Self::LoginLocation => ColumnType::String(Some(255u32)).def().null(),
-            Self::Browser => ColumnType::String(Some(50u32)).def().null(),
-            Self::Os => ColumnType::String(Some(50u32)).def().null(),
-            Self::Status => ColumnType::TinyInteger.def().null(),
-            Self::Msg => ColumnType::String(Some(255u32)).def().null(),
-            Self::LoginTime => ColumnType::DateTime.def().null(),
-            Self::Module => ColumnType::String(Some(30u32)).def().null(),
+            Self::LoginName => ColumnType::String(Some(50u32)).def(),
+            Self::Net => ColumnType::String(Some(10u32)).def(),
+            Self::Ipaddr => ColumnType::String(Some(50u32)).def(),
+            Self::LoginLocation => ColumnType::String(Some(255u32)).def(),
+            Self::Browser => ColumnType::String(Some(50u32)).def(),
+            Self::Os => ColumnType::String(Some(50u32)).def(),
+            Self::Device => ColumnType::String(Some(50u32)).def(),
+            Self::Status => ColumnType::Char(Some(1u32)).def(),
+            Self::Msg => ColumnType::String(Some(255u32)).def(),
+            Self::LoginTime => ColumnType::DateTime.def(),
+            Self::Module => ColumnType::String(Some(30u32)).def(),
         }
     }
 }

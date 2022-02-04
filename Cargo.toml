@@ -12,7 +12,7 @@ opt-level = "z" # Optimize for size.
 panic = 'abort' 
 
 [dependencies]
-# anyhow = "1.0.51"
+anyhow = "1.0"
 # env_logger = "0.9"
 chrono = {version = "0.4", features = ["serde"]}
 headers = "0.3.5"
@@ -40,7 +40,11 @@ tracing-subscriber = {git = "https://github.com/tokio-rs/tracing.git", version =
 # tracing-log = "0.1.2"
 # tracing-subscriber = {version = "0.3.5", features = ["json", "env-filter", "local-time"]}
 
+# 计划任务
+delay_timer = {version = "0.11.0"}
+reqwest = {version = "0.11", features = ["json"]}
 sea_orm_casbin_adapter = "0.2.4"
+user-agent-parser = "0.3.0"
 # sea_orm_casbin_adapter = {git = "https://github.com/lingdu1234/sea_orm_casbin_adapter.git"}
 
 #  随机数

@@ -68,13 +68,22 @@ async fn db_table_init(db: &DatabaseConnection) {
         .expect("数据库创建失败或者已经存在");
     db.execute(builder.build(&schema.create_table_from_entity(sys_user_post::Entity)))
         .await
-        .expect("数据库创建失败或者已经存在");
+        .expect("用户部门表,创建失败或者已经存在");
     db.execute(builder.build(&schema.create_table_from_entity(sys_role::Entity)))
         .await
-        .expect("数据库创建失败或者已经存在");
+        .expect("角色表,创建失败或者已经存在");
     db.execute(builder.build(&schema.create_table_from_entity(sys_role_dept::Entity)))
         .await
-        .expect("数据库创建失败或者已经存在");
+        .expect("角色部门表,创建失败或者已经存在");
+    db.execute(builder.build(&schema.create_table_from_entity(sys_login_log::Entity)))
+        .await
+        .expect("登录日志表,创建失败或者已经存在");
+    db.execute(builder.build(&schema.create_table_from_entity(sys_user_online::Entity)))
+        .await
+        .expect("在线用户表,创建失败或者已经存在");
+    db.execute(builder.build(&schema.create_table_from_entity(sys_job::Entity)))
+        .await
+        .expect("定时任务表,创建失败或者已经存在");
 }
 
 async fn db_table_data_init(db: &DatabaseConnection) {

@@ -1,7 +1,5 @@
 pub mod common;
 
-pub mod auth; //用户授权
-
 //用户管理
 pub mod sys_user;
 //字典类型
@@ -16,3 +14,11 @@ pub mod sys_dept;
 pub mod sys_role;
 // 菜单管理
 pub mod sys_menu;
+// 登录日志
+pub mod sys_login_log;
+//  在线日志
+pub mod sys_user_online;
+//  定时任务
+pub mod sys_job;
+// 定时任务日志
+pub mod sys_job_log;

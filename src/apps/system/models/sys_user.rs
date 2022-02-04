@@ -109,11 +109,14 @@ pub struct DeleteReq {
 #[derive(Deserialize, Debug, Serialize, Default, Validate)]
 pub struct UserLoginReq {
     ///  用户名
-    #[validate(length(min = 4))]
+    #[validate(length(min = 4, message = "用户名长度不能小于4"))]
     pub user_name: String,
     ///  用户密码
-    #[validate(length(min = 5))]
+    #[validate(length(min = 6, message = "密码长度不能小于6"))]
     pub user_password: String,
+    #[validate(length(min = 1, message = "验证码不能为空"))]
+    pub code: String,
+    pub uuid: String,
 }
 
 #[derive(Serialize, Debug)]

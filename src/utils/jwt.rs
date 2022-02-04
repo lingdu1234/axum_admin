@@ -3,6 +3,7 @@ use headers::{authorization::Bearer, Authorization};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use once_cell::sync::Lazy;
 use poem::{http::StatusCode, web::TypedHeader, Error, FromRequest, Request, RequestBody, Result};
+
 use serde::{Deserialize, Serialize};
 
 use crate::CFG;
@@ -27,14 +28,15 @@ impl Keys {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct AuthPayload {
     pub id: String,
     pub name: String,
 }
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     pub id: String,
+    pub token_id: String,
     pub name: String,
     pub exp: i64,
 }
@@ -58,7 +60,7 @@ impl<'a> FromRequest<'a> for Claims {
     }
 }
 
-pub async fn authorize(payload: AuthPayload) -> Result<AuthBody> {
+pub async fn authorize(payload: AuthPayload, token_id: String) -> Result<AuthBody> {
     if payload.id.is_empty() || payload.name.is_empty() {
         return Err(Error::from_string(
             "Missing credentials",
@@ -69,6 +71,7 @@ pub async fn authorize(payload: AuthPayload) -> Result<AuthBody> {
     let exp = iat + Duration::minutes(CFG.jwt.jwt_exp);
     let claims = Claims {
         id: payload.id.to_owned(),
+        token_id,
         name: payload.name,
         exp: exp.timestamp(),
     };
@@ -78,7 +81,7 @@ pub async fn authorize(payload: AuthPayload) -> Result<AuthBody> {
     })?;
 
     // Send the authorized token
-    Ok(AuthBody::new(token, claims.exp))
+    Ok(AuthBody::new(token, claims.exp, CFG.jwt.jwt_exp))
 }
 
 // #[derive(Debug)]
@@ -103,18 +106,20 @@ pub async fn authorize(payload: AuthPayload) -> Result<AuthBody> {
 //     }
 // }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AuthBody {
     token: String,
     token_type: String,
-    exp: i64,
+    pub exp: i64,
+    exp_in: i64,
 }
 impl AuthBody {
-    fn new(access_token: String, exp: i64) -> Self {
+    fn new(access_token: String, exp: i64, exp_in: i64) -> Self {
         Self {
             token: access_token,
             token_type: "Bearer".to_string(),
             exp,
+            exp_in,
         }
     }
 }

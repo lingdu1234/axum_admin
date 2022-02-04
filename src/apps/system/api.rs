@@ -3,13 +3,18 @@ mod common;
 mod sys_dept;
 mod sys_dict_data;
 mod sys_dict_type;
+mod sys_job;
+mod sys_job_log;
+mod sys_login_log;
 mod sys_menu;
 mod sys_post;
 mod sys_role;
 mod sys_user;
+mod sys_user_online;
 
 pub use common::get_captcha;
 pub use sys_user::login;
+pub use sys_user_online::log_out;
 
 pub fn system_api() -> Route {
     Route::new()
@@ -21,6 +26,10 @@ pub fn system_api() -> Route {
         .nest("/dept", sys_dept_api()) //部门模块
         .nest("/role", sys_role_api()) //角色模块
         .nest("/menu", sys_menu_api()) //路由 菜单 模块
+        .nest("/login-log", sys_login_log_api()) //登录日志模块
+        .nest("/online", sys_user_online_api()) //在线用户
+        .nest("/job", sys_job_api()) //定时任务
+        .nest("/job-log", sys_job_log_api()) //定时任务日志
 }
 
 fn sys_user_api() -> Route {
@@ -33,6 +42,7 @@ fn sys_user_api() -> Route {
         .at("/get_info", get(sys_user::get_info)) //获取用户信息
         .at("/reset_passwd", put(sys_user::reset_passwd)) //重置密码
         .at("/change_status", put(sys_user::change_status)) //修改状态
+        .at("/fresh_token", put(sys_user::fresh_token)) //修改状态
 }
 
 fn sys_dict_type_api() -> Route {
@@ -114,4 +124,31 @@ fn sys_menu_api() -> Route {
         //
         .at("/get_all_menu_tree", get(sys_menu::get_all_menu_tree)) //获取全部路由菜单树
         .at("/get_routers", get(sys_menu::get_routers)) //获取用户菜单树
+}
+fn sys_login_log_api() -> Route {
+    Route::new()
+        .at("/list", get(sys_login_log::get_sort_list)) //获取筛选分页
+        .at("/clean", delete(sys_login_log::clean)) //清空
+        .at("/delete", delete(sys_login_log::delete)) //硬删除
+}
+fn sys_user_online_api() -> Route {
+    Route::new()
+        .at("/list", get(sys_user_online::get_sort_list)) //获取筛选分页
+        .at("/delete", delete(sys_user_online::delete)) //删除
+}
+
+fn sys_job_api() -> Route {
+    Route::new()
+        .at("/list", get(sys_job::get_sort_list)) //获取筛选分页
+        .at("/get_by_id", get(sys_job::get_by_id)) //按id获取
+        .at("/add", post(sys_job::add)) //添加
+        .at("/edit", put(sys_job::edit)) //更新
+        .at("/delete", delete(sys_job::delete)) //硬删除
+}
+
+fn sys_job_log_api() -> Route {
+    Route::new()
+        .at("/list", get(sys_job_log::get_sort_list)) //获取筛选分页
+        .at("/get_by_id", get(sys_job_log::get_by_id)) //按id获取
+        .at("/delete", delete(sys_job_log::delete)) //硬删除
 }

@@ -12,7 +12,6 @@ use crate::database::{db_conn, DB};
 
 //路由日志追踪
 use crate::middleware::Tracing;
-use crate::utils::get_enforcer;
 
 mod apps;
 //  配置文件
@@ -21,6 +20,7 @@ mod config;
 mod database;
 mod env;
 mod middleware;
+mod tasks;
 pub mod utils;
 
 #[tokio::main]
@@ -68,11 +68,11 @@ async fn main() -> Result<(), std::io::Error> {
     // 数据库初始化
     database::migration::db_init().await;
     //  casbin设置
-    get_enforcer().await;
-
+    utils::get_enforcer().await;
+    // 定时任务初始化
+    tasks::timer_task_init().await.expect("定时任务初始化失败");
     //  跨域
     let cors = Cors::new();
-    println!("dvsdvdsvdsv------------------------------");
     //  Swagger
     let listener = TcpListener::bind(&CFG.server.address);
     // 启动app  注意中间件顺序 最后的先执行，尤其AddData 顺序不对可能会导致数据丢失，无法在某些位置获取数据
@@ -81,7 +81,9 @@ async fn main() -> Result<(), std::io::Error> {
         .nest("/api", apps::api())
         .nest(
             "/",
-            StaticFilesEndpoint::new(&CFG.web.dir).index_file(&CFG.web.index),
+            StaticFilesEndpoint::new(&CFG.web.dir)
+                .show_files_listing()
+                .index_file(&CFG.web.index),
         )
         .with(Tracing)
         .with(cors);

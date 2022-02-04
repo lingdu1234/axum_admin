@@ -1,25 +1,29 @@
 use chrono::{Local, NaiveDateTime};
-use poem::{error::BadRequest, http::StatusCode, Error, Result};
+use poem::{error::BadRequest, http::StatusCode, Error, Request, Result};
 
-use sea_orm::sea_query::Expr;
+use scru128::scru128_string;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
-    PaginatorTrait, QueryFilter, QueryOrder, Set,
+    sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
+    EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
 use serde_json::json;
 
-use crate::apps::common::models::{ListData, PageParams, RespData};
 use crate::utils::{
     self,
-    jwt::{AuthBody, AuthPayload},
+    jwt::{AuthBody, AuthPayload, Claims},
 };
 
-use super::super::entities::{prelude::SysUser, sys_user};
-use super::super::models::sys_user::{
-    AddReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq, UserResp,
-    UserWithDept,
+use super::{
+    super::{
+        super::common::models::{ListData, PageParams, RespData},
+        entities::{prelude::SysUser, sys_user},
+        models::sys_user::{
+            AddReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq,
+            UserResp, UserWithDept,
+        },
+    },
+    sys_login_log, sys_post, sys_role, sys_user_online,
 };
-use super::{sys_post, sys_role};
 
 /// get_user_list 获取用户列表
 /// page_params 分页参数
@@ -129,14 +133,13 @@ pub async fn get_un_auth_user(
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<UserResp> {
+pub async fn get_by_id(db: &DatabaseConnection, user_id: String) -> Result<UserResp> {
     let mut s = SysUser::find();
     // 不查找删除数据
     s = s.filter(sys_user::Column::DeletedAt.is_null());
     //
-    if let Some(x) = search_req.user_id {
-        s = s.filter(sys_user::Column::Id.eq(x));
-    }
+
+    s = s.filter(sys_user::Column::Id.eq(user_id));
 
     let result = match s
         .into_model::<UserResp>()
@@ -319,13 +322,28 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
 }
 
 /// 用户登录
-pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq) -> Result<AuthBody> {
-    // 验证用户名密码不为空
-    if login_req.user_name.trim().is_empty() {
-        return Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST));
-    }
-    if login_req.user_password.trim().is_empty() {
-        return Err(Error::from_string("密码不能为空", StatusCode::BAD_REQUEST));
+pub async fn login(
+    db: &DatabaseConnection,
+    login_req: UserLoginReq,
+    req: &Request,
+) -> Result<AuthBody> {
+    let mut msg = "登录成功".to_string();
+    let mut status = "1".to_string();
+    // 验证验证码
+    if utils::encrypt_password(&login_req.code, "") != login_req.uuid {
+        msg = "验证码错误".to_string();
+        status = "0".to_string();
+        set_login_info(
+            req,
+            "".to_string(),
+            login_req.user_name.clone(),
+            msg.clone(),
+            status.clone(),
+            None,
+            None,
+        )
+        .await;
+        return Err(Error::from_string("验证码错误", StatusCode::BAD_REQUEST));
     }
     // 根据用户名获取用户信息
     let user = match SysUser::find()
@@ -336,11 +354,35 @@ pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq) -> Result<A
     {
         Some(user) => user,
         None => {
+            msg = "用户不存在".to_string();
+            status = "0".to_string();
+            set_login_info(
+                req,
+                "".to_string(),
+                login_req.user_name.clone(),
+                msg.clone(),
+                status.clone(),
+                None,
+                None,
+            )
+            .await;
             return Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST));
         }
     };
     //  验证密码是否正确
     if utils::encrypt_password(&login_req.user_password, &user.user_salt) != user.user_password {
+        msg = "密码错误".to_string();
+        status = "0".to_string();
+        set_login_info(
+            req,
+            "".to_string(),
+            login_req.user_name.clone(),
+            msg.clone(),
+            status.clone(),
+            None,
+            None,
+        )
+        .await;
         return Err(Error::from_string("密码不正确", StatusCode::BAD_REQUEST));
     };
     // 注册JWT
@@ -348,8 +390,63 @@ pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq) -> Result<A
         id: user.id.clone(),               // 用户id
         name: login_req.user_name.clone(), // 用户名
     };
-
-    let token = utils::authorize(claims).await.unwrap();
+    let token_id = scru128_string();
+    let token = utils::authorize(claims.clone(), token_id.clone())
+        .await
+        .unwrap();
+    // 成功登录后
+    //  写入登录日志
+    set_login_info(
+        req,
+        user.id.to_string(),
+        login_req.user_name.clone(),
+        msg.clone(),
+        status.clone(),
+        Some(token_id),
+        Some(token.clone()),
+    )
+    .await;
 
     Ok(token)
+}
+
+/// 用户登录
+pub async fn fresh_token(user: Claims) -> Result<AuthBody> {
+    // 注册JWT
+    let claims = AuthPayload {
+        id: user.clone().id.clone(),     // 用户id
+        name: user.clone().name.clone(), // 用户名
+    };
+    let token = utils::authorize(claims.clone(), user.clone().token_id)
+        .await
+        .unwrap();
+    // 成功登录后
+    // 更新原始在线日志
+    sys_user_online::update_online(user.clone().token_id, token.clone().exp).await?;
+
+    Ok(token)
+}
+
+pub async fn set_login_info(
+    req: &Request,
+    u_id: String,
+    user: String,
+    msg: String,
+    status: String,
+    token_id: Option<String>,
+    token: Option<AuthBody>,
+) {
+    let u = utils::get_client_info(req).await;
+    // 写入登录日志
+    let u2 = u.clone();
+    let status2 = status.clone();
+    tokio::spawn(async {
+        sys_login_log::add(u2, user, msg, status2).await;
+    });
+    // 如果成功，写入在线日志
+    if status == "1" {
+        if let (Some(token_id), Some(token)) = (token_id, token) {
+            sys_user_online::add(u, u_id, token_id, token.clone().exp).await;
+        }
+    }
 }

@@ -2,7 +2,11 @@ use headers::{authorization::Bearer, HeaderMapExt};
 use jsonwebtoken::{decode, errors::ErrorKind, Validation};
 use poem::{http::StatusCode, Endpoint, Error, Middleware, Request, Result};
 
-use crate::utils::jwt::{Claims, KEYS};
+use crate::{
+    apps::system::check_user_online,
+    utils::jwt::{Claims, KEYS},
+};
+use chrono::{Duration, Utc};
 
 #[derive(Clone, Debug)]
 pub struct Auth;
@@ -40,7 +44,18 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
             // let validation = Validation {validate_exp: true,..Validation::default()};
             let token_data =
                 match decode::<Claims>(auth.0.token(), &KEYS.decoding, &Validation::default()) {
-                    Ok(token) => token,
+                    Ok(token) => {
+                        let token_id = token.claims.token_id.clone();
+                        let x = check_user_online(None, token_id).await;
+                        if x {
+                            token
+                        } else {
+                            return Err(Error::from_string(
+                                "该账户已经退出",
+                                StatusCode::UNAUTHORIZED,
+                            ));
+                        }
+                    }
                     Err(err) => match *err.kind() {
                         ErrorKind::InvalidToken => {
                             return Err(Error::from_string(

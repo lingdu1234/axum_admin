@@ -130,7 +130,7 @@ pub async fn add(
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
+pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
     let mut s = SysPost::delete_many();
 
     s = s.filter(sys_post::Column::PostId.is_in(delete_req.post_ids));
@@ -143,7 +143,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<Re
             "删除失败,数据不存在",
             StatusCode::BAD_REQUEST,
         )),
-        i => Ok(RespData::with_msg(&format!("成功删除{}条数据", i))),
+        i => Ok(format!("成功删除{}条数据", i)),
     }
 }
 

@@ -15,24 +15,34 @@ impl EntityName for Entity {
 #[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
 pub struct Model {
     pub id: String,
-    pub uuid: String,
-    pub token: String,
-    pub create_time: Option<DateTime>,
+    pub u_id: String,
+    pub token_id: String,
+    pub token_exp: i64,
+    pub login_time: DateTime,
     pub user_name: String,
-    pub ip: String,
-    pub explorer: String,
+    pub dept_name: String,
+    pub net: String,
+    pub ipaddr: String,
+    pub login_location: String,
+    pub device: String,
+    pub browser: String,
     pub os: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
 pub enum Column {
     Id,
-    Uuid,
-    Token,
-    CreateTime,
+    UId,
+    TokenId,
+    TokenExp,
+    LoginTime,
     UserName,
-    Ip,
-    Explorer,
+    DeptName,
+    Net,
+    Ipaddr,
+    LoginLocation,
+    Device,
+    Browser,
     Os,
 }
 
@@ -56,12 +66,17 @@ impl ColumnTrait for Column {
     fn def(&self) -> ColumnDef {
         match self {
             Self::Id => ColumnType::String(Some(32u32)).def(),
-            Self::Uuid => ColumnType::String(Some(32u32)).def(),
-            Self::Token => ColumnType::String(Some(255u32)).def().unique(),
-            Self::CreateTime => ColumnType::DateTime.def().null(),
+            Self::UId => ColumnType::String(Some(32u32)).def(),
+            Self::TokenId => ColumnType::String(Some(32u32)).def(),
+            Self::TokenExp => ColumnType::BigInteger.def(),
+            Self::LoginTime => ColumnType::DateTime.def(),
             Self::UserName => ColumnType::String(Some(255u32)).def(),
-            Self::Ip => ColumnType::String(Some(120u32)).def(),
-            Self::Explorer => ColumnType::String(Some(30u32)).def(),
+            Self::DeptName => ColumnType::String(Some(100u32)).def(),
+            Self::Net => ColumnType::String(Some(10u32)).def(),
+            Self::Ipaddr => ColumnType::String(Some(120u32)).def(),
+            Self::LoginLocation => ColumnType::String(Some(255u32)).def(),
+            Self::Device => ColumnType::String(Some(50u32)).def(),
+            Self::Browser => ColumnType::String(Some(30u32)).def(),
             Self::Os => ColumnType::String(Some(30u32)).def(),
         }
     }

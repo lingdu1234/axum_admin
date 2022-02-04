@@ -17,12 +17,13 @@ file = "app_log"
 log_level = "DEBUG" # DEBUG TRACE  INFO  WARN ERROR
 [system]
 super_user = ["00TV87DDOBJPU75J4TGUOC3NNG", "00TV876BOIIDCR9H7JA1KNNIGH"]
+user_agent_parser = "config/regexes.yaml"
 [jwt]
 # 单位 分钟
-jwt_exp = 1440
-jwt_secret = 'secret'
+jwt_exp = 14400 # 10天 14400
+jwt_secret = 'secret' 
 [database]
 db_type = 'mysql'
-# link = 'mysql://root:lingdu515639@192.168.1.11:13306/wk'
-link = 'mysql://root:lingdu515639@127.0.0.1:13306/wk2'
+link = 'mysql://root:lingdu515639@192.168.1.11:13306/wk'
+# link = 'mysql://root:lingdu515639@127.0.0.1:13306/wk2'
 # link = 'postgres://postgres:lingdu515639@192.168.1.11:15432/wk'

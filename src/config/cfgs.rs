@@ -43,8 +43,10 @@ pub struct Web {
 /// system 系统配置
 #[derive(Debug, Deserialize)]
 pub struct System {
-    /// 静态网站根目录
+    /// 超级管理员账号
     pub super_user: Vec<String>,
+    /// user agent 解析
+    pub user_agent_parser: String,
 }
 
 /// casbin 配置文件

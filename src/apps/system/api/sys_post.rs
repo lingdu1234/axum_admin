@@ -56,11 +56,17 @@ pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Json<Res<String>> {
 
 /// delete 完全删除
 #[handler]
-pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Result<Json<RespData>> {
-    delete_req.validate().map_err(BadRequest)?;
+pub async fn delete(Json(req): Json<DeleteReq>) -> Json<Res<String>> {
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_post::delete(db, delete_req).await?;
-    Ok(Json(res))
+    let res = service::sys_post::delete(db, req).await;
+    match res {
+        Ok(x) => Json(Res::with_msg(&x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 // edit 修改
