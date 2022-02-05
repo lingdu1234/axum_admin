@@ -29,7 +29,7 @@ pub fn system_api() -> Route {
         .nest("/login-log", sys_login_log_api()) //登录日志模块
         .nest("/online", sys_user_online_api()) //在线用户
         .nest("/job", sys_job_api()) //定时任务
-        .nest("/job-log", sys_job_log_api()) //定时任务日志
+        .nest("/job_log", sys_job_log_api()) //定时任务日志
 }
 
 fn sys_user_api() -> Route {
@@ -141,6 +141,8 @@ fn sys_job_api() -> Route {
     Route::new()
         .at("/list", get(sys_job::get_sort_list)) //获取筛选分页
         .at("/get_by_id", get(sys_job::get_by_id)) //按id获取
+        .at("/change_status", put(sys_job::change_status)) //设置状态
+        .at("/run_task_once", put(sys_job::run_task_once)) //设置状态
         .at("/add", post(sys_job::add)) //添加
         .at("/edit", put(sys_job::edit)) //更新
         .at("/delete", delete(sys_job::delete)) //硬删除
@@ -150,5 +152,6 @@ fn sys_job_log_api() -> Route {
     Route::new()
         .at("/list", get(sys_job_log::get_sort_list)) //获取筛选分页
         .at("/get_by_id", get(sys_job_log::get_by_id)) //按id获取
+        .at("/clean", delete(sys_job_log::clean)) //硬删除
         .at("/delete", delete(sys_job_log::delete)) //硬删除
 }

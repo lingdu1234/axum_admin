@@ -24,9 +24,17 @@ pub struct AddReq {
     pub status: String,
     pub created_at: NaiveDateTime,
     pub elapsed_time: i64,
+    pub lot_id: String,
+    pub lot_order: i64,
+    pub is_once: Option<String>,
 }
 
 #[derive(Deserialize)]
 pub struct DeleteReq {
     pub job_log_ids: Vec<String>,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct CleanReq {
+    pub job_id: String,
 }

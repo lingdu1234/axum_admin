@@ -12,7 +12,7 @@ use validator::Validate;
 
 use crate::database::{db_conn, DB};
 
-use super::super::models::sys_job_log::{DeleteReq, SearchReq};
+use super::super::models::sys_job_log::{CleanReq, DeleteReq, SearchReq};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -45,6 +45,17 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Json<Res<String>> {
     // };
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_job_log::delete(db, req).await;
+    match res {
+        Ok(x) => Json(Res::with_msg(&x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
+}
+
+#[handler]
+pub async fn clean(Json(req): Json<CleanReq>) -> Json<Res<String>> {
+    //  数据验证
+    let db = DB.get_or_init(db_conn).await;
+    let res = service::sys_job_log::clean(db, req.job_id).await;
     match res {
         Ok(x) => Json(Res::with_msg(&x)),
         Err(e) => Json(Res::with_err(&e.to_string())),

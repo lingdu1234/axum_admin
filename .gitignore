@@ -1,6 +1,9 @@
 /target
-/data
+/data/log
 .idea
 *.http
 .git
 .vscode
+/tests
+.env
+/config/config.toml

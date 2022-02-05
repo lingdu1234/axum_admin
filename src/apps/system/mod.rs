@@ -8,7 +8,10 @@ mod service;
 
 pub use api::{get_captcha, log_out, login as SysLogin, system_api};
 pub use db_migration::system_db_migration;
-pub use entities::sys_job::Model as SysJobModel;
+pub use entities::{
+    sys_job::{Column as SysJobColumn, Entity as SysJobEntity, Model as SysJobModel},
+    sys_user_online as SysUserOnlineEntity,
+};
 pub use models::sys_job_log::AddReq as SysJobLogAddReq;
 pub use service::{
     sys_job::{get_active_job, get_by_id as get_job_by_id},

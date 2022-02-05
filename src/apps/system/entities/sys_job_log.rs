@@ -16,6 +16,8 @@ impl EntityName for Entity {
 pub struct Model {
     pub job_log_id: String,
     pub job_id: String,
+    pub lot_id: String,
+    pub lot_order: i64,
     pub job_name: String,
     pub job_group: String,
     pub invoke_target: String,
@@ -23,6 +25,7 @@ pub struct Model {
     pub job_message: Option<String>,
     pub status: String,
     pub exception_info: Option<String>,
+    pub is_once: Option<String>,
     pub created_at: DateTime,
     pub elapsed_time: i64,
 }
@@ -31,6 +34,8 @@ pub struct Model {
 pub enum Column {
     JobLogId,
     JobId,
+    LotId,
+    LotOrder,
     JobName,
     JobGroup,
     InvokeTarget,
@@ -38,6 +43,7 @@ pub enum Column {
     JobMessage,
     Status,
     ExceptionInfo,
+    IsOnce,
     CreatedAt,
     ElapsedTime,
 }
@@ -63,6 +69,8 @@ impl ColumnTrait for Column {
         match self {
             Self::JobLogId => ColumnType::String(Some(32u32)).def(),
             Self::JobId => ColumnType::String(Some(32u32)).def(),
+            Self::LotId => ColumnType::String(Some(32u32)).def(),
+            Self::LotOrder => ColumnType::BigInteger.def(),
             Self::JobName => ColumnType::String(Some(64u32)).def(),
             Self::JobGroup => ColumnType::String(Some(64u32)).def(),
             Self::InvokeTarget => ColumnType::String(Some(500u32)).def(),
@@ -70,6 +78,7 @@ impl ColumnTrait for Column {
             Self::JobMessage => ColumnType::String(Some(500u32)).def().null(),
             Self::Status => ColumnType::Char(Some(1u32)).def(),
             Self::ExceptionInfo => ColumnType::String(Some(2000u32)).def().null(),
+            Self::IsOnce => ColumnType::Char(Some(1u32)).def().null(),
             Self::CreatedAt => ColumnType::DateTime.def(),
             Self::ElapsedTime => ColumnType::BigInteger.def(),
         }

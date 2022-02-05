@@ -2,8 +2,8 @@ use chrono::Local;
 use poem::{error::BadRequest, Error, Result};
 use reqwest::StatusCode;
 use sea_orm::{
-    sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
-    EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
+    ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
+    QueryOrder, Set,
 };
 
 use super::super::{
@@ -103,7 +103,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 }
 
 pub async fn clean(db: &DatabaseConnection) -> Result<String> {
-    let  s = SysLoginLog::delete_many();
+    let s = SysLoginLog::delete_many();
     s.exec(db).await.map_err(BadRequest)?;
     Ok("数据已清空".to_string())
 }

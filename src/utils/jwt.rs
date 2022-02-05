@@ -1,4 +1,4 @@
-use chrono::{Duration, Utc};
+use chrono::{Duration, Local};
 use headers::{authorization::Bearer, Authorization};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use once_cell::sync::Lazy;
@@ -67,7 +67,7 @@ pub async fn authorize(payload: AuthPayload, token_id: String) -> Result<AuthBod
             StatusCode::BAD_REQUEST,
         ));
     }
-    let iat = Utc::now();
+    let iat = Local::now();
     let exp = iat + Duration::minutes(CFG.jwt.jwt_exp);
     let claims = Claims {
         id: payload.id.to_owned(),

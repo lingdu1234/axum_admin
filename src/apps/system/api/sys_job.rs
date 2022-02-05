@@ -1,18 +1,16 @@
 use crate::apps::common::models::{ListData, PageParams, Res};
 use crate::apps::system::entities::sys_job;
 use crate::apps::system::service;
+use crate::tasks;
 use crate::utils::jwt::Claims;
 use poem::{
-    error::BadRequest,
     handler,
     web::{Json, Query},
-    Result,
 };
-use validator::Validate;
 
 use crate::database::{db_conn, DB};
 
-use super::super::models::sys_job::{AddReq, DeleteReq, EditReq, SearchReq};
+use super::super::models::sys_job::{AddReq, DeleteReq, EditReq, JobId, SearchReq, StatusReq};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -91,4 +89,21 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<sys_job::Model>
         Ok(x) => Json(Res::with_data(x)),
         Err(e) => Json(Res::with_err(&e.to_string())),
     }
+}
+
+#[handler]
+pub async fn change_status(Json(req): Json<StatusReq>) -> Json<Res<String>> {
+    //  数据验证
+    let db = DB.get_or_init(db_conn).await;
+    let res = service::sys_job::set_status(db, req).await;
+    match res {
+        Ok(x) => Json(Res::with_msg(&x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
+}
+
+#[handler]
+pub async fn run_task_once(Json(req): Json<JobId>) -> Json<Res<String>> {
+    tasks::run_once_task(req.job_id, req.task_id, true).await;
+    Json(Res::with_msg("任务开始执行"))
 }

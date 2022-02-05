@@ -84,6 +84,9 @@ async fn db_table_init(db: &DatabaseConnection) {
     db.execute(builder.build(&schema.create_table_from_entity(sys_job::Entity)))
         .await
         .expect("定时任务表,创建失败或者已经存在");
+    db.execute(builder.build(&schema.create_table_from_entity(sys_job_log::Entity)))
+        .await
+        .expect("定时任务日志表,创建失败或者已经存在");
 }
 
 async fn db_table_data_init(db: &DatabaseConnection) {

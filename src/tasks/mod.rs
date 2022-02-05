@@ -1,14 +1,33 @@
 mod task_builder;
+mod task_runner;
 mod tasks;
+use chrono::NaiveDateTime;
+pub use task_builder::{build_task, TASK_TIMER};
+pub use task_runner::{delete_job, get_next_task_run_time, get_task_end_time, run_once_task};
+
 use crate::{
     apps::system,
     database::{db_conn, DB},
 };
 use anyhow::{anyhow, Result};
+use once_cell::sync::Lazy;
+use std::{collections::HashMap, sync::Arc};
+use tokio::sync::Mutex;
 
-pub use task_builder::{build_task, TASK_TIMER};
-pub use tasks::run_task as run_once_task;
-use tracing::info;
+pub static TASK_MODELS: Lazy<Arc<Mutex<HashMap<i64, TaskModel>>>> = Lazy::new(|| {
+    let tasks: HashMap<i64, TaskModel> = HashMap::new();
+    Arc::new(Mutex::new(tasks))
+});
+
+#[derive(Debug, Clone)]
+pub struct TaskModel {
+    pub run_lot: String,
+    pub count: i64,
+    pub lot_count: i64,
+    pub next_run_time: NaiveDateTime,
+    pub lot_end_time: NaiveDateTime,
+    pub model: system::SysJobModel,
+}
 
 pub async fn timer_task_init() -> Result<()> {
     // 获取任务列表
@@ -19,30 +38,8 @@ pub async fn timer_task_init() -> Result<()> {
     };
     // 初始化任务
     for t in task_list {
-        add_circles_task(t).await?;
+        task_runner::add_circles_task(t).await?;
     }
-    Ok(())
-}
-
-async fn add_circles_task(t: system::SysJobModel) -> Result<()> {
-    let t_builder = task_builder::TASK_TIMER.lock().await;
-    let task = task_builder::build_task(
-        &t.job_id,
-        &t.cron_expression,
-        &t.job_name,
-        t.task_count.try_into().unwrap_or(0),
-        t.task_id.try_into().unwrap_or(0),
-        t.job_params.clone(),
-    );
-    match task {
-        Ok(x) => {
-            match t_builder.add_task(x) {
-                Ok(_) => {}
-                Err(e) => return Err(anyhow!("{:#?}", e)),
-            };
-        }
-        Err(e) => return Err(anyhow!("{:#?}", e)),
-    };
     Ok(())
 }
 
@@ -52,6 +49,6 @@ pub async fn run_circles_task(job_id: String) -> Result<()> {
         Ok(x) => x,
         Err(e) => return Err(anyhow!("{:#?}", e)),
     };
-    add_circles_task(t).await?;
+    task_runner::add_circles_task(t).await?;
     Ok(())
 }

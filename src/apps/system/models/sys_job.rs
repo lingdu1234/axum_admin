@@ -7,7 +7,7 @@ pub struct SearchReq {
     pub status: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct AddReq {
     pub task_id: i64,
     pub task_count: i64,
@@ -41,4 +41,16 @@ pub struct EditReq {
     pub concurrent: Option<String>,
     pub status: Option<String>,
     pub remark: Option<String>,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct StatusReq {
+    pub job_id: String,
+    pub status: String,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct JobId {
+    pub job_id: String,
+    pub task_id: i64,
 }

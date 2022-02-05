@@ -1,7 +1,5 @@
 use crate::apps::common::models::{ListData, PageParams};
-use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
-use sea_orm::ActiveValue::NotSet;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
     PaginatorTrait, QueryFilter, QueryOrder, Set,
@@ -22,16 +20,26 @@ pub async fn get_sort_list(
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
     let mut s = SysJobLog::find();
-
+    if let Some(x) = req.job_id {
+        if !x.is_empty() {
+            s = s.filter(sys_job_log::Column::JobId.eq(x));
+        }
+    }
     if let Some(x) = req.job_name {
-        s = s.filter(sys_job_log::Column::JobName.contains(&x));
+        if !x.is_empty() {
+            s = s.filter(sys_job_log::Column::JobName.contains(&x));
+        }
     }
 
     if let Some(x) = req.job_group {
-        s = s.filter(sys_job_log::Column::JobGroup.contains(&x));
+        if !x.is_empty() {
+            s = s.filter(sys_job_log::Column::JobGroup.eq(x));
+        }
     }
     if let Some(x) = req.status {
-        s = s.filter(sys_job_log::Column::Status.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_job_log::Column::Status.eq(x));
+        }
     }
     if let Some(x) = req.begin_time {
         s = s.filter(sys_job_log::Column::CreatedAt.gte(x));
@@ -43,6 +51,8 @@ pub async fn get_sort_list(
     let total = s.clone().count(db).await.map_err(BadRequest)?;
     // 分页获取数据
     let paginator = s
+        .order_by_desc(sys_job_log::Column::LotId)
+        .order_by_desc(sys_job_log::Column::LotOrder)
         .order_by_desc(sys_job_log::Column::CreatedAt)
         .paginate(db, page_per_size);
     let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
@@ -69,6 +79,8 @@ where
     let add_data = sys_job_log::ActiveModel {
         job_log_id: Set(uid.clone()),
         job_id: Set(req.job_id),
+        lot_id: Set(req.lot_id),
+        lot_order: Set(req.lot_order),
         job_name: Set(req.job_name),
         job_params: Set(req.job_params),
         job_group: Set(req.job_group),
@@ -78,6 +90,7 @@ where
         job_message: Set(req.job_message),
         exception_info: Set(req.exception_info),
         elapsed_time: Set(req.elapsed_time),
+        is_once: Set(req.is_once),
     };
     SysJobLog::insert(add_data)
         .exec(db)
@@ -104,7 +117,27 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     match d.rows_affected {
         // 0 => return Err("你要删除的字典类型不存在".into()),
         0 => Err(Error::from_string(
-            "你要删除的字典类型不存在",
+            "你要删除的日志不存在".to_string(),
+            StatusCode::BAD_REQUEST,
+        )),
+
+        i => Ok(format!("成功删除{}条数据", i)),
+    }
+}
+
+/// delete 完全删除
+pub async fn clean(db: &DatabaseConnection, job_id: String) -> Result<String> {
+    let mut s = SysJobLog::delete_many();
+    s = s.filter(sys_job_log::Column::JobId.eq(job_id));
+    //开始删除
+    let d = s
+        .exec(db)
+        .await
+        .map_err(|e| Error::from_string(e.to_string(), StatusCode::BAD_REQUEST))?;
+    match d.rows_affected {
+        // 0 => return Err("你要删除的字典类型不存在".into()),
+        0 => Err(Error::from_string(
+            "你要删除的日志不存在".to_string(),
             StatusCode::BAD_REQUEST,
         )),
 

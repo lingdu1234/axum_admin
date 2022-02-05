@@ -1,10 +1,13 @@
 use crate::apps::common::models::{ListData, PageParams};
+use crate::apps::system::models::sys_job::StatusReq;
+use crate::database::{db_conn, DB};
+use crate::tasks;
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::ActiveValue::NotSet;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set,
+    sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
+    EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set,
 };
 
 use super::super::entities::{prelude::SysJob, sys_job};
@@ -106,6 +109,8 @@ where
     }
     let uid = scru128::scru128_string();
     let now: NaiveDateTime = Local::now().naive_local();
+    let next_time = tasks::get_next_task_run_time(req.cron_expression.to_string());
+    let status = req.status.unwrap_or_else(|| "1".to_string());
     let add_data = sys_job::ActiveModel {
         job_id: Set(uid.clone()),
         task_id: Set(req.task_id),
@@ -125,16 +130,22 @@ where
         } else {
             NotSet
         },
-        status: Set(req.status.unwrap_or_else(|| "1".to_string())),
+        status: Set(status.clone()),
         remark: Set(Some(req.remark.unwrap_or_else(|| "".to_string()))),
+        next_time: Set(next_time),
         create_by: Set(user_id),
         created_at: Set(Some(now)),
         ..Default::default()
     };
-    SysJob::insert(add_data)
+    SysJob::insert(add_data.clone())
         .exec(db)
         .await
         .map_err(BadRequest)?;
+    if status.as_str() == "1" {
+        tasks::run_circles_task(uid.clone())
+            .await
+            .expect("任务添加失败");
+    };
 
     let res = format!("{}添加成功", uid);
 
@@ -172,7 +183,9 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
     }
     let uid = req.job_id;
     let s_s = get_by_id(db, uid.clone()).await?;
-    let s_r: sys_job::ActiveModel = s_s.into();
+    let s_r: sys_job::ActiveModel = s_s.clone().into();
+    let next_time = tasks::get_next_task_run_time(req.cron_expression.to_string());
+    let status = req.status.unwrap_or_else(|| "1".to_string());
     let now: NaiveDateTime = Local::now().naive_local();
     let act = sys_job::ActiveModel {
         job_id: Set(uid.clone()),
@@ -193,21 +206,37 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
         } else {
             NotSet
         },
-        status: Set(req.status.unwrap_or_else(|| "1".to_string())),
+        next_time: Set(next_time),
+        status: Set(status.clone()),
         remark: Set(Some(req.remark.unwrap_or_else(|| "".to_string()))),
         update_by: Set(Some(user_id)),
         updated_at: Set(Some(now)),
         ..s_r
     };
     // 更新
-    act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
-
-    Ok(format!("用户<{}>数据更新成功", uid))
+    act.update(db).await.map_err(BadRequest)?;
+    match status.clone().as_str() {
+        "1" => {
+            tasks::run_circles_task(uid.clone())
+                .await
+                .expect("任务执行失败");
+        }
+        "0" => {
+            tasks::delete_job(s_s.clone().task_id.try_into().unwrap())
+                .await
+                .expect("任务删除失败");
+        }
+        _ => return Err(Error::from_string("状态值错误", StatusCode::BAD_REQUEST)),
+    };
+    Ok(format!("{}修改成功", uid))
 }
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, job_id: String) -> Result<sys_job::Model> {
+pub async fn get_by_id<'a, C>(db: &'a C, job_id: String) -> Result<sys_job::Model>
+where
+    C: ConnectionTrait<'a>,
+{
     let s = SysJob::find()
         .filter(sys_job::Column::JobId.eq(job_id))
         .one(db)
@@ -232,4 +261,29 @@ pub async fn get_active_job(db: &DatabaseConnection) -> Result<Vec<sys_job::Mode
         .await
         .map_err(BadRequest)?;
     Ok(s)
+}
+
+/// delete 完全删除
+pub async fn set_status(db: &DatabaseConnection, req: StatusReq) -> Result<String> {
+    let job = get_by_id(db, req.job_id.clone()).await?;
+    sys_job::Entity::update_many()
+        .col_expr(sys_job::Column::Status, Expr::value(req.status.clone()))
+        .filter(sys_job::Column::JobId.eq(req.job_id.clone()))
+        .exec(db)
+        .await
+        .map_err(BadRequest)?;
+    match req.status.clone().as_str() {
+        "1" => {
+            tasks::run_circles_task(job.clone().job_id)
+                .await
+                .expect("任务执行失败");
+        }
+        "0" => {
+            tasks::delete_job(job.clone().task_id.try_into().unwrap())
+                .await
+                .expect("任务删除失败");
+        }
+        _ => return Err(Error::from_string("状态值错误", StatusCode::BAD_REQUEST)),
+    };
+    Ok(format!("{}修改成功", req.job_id))
 }

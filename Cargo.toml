@@ -13,6 +13,7 @@ panic = 'abort'
 
 [dependencies]
 anyhow = "1.0"
+futures = "0.3.19"
 # env_logger = "0.9"
 chrono = {version = "0.4", features = ["serde"]}
 headers = "0.3.5"
@@ -41,6 +42,7 @@ tracing-subscriber = {git = "https://github.com/tokio-rs/tracing.git", version =
 # tracing-subscriber = {version = "0.3.5", features = ["json", "env-filter", "local-time"]}
 
 # 计划任务
+# delay_timer = {version = "0.11.0", features = ["status-report"]}
 delay_timer = {version = "0.11.0"}
 reqwest = {version = "0.11", features = ["json"]}
 sea_orm_casbin_adapter = "0.2.4"
