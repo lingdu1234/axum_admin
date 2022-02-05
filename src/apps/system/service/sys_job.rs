@@ -255,7 +255,7 @@ where
 pub async fn get_active_job(db: &DatabaseConnection) -> Result<Vec<sys_job::Model>> {
     let s = SysJob::find()
         // .filter(sys_job::Column::DeletedAt.is_null())
-        .filter(sys_job::Column::Status.eq(1))
+        .filter(sys_job::Column::Status.eq("1".to_string()))
         .order_by(sys_job::Column::JobId, Order::Asc)
         .all(db)
         .await
