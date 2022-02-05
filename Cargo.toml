@@ -13,7 +13,7 @@ panic = 'abort'
 
 [dependencies]
 anyhow = "1.0"
-futures = "0.3.19"
+# futures = "0.3.19"
 # env_logger = "0.9"
 chrono = {version = "0.4", features = ["serde"]}
 headers = "0.3.5"

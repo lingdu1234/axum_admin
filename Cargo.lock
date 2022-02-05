@@ -2111,7 +2111,6 @@ dependencies = [
  "captcha_rust",
  "chrono",
  "delay_timer",
- "futures",
  "headers",
  "jsonwebtoken",
  "md5",
