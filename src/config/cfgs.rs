@@ -7,6 +7,8 @@ pub struct Configs {
     pub server: Server,
     /// 静态网站配置
     pub web: Web,
+    /// cert配置
+    pub cert: Cert,
     /// 系统配置
     pub system: System,
     /// Casbin配置
@@ -39,6 +41,14 @@ pub struct Web {
     pub index: String,
     /// 文件上传路径
     pub upload_dir: String,
+}
+#[derive(Debug, Deserialize)]
+pub struct Cert {
+    /// cert
+    pub cert: String,
+
+    /// key
+    pub key: String,
 }
 /// system 系统配置
 #[derive(Debug, Deserialize)]
