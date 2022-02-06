@@ -76,10 +76,9 @@ pub async fn add_circles_task(t: system::SysJobModel) -> Result<()> {
     );
     match task {
         Ok(x) => {
+            init_task_model(t).await;
             match t_builder.add_task(x) {
-                Ok(_) => {
-                    init_task_model(t).await;
-                }
+                Ok(_) => {}
                 Err(e) => return Err(anyhow!("{:#?}", e)),
             };
         }
