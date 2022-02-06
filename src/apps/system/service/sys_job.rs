@@ -115,6 +115,7 @@ where
         job_id: Set(uid.clone()),
         task_id: Set(req.task_id),
         task_count: Set(req.task_count),
+        run_count: Set(0),
         job_name: Set(req.job_name),
         job_params: if let Some(x) = req.job_params {
             Set(Some(x))
@@ -215,18 +216,23 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
     };
     // 更新
     act.update(db).await.map_err(BadRequest)?;
-    match status.clone().as_str() {
-        "1" => {
+    match (s_s.status.as_str(), status.clone().as_str()) {
+        ("0", "1") => {
             tasks::run_circles_task(uid.clone())
                 .await
                 .expect("任务执行失败");
         }
-        "0" => {
+        ("1", "0") => {
             tasks::delete_job(s_s.clone().task_id.try_into().unwrap())
                 .await
                 .expect("任务删除失败");
         }
-        _ => return Err(Error::from_string("状态值错误", StatusCode::BAD_REQUEST)),
+        ("1", "1") => {
+            tasks::update_circles_task(uid.clone())
+                .await
+                .expect("任务更新失败");
+        }
+        (_, _) => {}
     };
     Ok(format!("{}修改成功", uid))
 }

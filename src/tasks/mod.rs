@@ -52,3 +52,13 @@ pub async fn run_circles_task(job_id: String) -> Result<()> {
     task_runner::add_circles_task(t).await?;
     Ok(())
 }
+
+pub async fn update_circles_task(job_id: String) -> Result<()> {
+    let db = DB.get_or_init(db_conn).await;
+    let t = match system::get_job_by_id(db, job_id).await {
+        Ok(x) => x,
+        Err(e) => return Err(anyhow!("{:#?}", e)),
+    };
+    task_runner::update_circles_task(t).await?;
+    Ok(())
+}

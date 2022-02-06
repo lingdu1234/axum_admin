@@ -92,6 +92,43 @@ pub async fn add_circles_task(t: system::SysJobModel) -> Result<()> {
     Ok(())
 }
 
+pub async fn update_circles_task(t: system::SysJobModel) -> Result<()> {
+    let task_count = match t.task_count {
+        0 => i64::MAX,
+        x => x,
+    };
+
+    let t_builder = task_builder::TASK_TIMER.lock().await;
+    let task = task_builder::build_task(
+        &t.job_id,
+        &t.cron_expression,
+        &t.job_name,
+        task_count as u64,
+        t.task_id.try_into().unwrap_or(0),
+    );
+    match task {
+        Ok(x) => {
+            match t_builder.update_task(x) {
+                Ok(_) => {
+                    let mut task_models = TASK_MODELS.lock().await;
+                    task_models.entry(t.task_id).and_modify(|x| {
+                        x.model = t.clone();
+                        x.count = t.task_count;
+                        x.next_run_time =
+                            get_next_task_run_time(t.cron_expression.clone()).unwrap();
+                        x.lot_end_time =
+                            get_task_end_time(t.cron_expression.clone(), task_count as u64)
+                                .unwrap();
+                    });
+                }
+                Err(e) => return Err(anyhow!("{:#?}", e)),
+            };
+        }
+        Err(e) => return Err(anyhow!("{:#?}", e)),
+    };
+    Ok(())
+}
+
 async fn init_task_model(m: SysJobModel, task_count: i64) {
     let job_end_time =
         get_task_end_time(m.cron_expression.clone(), m.task_count.try_into().unwrap()).unwrap();
@@ -110,6 +147,7 @@ async fn init_task_model(m: SysJobModel, task_count: i64) {
         let db = DB.get_or_init(db_conn).await;
         SysJobEntity::update_many()
             .col_expr(SysJobColumn::NextTime, Expr::value(next_time))
+            .col_expr(SysJobColumn::RunCount, Expr::value(0_i64))
             .filter(SysJobColumn::JobId.eq(m.job_id.clone()))
             .exec(db)
             .await
@@ -131,9 +169,12 @@ async fn write_circle_job_log(
     let mut job_remark = "".to_string();
     let mut job_status = "1".to_string();
     //获取结束时间和开始时间的时间差，单位为毫秒
-    match job.count as i64 == job.lot_count {
+    match job.count as i64 <= job.lot_count {
         false => {}
         true => {
+            delete_job(job.model.task_id as u64)
+                .await
+                .expect("delete job failed");
             job_remark = format!(
                 "批任务:[{}]已经执行完毕,完成时间:{}",
                 job.run_lot.clone(),
@@ -168,6 +209,7 @@ async fn write_circle_job_log(
         .col_expr(SysJobColumn::Remark, Expr::value(job_remark))
         .col_expr(SysJobColumn::LastTime, Expr::value(begin_time))
         .col_expr(SysJobColumn::NextTime, Expr::value(next_time))
+        .col_expr(SysJobColumn::RunCount, Expr::value(job.lot_count))
         .filter(SysJobColumn::JobId.eq(job.model.job_id.clone()))
         .exec(&txn)
         .await
