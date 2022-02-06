@@ -42,16 +42,10 @@ fn build_task_async_task(
         let jj_id = j_id.clone();
         generate_closure_template(jj_id, task_id, tt_name)
     };
-    let task = match task_count {
-        0 => task_builder
-            .set_frequency_count_down_by_cron_str(cron_str, u64::MAX)
-            .set_task_id(task_id)
-            .spawn_async_routine(body)?,
-        x => task_builder
-            .set_frequency_count_down_by_cron_str(cron_str, x)
-            .set_task_id(task_id)
-            .spawn_async_routine(body)?,
-    };
+    let task = task_builder
+        .set_frequency_count_down_by_cron_str(cron_str, task_count)
+        .set_task_id(task_id)
+        .spawn_async_routine(body)?;
     Ok(task)
 }
 

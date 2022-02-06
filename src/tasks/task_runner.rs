@@ -66,17 +66,22 @@ pub async fn run_once_task(job_id: String, task_id: i64, is_once: bool) {
 }
 
 pub async fn add_circles_task(t: system::SysJobModel) -> Result<()> {
+    let task_count = match t.task_count {
+        0 => i64::MAX,
+        x => x,
+    };
+
     let t_builder = task_builder::TASK_TIMER.lock().await;
     let task = task_builder::build_task(
         &t.job_id,
         &t.cron_expression,
         &t.job_name,
-        t.task_count.try_into().unwrap_or(0),
+        task_count as u64,
         t.task_id.try_into().unwrap_or(0),
     );
     match task {
         Ok(x) => {
-            init_task_model(t).await;
+            init_task_model(t, task_count).await;
             match t_builder.add_task(x) {
                 Ok(_) => {}
                 Err(e) => return Err(anyhow!("{:#?}", e)),
@@ -87,14 +92,14 @@ pub async fn add_circles_task(t: system::SysJobModel) -> Result<()> {
     Ok(())
 }
 
-async fn init_task_model(m: SysJobModel) {
+async fn init_task_model(m: SysJobModel, task_count: i64) {
     let job_end_time =
         get_task_end_time(m.cron_expression.clone(), m.task_count.try_into().unwrap()).unwrap();
     let next_time = get_next_task_run_time(m.cron_expression.clone()).unwrap();
     let mut task_models = TASK_MODELS.lock().await;
     let task_model = TaskModel {
         run_lot: utils::rand_s(10),
-        count: m.task_count,
+        count: task_count,
         lot_count: 0,
         next_run_time: next_time.clone(),
         lot_end_time: job_end_time,
@@ -126,7 +131,7 @@ async fn write_circle_job_log(
     let mut job_remark = "".to_string();
     let mut job_status = "1".to_string();
     //获取结束时间和开始时间的时间差，单位为毫秒
-    match job.count == job.lot_count {
+    match job.count as i64 == job.lot_count {
         false => {}
         true => {
             job_remark = format!(
