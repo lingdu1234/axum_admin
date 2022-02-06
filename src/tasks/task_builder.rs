@@ -1,3 +1,5 @@
+use crate::RT;
+
 use super::run_once_task;
 use delay_timer::{
     anyhow::Result,
@@ -11,9 +13,11 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub static TASK_TIMER: Lazy<Arc<Mutex<DelayTimer>>> = Lazy::new(|| {
+    let rt = RT.clone();
     let t_timeer = DelayTimerBuilder::default()
         // .enable_status_report()
-        .tokio_runtime_by_default()
+        // .tokio_runtime_by_default()
+        .tokio_runtime_shared_by_custom(rt)
         .build();
     Arc::new(Mutex::new(t_timeer))
 });
