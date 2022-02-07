@@ -2,8 +2,8 @@ use chrono::Local;
 use poem::{error::BadRequest, Error, Result};
 use reqwest::StatusCode;
 use sea_orm::{
-    sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
-    EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
+    sea_query::Expr, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait,
+    QueryFilter, QueryOrder, Set,
 };
 
 use super::{
@@ -104,12 +104,6 @@ pub async fn check_online(db: Option<&DatabaseConnection>, id: String) -> bool {
         Some(_) => true,
         None => false,
     }
-}
-
-pub async fn clean(db: &DatabaseConnection) -> Result<String> {
-    let s = SysUserOnline::delete_many();
-    s.exec(db).await.map_err(BadRequest)?;
-    Ok("数据已清空".to_string())
 }
 
 pub async fn log_out(db: &DatabaseConnection, token_id: String) -> Result<String> {

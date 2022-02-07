@@ -7,6 +7,7 @@ pub struct SearchReq {
     pub job_id: Option<String>,
     pub job_name: Option<String>,
     pub job_group: Option<String>,
+    pub is_once: Option<String>,
     pub status: Option<String>,
     pub begin_time: Option<String>,
     pub end_time: Option<String>,
@@ -24,7 +25,7 @@ pub struct AddReq {
     pub status: String,
     pub created_at: NaiveDateTime,
     pub elapsed_time: i64,
-    pub lot_id: String,
+    pub lot_id: i64,
     pub lot_order: i64,
     pub is_once: Option<String>,
 }

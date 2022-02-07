@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use validator::Validate;
 
-#[derive(Deserialize, Debug, Serialize, Default)]
+#[derive(Deserialize, Debug, Default)]
 pub struct SearchReq {
     pub ip: Option<String>,
     pub user_name: Option<String>,
@@ -12,7 +12,7 @@ pub struct SearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Validate)]
+#[derive(Debug, Deserialize, Validate)]
 pub struct DeleteReq {
     #[validate(length(min = 1, message = "至少要有一个id"))]
     pub info_ids: Vec<String>,

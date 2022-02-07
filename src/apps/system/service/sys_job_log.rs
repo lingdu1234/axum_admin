@@ -1,8 +1,8 @@
 use crate::apps::common::models::{ListData, PageParams};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set,
+    ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
+    QueryOrder, Set,
 };
 
 use super::super::entities::{prelude::SysJobLog, sys_job_log};
@@ -34,6 +34,11 @@ pub async fn get_sort_list(
     if let Some(x) = req.job_group {
         if !x.is_empty() {
             s = s.filter(sys_job_log::Column::JobGroup.eq(x));
+        }
+    }
+    if let Some(x) = req.is_once {
+        if !x.is_empty() {
+            s = s.filter(sys_job_log::Column::IsOnce.eq(x));
         }
     }
     if let Some(x) = req.status {

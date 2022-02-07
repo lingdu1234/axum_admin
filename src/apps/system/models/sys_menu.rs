@@ -2,7 +2,7 @@ use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-#[derive(Deserialize, Serialize, Validate, Clone)]
+#[derive(Deserialize, Validate, Clone)]
 pub struct SearchReq {
     #[validate(length(min = 1))]
     pub id: Option<String>,
@@ -65,7 +65,7 @@ pub struct SysMenuTree {
     pub children: Option<Vec<SysMenuTree>>,
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug, Validate)]
+#[derive(Deserialize, Clone, Debug, Validate)]
 pub struct AddReq {
     pub pid: String,
     pub path: Option<String>,
@@ -84,13 +84,13 @@ pub struct AddReq {
     pub remark: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Validate)]
+#[derive(Debug, Deserialize, Validate)]
 pub struct DeleteReq {
     #[validate(length(min = 1, message = "至少要有一个id"))]
     pub ids: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
+#[derive(Debug, Clone, Deserialize, Validate)]
 pub struct EditReq {
     pub id: String,
     pub pid: String,

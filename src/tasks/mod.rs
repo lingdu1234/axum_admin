@@ -13,6 +13,7 @@ use anyhow::{anyhow, Result};
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
+use tokio::time::{sleep, Duration};
 
 pub static TASK_MODELS: Lazy<Arc<Mutex<HashMap<i64, TaskModel>>>> = Lazy::new(|| {
     let tasks: HashMap<i64, TaskModel> = HashMap::new();
@@ -21,7 +22,7 @@ pub static TASK_MODELS: Lazy<Arc<Mutex<HashMap<i64, TaskModel>>>> = Lazy::new(||
 
 #[derive(Debug, Clone)]
 pub struct TaskModel {
-    pub run_lot: String,
+    pub run_lot: i64,
     pub count: i64,
     pub lot_count: i64,
     pub next_run_time: NaiveDateTime,
@@ -38,8 +39,30 @@ pub async fn timer_task_init() -> Result<()> {
     };
     // 初始化任务
     for t in task_list {
-        task_runner::add_circles_task(t).await?;
+        match t.task_count {
+            0..=99 => {
+                task_runner::add_circles_task(t.clone()).await?;
+            }
+            _ => {
+                tokio::spawn(async move {
+                    timer_big_task_init(t.clone())
+                        .await
+                        .expect("任务初始化失败");
+                });
+            }
+        };
     }
+    Ok(())
+}
+
+pub async fn timer_big_task_init(t: system::SysJobModel) -> Result<()> {
+    let mut tt = t.clone();
+    tt.task_count = 99;
+    task_runner::add_circles_task(tt.clone()).await?;
+    sleep(Duration::from_secs(5)).await;
+    update_circles_task(t.job_id.clone())
+        .await
+        .expect("更新任务失败");
     Ok(())
 }
 

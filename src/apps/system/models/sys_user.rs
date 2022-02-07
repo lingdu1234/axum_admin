@@ -12,7 +12,7 @@ static PHONE_REGEX: Lazy<Regex> = Lazy::new(|| {
 });
 // static MOBILE_REGEX: Lazy<Regex> =
 //     Lazy::new(|| Regex::new(r"^1([358][0-9]|4[579]|66|7[0135678]|9[89])[0-9]{8}$").unwrap());
-#[derive(Serialize, Deserialize, Default, Debug, Validate)]
+#[derive(Deserialize, Debug, Validate)]
 pub struct AddReq {
     pub user_name: String,
     #[validate(length(min = 1))]
@@ -35,7 +35,7 @@ pub struct AddReq {
     pub role_ids: Option<Vec<String>>,
 }
 
-#[derive(Serialize, Deserialize, Default, Debug, Validate)]
+#[derive(Deserialize, Debug, Validate)]
 pub struct EditReq {
     pub id: String,
     pub user_name: String,
@@ -52,7 +52,7 @@ pub struct EditReq {
     pub role_ids: Vec<String>,
 }
 
-#[derive(Debug, Clone, Default, Deserialize, Serialize, FromQueryResult)]
+#[derive(Debug, Clone, Default, Serialize, FromQueryResult)]
 pub struct UserResp {
     pub id: String,
     pub user_name: String,
@@ -67,14 +67,14 @@ pub struct UserResp {
     pub phone_num: String,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct UserWithDept {
     #[serde(flatten)]
     pub user: UserResp,
     pub dept: DeptResp,
 }
 
-#[derive(Deserialize, Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default)]
 pub struct UserInfomaion {
     pub user_info: UserResp,
     pub post_ids: Vec<String>,
@@ -82,7 +82,7 @@ pub struct UserInfomaion {
     pub dept_id: String,
 }
 
-#[derive(Deserialize, Debug, Serialize, Default, Validate)]
+#[derive(Deserialize, Debug, Validate)]
 pub struct SearchReq {
     #[validate(length(min = 1))]
     pub user_id: Option<String>,
@@ -100,13 +100,13 @@ pub struct SearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Serialize, Clone)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct DeleteReq {
     pub user_id: Vec<String>,
 }
 
 ///  用户登录
-#[derive(Deserialize, Debug, Serialize, Default, Validate)]
+#[derive(Deserialize, Debug, Validate)]
 pub struct UserLoginReq {
     ///  用户名
     #[validate(length(min = 4, message = "用户名长度不能小于4"))]

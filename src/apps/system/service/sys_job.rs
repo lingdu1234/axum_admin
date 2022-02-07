@@ -1,6 +1,5 @@
 use crate::apps::common::models::{ListData, PageParams};
 use crate::apps::system::models::sys_job::StatusReq;
-use crate::database::{db_conn, DB};
 use crate::tasks;
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
@@ -223,7 +222,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
                 .expect("任务执行失败");
         }
         ("1", "0") => {
-            tasks::delete_job(s_s.clone().task_id.try_into().unwrap())
+            tasks::delete_job(s_s.clone().task_id, true)
                 .await
                 .expect("任务删除失败");
         }
@@ -285,7 +284,7 @@ pub async fn set_status(db: &DatabaseConnection, req: StatusReq) -> Result<Strin
                 .expect("任务执行失败");
         }
         "0" => {
-            tasks::delete_job(job.clone().task_id.try_into().unwrap())
+            tasks::delete_job(job.clone().task_id, true)
                 .await
                 .expect("任务删除失败");
         }

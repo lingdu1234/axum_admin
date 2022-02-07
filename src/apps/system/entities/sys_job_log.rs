@@ -16,7 +16,7 @@ impl EntityName for Entity {
 pub struct Model {
     pub job_log_id: String,
     pub job_id: String,
-    pub lot_id: String,
+    pub lot_id: i64,
     pub lot_order: i64,
     pub job_name: String,
     pub job_group: String,
@@ -69,7 +69,7 @@ impl ColumnTrait for Column {
         match self {
             Self::JobLogId => ColumnType::String(Some(32u32)).def(),
             Self::JobId => ColumnType::String(Some(32u32)).def(),
-            Self::LotId => ColumnType::String(Some(32u32)).def(),
+            Self::LotId => ColumnType::BigInteger.def(),
             Self::LotOrder => ColumnType::BigInteger.def(),
             Self::JobName => ColumnType::String(Some(64u32)).def(),
             Self::JobGroup => ColumnType::String(Some(64u32)).def(),
