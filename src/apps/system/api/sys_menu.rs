@@ -101,6 +101,7 @@ pub async fn get_routers(user: Claims) -> Result<Json<Res<Vec<SysMenuTree>>>> {
         .iter()
         .map(|v| v.role_id.clone())
         .collect::<Vec<String>>();
+    println!(" ==================={:?}", role_ids);
     // 检查是否超管用户
     let res = if CFG.system.super_user.contains(&user.id) {
         service::sys_menu::get_all_menu_tree(db).await

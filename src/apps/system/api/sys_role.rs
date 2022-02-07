@@ -137,8 +137,22 @@ pub async fn get_role_menu(Query(req): Query<SearchReq>) -> Json<Res<Vec<String>
     match req.role_id {
         None => Json(Res::with_msg("role_id不能为空")),
         Some(id) => {
+            let mut menu_ids: Vec<String> = Vec::new();
             let res = service::sys_menu::get_permissions(vec![id]).await;
-            Json(Res::with_data(res))
+            let db = DB.get_or_init(db_conn).await;
+            let menus = service::sys_menu::get_all(db).await;
+            match menus {
+                Ok(x) => {
+                    for menu in x {
+                        if res.contains(&menu.api) {
+                            menu_ids.push(menu.id.to_string());
+                        }
+                    }
+                }
+                Err(e) => return Json(Res::with_err(&e.to_string())),
+            };
+
+            Json(Res::with_data(menu_ids))
         }
     }
 }

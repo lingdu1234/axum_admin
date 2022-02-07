@@ -129,7 +129,8 @@ where
         remark: Set(req.remark),
         menu_type: Set(req.menu_type),
         query: Set(req.query),
-        perms: Set(req.perms.unwrap_or_else(|| "".to_string())),
+        api: Set(req.api.unwrap_or_else(|| "".to_string())),
+        method: Set(req.method.unwrap_or_else(|| "".to_string())),
         order_sort: Set(req.order_sort),
         status: Set(req.status),
         visible: Set(req.visible),
@@ -201,7 +202,8 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<CudResData<St
         menu_name: Set(req.menu_name),
         icon: Set(req.icon.unwrap_or_else(|| "".to_string())),
         remark: Set(req.remark),
-        perms: Set(req.perms.unwrap_or_else(|| "".to_string())),
+        api: Set(req.api.unwrap_or_else(|| "".to_string())),
+        method: Set(req.method.unwrap_or_else(|| "".to_string())),
         query: Set(req.query),
         menu_type: Set(req.menu_type),
         order_sort: Set(req.order_sort),
@@ -252,7 +254,10 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
 
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
-pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<MenuResp>> {
+pub async fn get_all<'a, C>(db: &'a C) -> Result<Vec<MenuResp>>
+where
+    C: ConnectionTrait<'a>,
+{
     let s = SysMenu::find()
         .filter(sys_menu::Column::DeletedAt.is_null())
         .filter(sys_menu::Column::Status.eq(1))
@@ -263,6 +268,22 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<MenuResp>> {
         .map_err(BadRequest)?;
     Ok(s)
 }
+// pub async fn get_all_api<'a, C>(db: &'a C) -> Result<Vec<MenuResp>>
+// where
+//     C: ConnectionTrait<'a>,
+// {
+//     let menu_type = vec!["C", "F"];
+//     let s = SysMenu::find()
+//         .filter(sys_menu::Column::DeletedAt.is_null())
+//         .filter(sys_menu::Column::Status.eq(1))
+//         .filter(sys_menu::Column::MenuType.is_in(menu_type))
+//         .order_by(sys_menu::Column::OrderSort, Order::Asc)
+//         .into_model::<MenuResp>()
+//         .all(db)
+//         .await
+//         .map_err(BadRequest)?;
+//     Ok(s)
+// }
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
 pub async fn get_all_router(db: &DatabaseConnection) -> Result<Vec<MenuResp>> {
@@ -289,15 +310,15 @@ pub async fn get_all_menu_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTre
 
 /// 获取授权菜单信息
 pub async fn get_permissions(role_ids: Vec<String>) -> Vec<String> {
-    let mut menu_ids: Vec<String> = Vec::new();
+    let mut menu_apis: Vec<String> = Vec::new();
     let e = get_enforcer().await;
     for role_id in role_ids {
         let policies = e.get_filtered_policy(0, vec![role_id]);
         for policy in policies {
-            menu_ids.push(policy[1].clone());
+            menu_apis.push(policy[1].clone());
         }
     }
-    menu_ids
+    menu_apis
 }
 
 /// get_all 获取全部   
@@ -306,20 +327,22 @@ pub async fn get_admin_menu_by_role_ids(
     db: &DatabaseConnection,
     role_ids: Vec<String>,
 ) -> Result<Vec<SysMenuTree>> {
-    let menu_ids = self::get_permissions(role_ids).await;
+    let menu_apis = self::get_permissions(role_ids).await;
+    println!("----------------------menu_apis: {:?}", menu_apis);
     //  todo 可能以后加条件判断
     let menu_all = get_all(db).await?;
     //  生成menus
     let mut menus: Vec<MenuResp> = Vec::new();
     for ele in menu_all {
-        if menu_ids.contains(&ele.id) {
+        if menu_apis.contains(&ele.api) {
             menus.push(ele);
         }
     }
+    println!("--------------menus--------: {:?}", menus);
     let menu_data = self::get_menu_data(menus);
-
+    println!("--------------menu_data--------: {:?}", menu_data);
     let menu_tree = self::get_menu_tree(menu_data, "0".to_string());
-
+    println!("--------------get_menu_tree--------: {:?}", menu_tree);
     Ok(menu_tree)
 }
 
@@ -334,6 +357,7 @@ pub fn get_menu_tree(user_menus: Vec<SysMenuTree>, pid: String) -> Vec<SysMenuTr
             menu_tree.push(user_menu.clone());
         }
     }
+    println!("--------------_menu_tree--------: {:?}", menu_tree);
     menu_tree
 }
 

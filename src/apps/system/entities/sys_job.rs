@@ -97,7 +97,7 @@ impl ColumnTrait for Column {
             Self::Status => ColumnType::Char(Some(1u32)).def(),
             Self::CreateBy => ColumnType::String(Some(32u32)).def(),
             Self::UpdateBy => ColumnType::Char(Some(32u32)).def().null(),
-            Self::Remark => ColumnType::String(Some(500u32)).def().null(),
+            Self::Remark => ColumnType::Text.def().null(),
             Self::LastTime => ColumnType::DateTime.def().null(),
             Self::NextTime => ColumnType::DateTime.def().null(),
             Self::EndTime => ColumnType::DateTime.def().null(),

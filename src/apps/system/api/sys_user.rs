@@ -133,14 +133,12 @@ pub async fn get_info(user: Claims) -> Result<Json<Res<UserInfo>>> {
     let roles = service::sys_role::get_admin_role(&user.id, all_roles).await?;
     // let mut role_names: Vec<String> = Vec::new();
     let mut role_ids: Vec<String> = Vec::new();
-    if CFG.system.super_user.contains(&user.id) {
-        role_ids = vec!["".to_string()];
-    } else {
-        for role in roles {
-            // role_names.push(role.name);
-            role_ids.push(role.role_id);
-        }
+
+    for role in roles {
+        // role_names.push(role.name);
+        role_ids.push(role.role_id);
     }
+
     // 检查是否超管用户
     let permissions = if CFG.system.super_user.contains(&user.id) {
         vec!["*:*:*".to_string()]
@@ -151,7 +149,11 @@ pub async fn get_info(user: Claims) -> Result<Json<Res<UserInfo>>> {
     // 获取用户菜单信息
     let res = UserInfo {
         user: user_info,
-        roles: role_ids,
+        roles: if role_ids.is_empty() {
+            vec!["".to_string()]
+        } else {
+            role_ids
+        },
         permissions,
     };
 

@@ -1,5 +1,10 @@
+use std::collections::HashMap;
+
 use crate::{
-    apps::common::models::{ListData, PageParams, RespData},
+    apps::{
+        common::models::{ListData, PageParams, RespData},
+        system::models::sys_menu::MenuResp,
+    },
     utils::get_enforcer,
 };
 use chrono::{Local, NaiveDateTime};
@@ -18,6 +23,7 @@ use super::super::entities::{
 use super::super::models::sys_role::{
     AddOrCancelAuthRoleReq, AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq,
 };
+use super::sys_menu;
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -82,7 +88,8 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
     // 添加角色数据
     let role_id = self::add_role(&txn, req.clone()).await?;
     // 获取组合角色权限数据
-    let permissions = self::combine_permissions_data(role_id.clone(), req.menu_ids.clone()).await?;
+    let permissions =
+        self::combine_permissions_data(&txn, role_id.clone(), req.menu_ids.clone()).await?;
     // 添加角色权限数据
     let mut e = get_enforcer().await;
     e.add_policies(permissions).await.map_err(BadRequest)?;
@@ -93,26 +100,26 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
 }
 
 // 组合角色数据
-pub async fn combine_permissions_data(
+pub async fn combine_permissions_data<'a, C>(
+    db: &'a C,
     role_id: String,
     permission_ids: Vec<String>,
-) -> Result<Vec<Vec<String>>> {
+) -> Result<Vec<Vec<String>>>
+where
+    C: ConnectionTrait<'a>,
+{
     // 获取全部菜单
-    // let menus = service::sys_menu::get_all(db).await?;
-    // let menu_map = menus
-    //     .iter()
-    //     .map(|x| (x.id.clone(), x.method.clone()))
-    //     .collect::<HashMap<String, String>>();
+    let menus = sys_menu::get_all(db).await?;
+    let menu_map = menus
+        .iter()
+        .map(|x| (x.id.clone(), x.clone()))
+        .collect::<HashMap<String, MenuResp>>();
     // 组装角色权限数据
     let mut permissions: Vec<Vec<String>> = Vec::new();
     for permission_id in permission_ids {
-        // if let Some(method) = menu_map.get(&permission_id) {
-        permissions.push(vec![
-            role_id.clone(),
-            permission_id.clone(),
-            "ALL".to_string(),
-        ]);
-        // }
+        if let Some(menu) = menu_map.get(&permission_id) {
+            permissions.push(vec![role_id.clone(), menu.api.clone(), menu.method.clone()]);
+        }
     }
     Ok(permissions)
 }
@@ -226,7 +233,8 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
     act.update(&txn).await.map_err(BadRequest)?;
 
     // 获取组合角色权限数据
-    let permissions = self::combine_permissions_data(uid.clone(), req.menu_ids.clone()).await?;
+    let permissions =
+        self::combine_permissions_data(&txn, uid.clone(), req.menu_ids.clone()).await?;
     let mut e = get_enforcer().await;
 
     // 删除全部权限 按角色id删除
