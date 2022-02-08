@@ -10,7 +10,7 @@ use crate::{
 use anyhow::{anyhow, Result};
 use chrono::{Local, NaiveDateTime};
 use delay_timer::prelude::cron_clock;
-use sea_orm::{sea_query::Expr, ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter};
+use sea_orm::{sea_query::Expr, ColumnTrait, EntityTrait, QueryFilter, TransactionTrait};
 
 use super::{task_builder, tasks, TaskModel, TASK_MODELS};
 
@@ -309,7 +309,7 @@ pub async fn delete_job(task_id: i64, is_manual: bool) -> Result<()> {
     let t_builder = task_builder::TASK_TIMER.lock().await;
     match t_builder.remove_task(task_id as u64) {
         Ok(_) => match is_manual {
-            false => {}
+            false => return Ok(()),
             true => {
                 let task_models = TASK_MODELS.lock().await;
                 let job = task_models.get(&task_id).cloned().expect("task not found");

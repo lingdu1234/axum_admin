@@ -4,7 +4,7 @@ use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set,
+    PaginatorTrait, QueryFilter, QueryOrder, Set,TransactionTrait
 };
 
 use super::super::entities::{prelude::*, sys_post};
@@ -239,7 +239,7 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
 
 pub async fn delete_post_by_user_id<'a, C>(db: &'a C, user_id: String) -> Result<()>
 where
-    C: ConnectionTrait<'a>,
+    C: TransactionTrait + ConnectionTrait,
 {
     SysUserPost::delete_many()
         .filter(sys_user_post::Column::UserId.eq(user_id))
@@ -251,7 +251,7 @@ where
 
 pub async fn add_post_by_user_id<'a, C>(db: &'a C, user_id: String, post: Vec<String>) -> Result<()>
 where
-    C: ConnectionTrait<'a>,
+    C: TransactionTrait + ConnectionTrait,
 {
     let mut inser_data: Vec<sys_user_post::ActiveModel> = Vec::new();
     for x in post {

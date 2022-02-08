@@ -1,10 +1,10 @@
 use crate::apps::common::models::{CudResData, ListData, PageParams};
-use crate::utils::get_enforcer;
+use crate::utils::{self, get_enforcer};
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set,
+    PaginatorTrait, QueryFilter, QueryOrder, Set,TransactionTrait
 };
 use sea_orm_casbin_adapter::casbin::MgmtApi;
 
@@ -88,7 +88,7 @@ pub async fn check_router_is_exist_add<'a, C>(
     route_name: String,
 ) -> Result<bool>
 where
-    C: ConnectionTrait<'a>,
+    C: TransactionTrait + ConnectionTrait,
 {
     let s1 = SysMenu::find()
         .filter(sys_menu::Column::Path.eq(route_path))
@@ -104,7 +104,7 @@ where
 /// add 添加
 pub async fn add<'a, C>(db: &'a C, req: AddReq) -> Result<CudResData<String>>
 where
-    C: ConnectionTrait<'a>,
+    C: TransactionTrait + ConnectionTrait,
 {
     //  检查数据是否存在
     if check_router_is_exist_add(
@@ -119,6 +119,7 @@ where
             StatusCode::BAD_REQUEST,
         ));
     }
+    let reqq = req.clone();
     let uid = scru128::scru128().to_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let active_model = sys_menu::ActiveModel {
@@ -153,6 +154,8 @@ where
         id: Some(uid.clone()),
         msg: format!("{} 添加成功", uid),
     };
+    // 添加api到全局
+    utils::ApiUtils::add_api(reqq.api.unwrap().as_str()).await;
     Ok(res)
 }
 
@@ -188,7 +191,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<CudResData<St
             StatusCode::BAD_REQUEST,
         ));
     }
-
+    let reqq = req.clone();
     let uid = req.id;
     let s_s = SysMenu::find_by_id(uid.clone())
         .one(db)
@@ -219,7 +222,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<CudResData<St
     };
     // 更新
     let _aa = act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
-
+    utils::ApiUtils::add_api(reqq.api.unwrap().as_str()).await;
     let res = CudResData {
         id: Some(uid.clone()),
         msg: format!("{} 修改成功", uid),
@@ -256,7 +259,7 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
 /// db 数据库连接 使用db.0
 pub async fn get_all<'a, C>(db: &'a C) -> Result<Vec<MenuResp>>
 where
-    C: ConnectionTrait<'a>,
+    C: TransactionTrait + ConnectionTrait,
 {
     let s = SysMenu::find()
         .filter(sys_menu::Column::DeletedAt.is_null())
@@ -270,7 +273,7 @@ where
 }
 // pub async fn get_all_api<'a, C>(db: &'a C) -> Result<Vec<MenuResp>>
 // where
-//     C: ConnectionTrait<'a>,
+//     C: TransactionTrait + ConnectionTrait,
 // {
 //     let menu_type = vec!["C", "F"];
 //     let s = SysMenu::find()
@@ -311,7 +314,7 @@ pub async fn get_all_menu_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTre
 /// 获取授权菜单信息
 pub async fn get_permissions(role_ids: Vec<String>) -> Vec<String> {
     let mut menu_apis: Vec<String> = Vec::new();
-    let e = get_enforcer().await;
+    let e = get_enforcer(false).await;
     for role_id in role_ids {
         let policies = e.get_filtered_policy(0, vec![role_id]);
         for policy in policies {
@@ -328,7 +331,6 @@ pub async fn get_admin_menu_by_role_ids(
     role_ids: Vec<String>,
 ) -> Result<Vec<SysMenuTree>> {
     let menu_apis = self::get_permissions(role_ids).await;
-    println!("----------------------menu_apis: {:?}", menu_apis);
     //  todo 可能以后加条件判断
     let menu_all = get_all(db).await?;
     //  生成menus
@@ -338,11 +340,8 @@ pub async fn get_admin_menu_by_role_ids(
             menus.push(ele);
         }
     }
-    println!("--------------menus--------: {:?}", menus);
     let menu_data = self::get_menu_data(menus);
-    println!("--------------menu_data--------: {:?}", menu_data);
     let menu_tree = self::get_menu_tree(menu_data, "0".to_string());
-    println!("--------------get_menu_tree--------: {:?}", menu_tree);
     Ok(menu_tree)
 }
 
@@ -357,7 +356,6 @@ pub fn get_menu_tree(user_menus: Vec<SysMenuTree>, pid: String) -> Vec<SysMenuTr
             menu_tree.push(user_menu.clone());
         }
     }
-    println!("--------------_menu_tree--------: {:?}", menu_tree);
     menu_tree
 }
 

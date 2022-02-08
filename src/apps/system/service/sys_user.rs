@@ -4,7 +4,7 @@ use poem::{error::BadRequest, http::StatusCode, Error, Request, Result};
 use scru128::scru128_string;
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
-    EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
+    EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 use serde_json::json;
 

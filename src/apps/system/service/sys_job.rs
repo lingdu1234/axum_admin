@@ -6,7 +6,7 @@ use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::ActiveValue::NotSet;
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
-    EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set,
+    EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set,TransactionTrait
 };
 
 use super::super::entities::{prelude::SysJob, sys_job};
@@ -58,7 +58,7 @@ pub async fn get_sort_list(
 
 pub async fn check_job_add_is_exist<'a, C>(db: &'a C, job_name: &str, task_id: i64) -> Result<bool>
 where
-    C: ConnectionTrait<'a>,
+    C: TransactionTrait + ConnectionTrait,
 {
     let c1 = SysJob::find()
         .filter(sys_job::Column::JobName.eq(job_name))
@@ -80,7 +80,7 @@ pub async fn check_job_edit_is_exist<'a, C>(
     job_id: &str,
 ) -> Result<bool>
 where
-    C: ConnectionTrait<'a>,
+    C: TransactionTrait + ConnectionTrait,
 {
     let c1 = SysJob::find()
         .filter(sys_job::Column::JobName.eq(job_name))
@@ -100,7 +100,7 @@ where
 /// add 添加
 pub async fn add<'a, C>(db: &'a C, req: AddReq, user_id: String) -> Result<String>
 where
-    C: ConnectionTrait<'a>,
+    C: TransactionTrait + ConnectionTrait,
 {
     //  检查字典类型是否存在
     if check_job_add_is_exist(db, &req.job_name, req.task_id).await? {
@@ -240,7 +240,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
 /// db 数据库连接 使用db.0
 pub async fn get_by_id<'a, C>(db: &'a C, job_id: String) -> Result<sys_job::Model>
 where
-    C: ConnectionTrait<'a>,
+    C: TransactionTrait + ConnectionTrait,
 {
     let s = SysJob::find()
         .filter(sys_job::Column::JobId.eq(job_id))

@@ -4,9 +4,12 @@ use poem::{http::StatusCode, Endpoint, Error, Middleware, Request, Result};
 
 use crate::{
     apps::system::check_user_online,
-    utils::jwt::{Claims, KEYS},
+    utils::{
+        jwt::{Claims, KEYS},
+        ApiUtils,
+    },
+    CFG,
 };
-use chrono::{Duration, Utc};
 
 #[derive(Clone, Debug)]
 pub struct Auth;
@@ -28,17 +31,14 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
     type Output = E::Output;
 
     async fn call(&self, req: Request) -> Result<Self::Output> {
-        // let req_path = req.uri().path().replacen("/", "", 1);
         let req_vec = req.original_uri().path().split('/').collect::<Vec<&str>>();
         let req_path = if req_vec.len() > 2 {
             req_vec[2..].join("/")
         } else {
             "".to_string()
         };
-
-        // if req_path == "system/login" {
-        //     return self.ep.call(req).await;
-        // }
+        let req_method = req.method().as_str();
+        println!("{}   =======================   {}", req_path, req_method);
         if let Some(auth) = req.headers().typed_get::<headers::Authorization<Bearer>>() {
             //  验证token
             // let validation = Validation {validate_exp: true,..Validation::default()};
@@ -77,26 +77,28 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
                         }
                     },
                 };
-            //  验证token是否过期
+            // 如果是超级用户，则不需要验证权限，直接放行
+            if CFG.system.super_user.contains(&token_data.claims.id) {
+                return self.ep.call(req).await;
+            }
 
-            // 验证casbin权限
-            // unsafe {
-            //     let e = CASBIN::get_or_init(get_enforcer).await;
-            //     e.enforce((
-            //         &token_data.claims.id.to_string(),
-            //         &req.uri().path().to_string(),
-            //         &req.method().as_str(),
-            //     ))
-            //     .unwrap();
-            // }
-
-            //  if !casbin::is_permitted(&token_data.claims.role, req.path(), req.method()) {}
-
-            println!("{:?}------req_path-{}", token_data.claims, req_path);
-
-            return self.ep.call(req).await;
+            // 验证api权限，如果不在路由表中，则放行，否则验证权限
+            if !req_path.is_empty() {
+                if ApiUtils::is_in(&req_path).await {
+                    if ApiUtils::check_api_permission(&req_path, req_method).await {
+                        return self.ep.call(req).await;
+                    } else {
+                        return Err(Error::from_string(
+                            "你没有权限访问该页面",
+                            StatusCode::UNAUTHORIZED,
+                        ));
+                    }
+                } else {
+                    return self.ep.call(req).await;
+                }
+                return self.ep.call(req).await;
+            }
         }
-
         Err(Error::from_status(StatusCode::UNAUTHORIZED))
     }
 }

@@ -11,7 +11,7 @@ use super::super::{
 };
 use chrono::{Local, NaiveDateTime};
 use scru128::scru128_string;
-use sea_orm::{ActiveModelTrait, EntityTrait, QueryOrder, Set};
+use sea_orm::{ActiveModelTrait, EntityTrait, QueryOrder, Set, TransactionTrait};
 pub use sea_orm::{ConnectionTrait, DatabaseConnection, DatabaseTransaction, Schema};
 
 pub async fn database_init(db: &DatabaseConnection) {

@@ -38,7 +38,9 @@ fn build_task_async_task(
     task_id: u64,
 ) -> Result<Task> {
     let mut task_builder = TaskBuilder::default();
-    task_builder.set_schedule_iterator_time_zone(Local);
+    task_builder
+        .set_schedule_iterator_time_zone(Local)
+        .set_maximum_parallel_runnable_num(5);
     let t_name = job_name.to_string();
     let j_id = job_id.to_string();
     let body = move || {

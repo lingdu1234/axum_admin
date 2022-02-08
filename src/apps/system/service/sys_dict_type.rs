@@ -3,7 +3,7 @@ use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set,
+    PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
 use super::super::entities::{prelude::SysDictType, sys_dict_type};
@@ -61,7 +61,7 @@ pub async fn get_sort_list(
 
 pub async fn check_dict_type_is_exist<'a, C>(dict_type: &str, db: &'a C) -> Result<bool>
 where
-    C: ConnectionTrait<'a>,
+    C: TransactionTrait + ConnectionTrait,
 {
     let mut s = SysDictType::find();
     s = s.filter(sys_dict_type::Column::DictType.eq(dict_type));
@@ -72,7 +72,7 @@ where
 /// add 添加
 pub async fn add<'a, C>(db: &'a C, req: AddReq, user_id: String) -> Result<CudResData<String>>
 where
-    C: ConnectionTrait<'a>,
+    C: TransactionTrait + ConnectionTrait,
 {
     //  检查字典类型是否存在
     if check_dict_type_is_exist(&req.dict_type, db).await? {

@@ -3,8 +3,8 @@ use crate::apps::system::entities::sys_role_dept;
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, Order,
+    PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
 use crate::apps::system::models::sys_dept::RespTree;
