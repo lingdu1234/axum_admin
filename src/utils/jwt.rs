@@ -13,17 +13,16 @@ pub static KEYS: Lazy<Keys> = Lazy::new(|| {
     Keys::new(secret.as_bytes())
 });
 
-#[derive(Debug)]
 pub struct Keys {
     pub encoding: EncodingKey,
-    pub decoding: DecodingKey<'static>,
+    pub decoding: DecodingKey,
 }
 
 impl Keys {
     fn new(secret: &[u8]) -> Self {
         Self {
             encoding: EncodingKey::from_secret(secret),
-            decoding: DecodingKey::from_secret(secret).into_static(),
+            decoding: DecodingKey::from_secret(secret),
         }
     }
 }
