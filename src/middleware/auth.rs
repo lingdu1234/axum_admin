@@ -96,7 +96,6 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
                 } else {
                     return self.ep.call(req).await;
                 }
-                return self.ep.call(req).await;
             }
         }
         Err(Error::from_status(StatusCode::UNAUTHORIZED))

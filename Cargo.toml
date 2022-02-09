@@ -29,8 +29,8 @@ poem = {version = "1.2.5", features = ["static-files", "rustls"]}
 scru128 = "1.0.0"
 serde = {version = "1.0", features = ["derive"]}
 serde_json = "1"
-# tokio = {version = "1", features = ["rt-multi-thread", "macros", "parking_lot", "signal"]}
-tokio = {version = "1", features = ["full"]}
+tokio = {version = "1", features = ["rt-multi-thread", "macros", "parking_lot", "signal"]}
+# tokio = {version = "1", features = ["full"]}
 toml = "0.5.8"
 # tracing
 tracing = {git = "https://github.com/tokio-rs/tracing.git"}
@@ -46,9 +46,9 @@ tracing-subscriber = {git = "https://github.com/tokio-rs/tracing.git", version =
 # delay_timer = {version = "0.11.0", features = ["status-report"]}
 delay_timer = {version = "0.11.0"}
 reqwest = {version = "0.11", features = ["json"]}
-sea_orm_casbin_adapter = "0.2.5"
+sea_orm_casbin_adapter = {version = "0.3", features = ["mysql", "runtime-tokio-rustls"]}
+# sea_orm_casbin_adapter = {git = "https://github.com/lingdu1234/sea_orm_casbin_adapter.git", features = ["mysql", "runtime-tokio-native-tls"]}
 user-agent-parser = "0.3.0"
-# sea_orm_casbin_adapter = {git = "https://github.com/lingdu1234/sea_orm_casbin_adapter.git"}
 
 #  随机数
 md5 = "0.7.0"
@@ -58,10 +58,11 @@ regex = "1.5.4"
 validator = {version = "0.14.0", features = ["derive", "phone"]}
 # 验证码
 captcha_rust = "0.1.3"
+# sea-orm = {version = "0.6.0", default-features = false, features = ["sqlx-mysql", "macros", "runtime-tokio-native-tls"]}
 # sea-orm
 [dependencies.sea-orm]
 default-features = false
-features = ["macros", "runtime-tokio-native-tls"]
+features = ["macros", "runtime-tokio-rustls"]
 version = "0.6.0"
 
 [features]
