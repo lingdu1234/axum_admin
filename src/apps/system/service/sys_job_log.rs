@@ -2,7 +2,7 @@ use crate::apps::common::models::{ListData, PageParams};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
-    QueryOrder, Set,TransactionTrait
+    QueryOrder, Set, TransactionTrait,
 };
 
 use super::super::entities::{prelude::SysJobLog, sys_job_log};
@@ -76,7 +76,7 @@ pub async fn get_sort_list(
 }
 
 /// add 添加
-pub async fn add<'a, C>(db: &'a C, req: AddReq) -> Result<String>
+pub async fn add<C>(db: &C, req: AddReq) -> Result<String>
 where
     C: TransactionTrait + ConnectionTrait,
 {

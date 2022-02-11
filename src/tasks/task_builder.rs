@@ -28,7 +28,7 @@ pub fn build_task(
     task_count: u64,
     task_id: u64,
 ) -> Result<Task> {
-    return build_task_async_task(job_id, cron_str, task_name, task_count, task_id);
+    build_task_async_task(job_id, cron_str, task_name, task_count, task_id)
 }
 fn build_task_async_task(
     job_id: &str,

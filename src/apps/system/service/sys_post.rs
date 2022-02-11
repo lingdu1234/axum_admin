@@ -1,4 +1,4 @@
-use crate::apps::common::models::{ ListData, PageParams};
+use crate::apps::common::models::{ListData, PageParams};
 use crate::apps::system::entities::sys_user_post;
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
@@ -229,7 +229,7 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
     Ok(s)
 }
 
-pub async fn delete_post_by_user_id<'a, C>(db: &'a C, user_id: String) -> Result<()>
+pub async fn delete_post_by_user_id<C>(db: &C, user_id: String) -> Result<()>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -241,7 +241,7 @@ where
     Ok(())
 }
 
-pub async fn add_post_by_user_id<'a, C>(db: &'a C, user_id: String, post: Vec<String>) -> Result<()>
+pub async fn add_post_by_user_id<C>(db: &C, user_id: String, post: Vec<String>) -> Result<()>
 where
     C: TransactionTrait + ConnectionTrait,
 {

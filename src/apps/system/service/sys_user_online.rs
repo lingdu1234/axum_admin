@@ -2,8 +2,8 @@ use chrono::Local;
 use poem::{error::BadRequest, Error, Result};
 use reqwest::StatusCode;
 use sea_orm::{
-    sea_query::Expr, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait,
-    QueryFilter, QueryOrder, Set, TransactionTrait,
+    sea_query::Expr, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
+    QueryOrder, Set, TransactionTrait,
 };
 
 use super::{
@@ -100,10 +100,7 @@ pub async fn check_online(db: Option<&DatabaseConnection>, id: String) -> bool {
         .await
         .expect("查询失败");
 
-    match model {
-        Some(_) => true,
-        None => false,
-    }
+    model.is_some()
 }
 
 pub async fn log_out(db: &DatabaseConnection, token_id: String) -> Result<String> {

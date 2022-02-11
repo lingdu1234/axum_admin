@@ -56,9 +56,9 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<UserInfomaion>>
         Err(e) => return Json(Res::with_err(&e.to_string())),
     };
     let db = DB.get_or_init(db_conn).await;
-    if let Some(user_id) = req.user_id {
-        match service::sys_user::get_by_id(db, user_id).await {
-            Err(e) => return Json(Res::with_err(&e.to_string())),
+    match req.user_id {
+        Some(user_id) => match service::sys_user::get_by_id(db, user_id).await {
+            Err(e) => Json(Res::with_err(&e.to_string())),
             Ok(user) => {
                 let post_ids = service::sys_post::get_post_ids_by_user_id(db, user.clone().id)
                     .await
@@ -70,12 +70,11 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<UserInfomaion>>
                     post_ids,
                     role_ids,
                 };
-                return Json(Res::with_data(res));
+                Json(Res::with_data(res))
             }
-        };
-    } else {
-        return Json(Res::with_msg("用户id不能为空"));
-    };
+        },
+        None => Json(Res::with_msg("用户id不能为空")),
+    }
 }
 
 /// add 添加

@@ -123,7 +123,6 @@ async fn sys_db_version_init(txn: &DatabaseTransaction, now: NaiveDateTime) {
         id: Set(scru128::scru128_string()),
         db_version: Set(1),
         updated_at: Set(now),
-        ..Default::default()
     };
     init_data
         .insert(txn)
@@ -160,7 +159,7 @@ async fn sys_user_init(txn: &DatabaseTransaction, now: NaiveDateTime, uid: &str,
 async fn sys_dept_init(txn: &DatabaseTransaction, now: NaiveDateTime, uid: &str, dept_id: &str) {
     let init_data: Vec<SysDeptActiveModel> = vec![
         SysDeptActiveModel {
-            dept_id: Set(dept_id.clone().to_string()),
+            dept_id: Set(dept_id.to_string()),
             parent_id: Set("0".to_string()),
             dept_name: Set("lingdu".to_string()),
             order_num: Set(1000),
@@ -174,7 +173,7 @@ async fn sys_dept_init(txn: &DatabaseTransaction, now: NaiveDateTime, uid: &str,
         },
         SysDeptActiveModel {
             dept_id: Set(scru128_string()),
-            parent_id: Set(dept_id.clone().to_string()),
+            parent_id: Set(dept_id.to_string()),
             dept_name: Set("部门A".to_string()),
             order_num: Set(1100),
             leader: Set("A".to_string()),
@@ -187,7 +186,7 @@ async fn sys_dept_init(txn: &DatabaseTransaction, now: NaiveDateTime, uid: &str,
         },
         SysDeptActiveModel {
             dept_id: Set(scru128_string()),
-            parent_id: Set(dept_id.clone().to_string()),
+            parent_id: Set(dept_id.to_string()),
             dept_name: Set("部门A".to_string()),
             order_num: Set(1200),
             leader: Set("B".to_string()),

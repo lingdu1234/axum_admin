@@ -61,7 +61,7 @@ pub async fn get_sort_list(
     Ok(res)
 }
 
-pub async fn check_dict_data_is_exist<'a, C>(req: AddReq, db: &'a C) -> Result<bool>
+pub async fn check_dict_data_is_exist<C>(req: AddReq, db: &C) -> Result<bool>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -78,7 +78,7 @@ where
 }
 
 /// add 添加
-pub async fn add<'a, C>(db: &'a C, add_req: AddReq, user_id: String) -> Result<String>
+pub async fn add<C>(db: &C, add_req: AddReq, user_id: String) -> Result<String>
 where
     C: TransactionTrait + ConnectionTrait,
 {

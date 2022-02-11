@@ -99,8 +99,8 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<String> {
 }
 
 // 组合角色数据
-pub async fn combine_permissions_data<'a, C>(
-    db: &'a C,
+pub async fn combine_permissions_data<C>(
+    db: &C,
     role_id: String,
     permission_ids: Vec<String>,
 ) -> Result<Vec<Vec<String>>>

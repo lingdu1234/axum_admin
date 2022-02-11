@@ -1,6 +1,7 @@
+mod task;
 mod task_builder;
 mod task_runner;
-mod tasks;
+
 use chrono::NaiveDateTime;
 pub use task_builder::{build_task, TASK_TIMER};
 pub use task_runner::{delete_job, get_next_task_run_time, get_task_end_time, run_once_task};

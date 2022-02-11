@@ -12,7 +12,7 @@ use chrono::{Local, NaiveDateTime};
 use delay_timer::prelude::cron_clock;
 use sea_orm::{sea_query::Expr, ColumnTrait, EntityTrait, QueryFilter, TransactionTrait};
 
-use super::{task_builder, tasks, TaskModel, TASK_MODELS};
+use super::{task, task_builder, TaskModel, TASK_MODELS};
 
 pub async fn run_once_task(job_id: String, task_id: i64, is_once: bool) {
     let mut task_models = TASK_MODELS.lock().await;
@@ -36,7 +36,7 @@ pub async fn run_once_task(job_id: String, task_id: i64, is_once: bool) {
     };
     let cron_str = job.model.cron_expression.clone();
     let next_time = get_next_task_run_time(cron_str).unwrap();
-    let res = tasks::go_run_task(
+    let res = task::go_run_task(
         job.model.job_params.clone(),
         job.model.invoke_target.clone(),
     )
@@ -48,14 +48,14 @@ pub async fn run_once_task(job_id: String, task_id: i64, is_once: bool) {
         .unwrap()
         .as_millis()
         .try_into()
-        .unwrap_or_else(|_| i64::MAX); //获取结束时间和开始时间的时间差，单位为毫秒
+        .unwrap_or(i64::MAX); //获取结束时间和开始时间的时间差，单位为毫秒
     tokio::spawn(async move {
         match is_once {
             true => write_once_job_log(res, job, begin_time, elapsed_time).await,
             false => {
                 task_models.entry(task_id).and_modify(|x| {
                     x.lot_count += 1;
-                    x.next_run_time = next_time.clone();
+                    x.next_run_time = next_time;
                 });
                 let job_new = task_models.get(&task_id).cloned().expect("task not found");
                 write_circle_job_log(res, job_new, begin_time, next_time, elapsed_time).await;
@@ -159,7 +159,7 @@ async fn init_task_model(m: SysJobModel, task_count: i64) {
         run_lot,
         count: task_count,
         lot_count: 0,
-        next_run_time: next_time.clone(),
+        next_run_time: next_time,
         lot_end_time: job_end_time,
         model: m.clone(),
     };
@@ -169,7 +169,7 @@ async fn init_task_model(m: SysJobModel, task_count: i64) {
         now.format("%Y-%m-%d %H:%M:%S"),
     );
     task_model.model.remark = Some(remark.clone());
-    task_models.insert(m.task_id.clone(), task_model);
+    task_models.insert(m.task_id, task_model);
     tokio::spawn(async move {
         let db = DB.get_or_init(db_conn).await;
         SysJobEntity::update_many()
@@ -215,7 +215,7 @@ async fn write_circle_job_log(
     };
     let job_log = SysJobLogAddReq {
         job_id: job.model.job_id.clone(),
-        lot_id: job.run_lot.clone(),
+        lot_id: job.run_lot,
         lot_order: job.lot_count,
         job_name: job.model.job_name.clone(),
         job_group: job.model.job_group.clone(),
@@ -283,10 +283,7 @@ async fn write_once_job_log(
 
 pub fn get_next_task_run_time(cron_str: String) -> Option<NaiveDateTime> {
     let schedule = cron_clock::Schedule::from_str(&cron_str).unwrap();
-    let next_time = match schedule.upcoming(Local).next() {
-        Some(x) => Some(x.naive_local()),
-        None => None,
-    };
+    let next_time = schedule.upcoming(Local).next().map(|x| x.naive_local());
     next_time
 }
 
@@ -295,10 +292,11 @@ pub fn get_task_end_time(cron_str: String, task_count: u64) -> Option<NaiveDateT
         0 => Some(Local::now().naive_local()),
         v => {
             let schedule = cron_clock::Schedule::from_str(&cron_str).unwrap();
-            let end_time = match schedule.upcoming(Local).take(v.try_into().unwrap()).last() {
-                Some(x) => Some(x.naive_local()),
-                None => None,
-            };
+            let end_time = schedule
+                .upcoming(Local)
+                .take(v.try_into().unwrap())
+                .last()
+                .map(|x| x.naive_local());
             end_time
         }
     }

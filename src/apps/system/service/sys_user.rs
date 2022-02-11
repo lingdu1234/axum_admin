@@ -219,7 +219,7 @@ pub async fn reset_passwd(db: &DatabaseConnection, req: ResetPasswdReq) -> Resul
         .map_err(BadRequest)?;
     // user.update(&txn).await.map_err(BadRequest)?;
     txn.commit().await.map_err(BadRequest)?;
-    let res = format!("密码更新成功");
+    let res = "密码更新成功".to_string();
 
     Ok(res)
 }
@@ -253,7 +253,7 @@ pub async fn change_status(db: &DatabaseConnection, req: ChangeStatusReq) -> Res
         .map_err(BadRequest)?;
     // user.update(&txn).await.map_err(BadRequest)?;
     txn.commit().await.map_err(BadRequest)?;
-    let res = format!("用户状态更新成功");
+    let res = "用户状态更新成功".to_string();
 
     Ok(res)
 }
@@ -412,8 +412,8 @@ pub async fn login(
 pub async fn fresh_token(user: Claims) -> Result<AuthBody> {
     // 注册JWT
     let claims = AuthPayload {
-        id: user.clone().id.clone(),     // 用户id
-        name: user.clone().name.clone(), // 用户名
+        id: user.clone().id,     // 用户id
+        name: user.clone().name, // 用户名
     };
     let token = utils::authorize(claims.clone(), user.clone().token_id)
         .await

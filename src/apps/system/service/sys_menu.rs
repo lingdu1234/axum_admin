@@ -124,7 +124,7 @@ pub async fn check_router_is_exist_update(db: &DatabaseConnection, req: EditReq)
     Ok(count1 > 0 || count2 > 0)
 }
 
-pub async fn check_router_is_exist_add<'a, C>(db: &'a C, req: AddReq) -> Result<bool>
+pub async fn check_router_is_exist_add<C>(db: &C, req: AddReq) -> Result<bool>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -139,7 +139,7 @@ where
 }
 
 /// add 添加
-pub async fn add<'a, C>(db: &'a C, req: AddReq) -> Result<String>
+pub async fn add<C>(db: &C, req: AddReq) -> Result<String>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -285,7 +285,7 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
 
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
-pub async fn get_all<'a, C>(db: &'a C) -> Result<Vec<MenuResp>>
+pub async fn get_all<C>(db: &C) -> Result<Vec<MenuResp>>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -299,7 +299,7 @@ where
         .map_err(BadRequest)?;
     Ok(s)
 }
-// pub async fn get_all_api<'a, C>(db: &'a C) -> Result<Vec<MenuResp>>
+// pub async fn get_all_api<C>(db: &C) -> Result<Vec<MenuResp>>
 // where
 //     C: TransactionTrait + ConnectionTrait,
 // {

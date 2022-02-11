@@ -17,7 +17,7 @@ pub async fn get_client_info(req: &Request) -> ClientInfo {
 pub fn get_remote_ip(req: &Request) -> String {
     let ip = match req.headers().get("X-Forwarded-For") {
         Some(x) => {
-            let mut ips = x.to_str().unwrap().split(",");
+            let mut ips = x.to_str().unwrap().split(',');
             ips.next().unwrap().trim().to_string()
         }
         None => match req.headers().get("X-Real-IP") {
@@ -33,27 +33,17 @@ pub fn get_user_agent_info(user_agent: &str) -> UserAgentInfo {
     let product_v = ua_parser.parse_product(user_agent);
     let os_v = ua_parser.parse_os(user_agent);
     let device_v = ua_parser.parse_device(user_agent);
-    let browser = product_v
-        .name
-        .unwrap_or_else(|| Cow::Borrowed(""))
-        .to_string()
+    let browser = product_v.name.unwrap_or(Cow::Borrowed("")).to_string()
         + " "
         + product_v
             .major
-            .unwrap_or_else(|| Cow::Borrowed(""))
+            .unwrap_or(Cow::Borrowed(""))
             .to_string()
             .as_str();
-    let os = os_v.name.unwrap_or_else(|| Cow::Borrowed("")).to_string()
+    let os = os_v.name.unwrap_or(Cow::Borrowed("")).to_string()
         + " "
-        + os_v
-            .major
-            .unwrap_or_else(|| Cow::Borrowed(""))
-            .to_string()
-            .as_str();
-    let device = device_v
-        .name
-        .unwrap_or_else(|| Cow::Borrowed(""))
-        .to_string();
+        + os_v.major.unwrap_or(Cow::Borrowed("")).to_string().as_str();
+    let device = device_v.name.unwrap_or(Cow::Borrowed("")).to_string();
     UserAgentInfo {
         browser: browser.trim().to_string(),
         os: os.trim().to_string(),
@@ -69,7 +59,7 @@ async fn get_city_by_ip(ip: &str) -> Result<ClientNetInfo, Box<dyn std::error::E
         .await?;
     let res = serde_json::from_str::<HashMap<String, String>>(resp.as_str())?;
     let location = format!("{}{}", res["pro"], res["city"]);
-    let net_work = res["addr"].split(" ").collect::<Vec<&str>>()[1].to_string();
+    let net_work = res["addr"].split(' ').collect::<Vec<&str>>()[1].to_string();
     Ok(ClientNetInfo {
         ip: res["ip"].to_string(),
         location,

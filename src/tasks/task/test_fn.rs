@@ -29,7 +29,7 @@ pub fn test_b(params: Option<String>) -> Result<String> {
         }
     };
     println!("-----------test_b-----------参数为: {}", param);
-    let b_string: String = param.try_into().unwrap();
+    let b_string: String = param.into();
     println!("简单参数函数测试，参数为：{}", b_string);
     println!("{}", b_string);
     Ok("test_b函数运行成功".to_string())
@@ -56,7 +56,7 @@ pub fn test_c(params: Option<String>) -> Result<String> {
             return Err(anyhow!("参数解析失败,请检查参数格式,参数为{}", param));
         }
     };
-    println!("简单参数函数测试,参数为: {:#?}", pp);
+    println!("简单参数函数测试,参数为: {:#?},a的值{}", pp, pp.a);
     let res = format!("test_c函数运行成功,参数为:{:#?}", pp);
     Ok(res)
 }

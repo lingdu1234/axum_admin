@@ -50,20 +50,6 @@ impl<T: Serialize> Res<T> {
             msg: Some("success".to_string()),
         }
     }
-    pub fn with_msg(msg: &str) -> Self {
-        Self {
-            code: Some(200),
-            data: None,
-            msg: Some(msg.to_string()),
-        }
-    }
-    pub fn with_data_msg(data: Option<T>, msg: &str) -> Self {
-        Self {
-            code: Some(200),
-            data,
-            msg: Some(msg.to_string()),
-        }
-    }
     pub fn with_err(err: &str) -> Self {
         Self {
             code: Some(500),
@@ -71,10 +57,18 @@ impl<T: Serialize> Res<T> {
             msg: Some(err.to_string()),
         }
     }
-    pub fn new(code: i32, data: T, msg: &str) -> Self {
+    pub fn with_msg(msg: &str) -> Self {
         Self {
-            code: Some(code),
-            data: Some(data),
+            code: Some(200),
+            data: None,
+            msg: Some(msg.to_string()),
+        }
+    }
+    #[allow(dead_code)]
+    pub fn with_data_msg(data: Option<T>, msg: &str) -> Self {
+        Self {
+            code: Some(200),
+            data,
             msg: Some(msg.to_string()),
         }
     }

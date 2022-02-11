@@ -6,7 +6,7 @@ use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::ActiveValue::NotSet;
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
-    EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set,TransactionTrait
+    EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
 use super::super::entities::{prelude::SysJob, sys_job};
@@ -56,7 +56,7 @@ pub async fn get_sort_list(
     Ok(res)
 }
 
-pub async fn check_job_add_is_exist<'a, C>(db: &'a C, job_name: &str, task_id: i64) -> Result<bool>
+pub async fn check_job_add_is_exist<C>(db: &C, job_name: &str, task_id: i64) -> Result<bool>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -73,8 +73,8 @@ where
     Ok(c1 > 0 || c2 > 0)
 }
 
-pub async fn check_job_edit_is_exist<'a, C>(
-    db: &'a C,
+pub async fn check_job_edit_is_exist<C>(
+    db: &C,
     job_name: &str,
     task_id: i64,
     job_id: &str,
@@ -98,7 +98,7 @@ where
 }
 
 /// add 添加
-pub async fn add<'a, C>(db: &'a C, req: AddReq, user_id: String) -> Result<String>
+pub async fn add<C>(db: &C, req: AddReq, user_id: String) -> Result<String>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -238,7 +238,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-pub async fn get_by_id<'a, C>(db: &'a C, job_id: String) -> Result<sys_job::Model>
+pub async fn get_by_id<C>(db: &C, job_id: String) -> Result<sys_job::Model>
 where
     C: TransactionTrait + ConnectionTrait,
 {

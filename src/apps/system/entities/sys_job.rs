@@ -62,6 +62,7 @@ pub enum Column {
     DeletedAt,
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Copy, Clone, Debug, EnumIter, DerivePrimaryKey)]
 pub enum PrimaryKey {
     JobId,
