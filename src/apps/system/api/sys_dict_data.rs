@@ -4,13 +4,11 @@ use crate::apps::{
 };
 use crate::utils::jwt::Claims;
 use poem::{
-    error::BadRequest,
     handler,
     web::{Json, Query},
-    Result,
 };
 
-use crate::apps::common::models::{PageParams, RespData};
+use crate::apps::common::models::PageParams;
 use validator::Validate;
 
 use crate::database::{db_conn, DB};
@@ -47,7 +45,7 @@ pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Json<Res<String>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_data::add(db, req, user.id).await;
     match res {
-        Ok(x) => Json(Res::with_data_msg(x.id, &x.msg)),
+        Ok(x) => Json(Res::with_msg(&x)),
         Err(e) => Json(Res::with_err(&e.to_string())),
     }
 }
@@ -62,18 +60,24 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Json<Res<String>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_data::delete(db, req).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x.msg)),
+        Ok(x) => Json(Res::with_msg(&x)),
         Err(e) => Json(Res::with_err(&e.to_string())),
     }
 }
 
 // edit 修改
 #[handler]
-pub async fn edit(Json(req): Json<EditReq>, user: Claims) -> Result<Json<RespData>> {
-    req.validate().map_err(BadRequest)?;
+pub async fn edit(Json(req): Json<EditReq>, user: Claims) -> Json<Res<String>> {
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_data::edit(db, req, user.id).await?;
-    Ok(Json(res))
+    let res = service::sys_dict_data::edit(db, req, user.id).await;
+    match res {
+        Ok(x) => Json(Res::with_msg(&x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// get_user_by_id 获取用户Id获取用户   
@@ -110,8 +114,11 @@ pub async fn get_by_type(Query(req): Query<SearchReq>) -> Json<Res<Vec<sys_dict_
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_all() -> Result<Json<Vec<Resp>>> {
+pub async fn get_all() -> Json<Res<Vec<Resp>>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_data::get_all(db).await?;
-    Ok(Json(res))
+    let res = service::sys_dict_data::get_all(db).await;
+    match res {
+        Ok(x) => Json(Res::with_data(x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }

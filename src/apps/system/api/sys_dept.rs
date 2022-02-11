@@ -44,7 +44,7 @@ pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Json<Res<String>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dept::add(db, req, user.id).await;
     match res {
-        Ok(x) => Json(Res::with_data_msg(x.id, &x.msg)),
+        Ok(x) => Json(Res::with_msg(&x)),
         Err(e) => Json(Res::with_err(&e.to_string())),
     }
 }

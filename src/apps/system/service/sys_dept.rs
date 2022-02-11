@@ -1,10 +1,10 @@
-use crate::apps::common::models::{CudResData, ListData, PageParams};
+use crate::apps::common::models::{ ListData, PageParams};
 use crate::apps::system::entities::sys_role_dept;
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait,
+    QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
 use crate::apps::system::models::sys_dept::RespTree;
@@ -70,11 +70,7 @@ pub async fn check_data_is_exist(dept_name: String, db: &DatabaseConnection) -> 
 
 /// add 添加
 
-pub async fn add(
-    db: &DatabaseConnection,
-    req: AddReq,
-    user_id: String,
-) -> Result<CudResData<String>> {
+pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
     if check_data_is_exist(req.clone().dept_name, db).await? {
         return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
@@ -99,10 +95,8 @@ pub async fn add(
     //  let re =   user.insert(db).await?; 这个多查询一次结果
     let _ = SysDept::insert(user).exec(&txn).await.map_err(BadRequest)?;
     txn.commit().await.map_err(BadRequest)?;
-    let res = CudResData {
-        id: Some(uid),
-        msg: "添加成功".to_string(),
-    };
+    let res = "添加成功".to_string();
+
     Ok(res)
 }
 

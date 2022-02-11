@@ -1,5 +1,4 @@
 use poem::{
-    error::BadRequest,
     handler,
     web::{Json, Query},
     Request, Result,
@@ -8,7 +7,7 @@ use poem::{
 use validator::Validate;
 
 use crate::{
-    apps::common::models::{PageParams, Res, RespData},
+    apps::common::models::{PageParams, Res},
     CFG,
 };
 use crate::{
@@ -81,44 +80,56 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<UserInfomaion>>
 
 /// add 添加
 #[handler]
-pub async fn add(Json(add_req): Json<AddReq>) -> Result<Json<RespData>> {
-    add_req.validate().map_err(BadRequest)?;
+pub async fn add(Json(add_req): Json<AddReq>) -> Json<Res<String>> {
+    match add_req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    }
     let db = DB.get_or_init(db_conn).await;
-    let result = service::sys_user::add(db, add_req).await?;
-    Ok(Json(result))
+    let res = service::sys_user::add(db, add_req).await;
+    match res {
+        Ok(x) => Json(Res::with_msg(&x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// delete 完全删除
 #[handler]
-pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Result<Json<RespData>> {
+pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Json<Res<String>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::delete(db, delete_req).await?;
-    Ok(Json(res))
+    let res = service::sys_user::delete(db, delete_req).await;
+    match res {
+        Ok(x) => Json(Res::with_msg(&x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 // edit 修改
 #[handler]
-pub async fn edit(Json(edit_req): Json<EditReq>) -> Result<Json<RespData>> {
-    edit_req.validate().map_err(BadRequest)?;
+pub async fn edit(Json(edit_req): Json<EditReq>) -> Json<Res<String>> {
+    match edit_req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    }
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::edit(db, edit_req).await?;
-    Ok(Json(res))
+    let res = service::sys_user::edit(db, edit_req).await;
+    match res {
+        Ok(x) => Json(Res::with_msg(&x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// 用户登录
 #[handler]
-pub async fn login(
-    Json(login_req): Json<UserLoginReq>,
-    request: &Request,
-) -> Result<Json<Res<AuthBody>>> {
+pub async fn login(Json(login_req): Json<UserLoginReq>, request: &Request) -> Json<Res<AuthBody>> {
     match login_req.validate() {
         Ok(_) => {}
-        Err(e) => return Ok(Json(Res::with_err(&e.to_string()))),
+        Err(e) => return Json(Res::with_err(&e.to_string())),
     }
     let db = DB.get_or_init(db_conn).await;
     match service::sys_user::login(db, login_req, request).await {
-        Ok(res) => Ok(Json(Res::with_data(res))),
-        Err(e) => Ok(Json(Res::with_err(&e.to_string()))),
+        Ok(res) => Json(Res::with_data(res)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
     }
 }
 /// 获取用户登录信息

@@ -1,4 +1,4 @@
-use crate::RT;
+// use crate::RT;
 
 use super::run_once_task;
 use delay_timer::{
@@ -13,11 +13,11 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 pub static TASK_TIMER: Lazy<Arc<Mutex<DelayTimer>>> = Lazy::new(|| {
-    let rt = RT.clone();
+    // let rt = RT.clone();
     let t_timeer = DelayTimerBuilder::default()
         // .enable_status_report()
-        // .tokio_runtime_by_default()
-        .tokio_runtime_shared_by_custom(rt)
+        .tokio_runtime_by_default()
+        // .tokio_runtime_shared_by_custom(rt)
         .build();
     Arc::new(Mutex::new(t_timeer))
 });
@@ -38,9 +38,8 @@ fn build_task_async_task(
     task_id: u64,
 ) -> Result<Task> {
     let mut task_builder = TaskBuilder::default();
-    task_builder
-        .set_schedule_iterator_time_zone(Local)
-        .set_maximum_parallel_runnable_num(5);
+    task_builder.set_schedule_iterator_time_zone(Local);
+    // .set_maximum_parallel_runnable_num(5);
     let t_name = job_name.to_string();
     let j_id = job_id.to_string();
     let body = move || {

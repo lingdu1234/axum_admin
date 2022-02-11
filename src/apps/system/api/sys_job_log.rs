@@ -1,14 +1,10 @@
 use crate::apps::common::models::{ListData, PageParams, Res};
 use crate::apps::system::entities::sys_job_log;
 use crate::apps::system::service;
-use crate::utils::jwt::Claims;
 use poem::{
-    error::BadRequest,
     handler,
     web::{Json, Query},
-    Result,
 };
-use validator::Validate;
 
 use crate::database::{db_conn, DB};
 

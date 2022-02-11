@@ -1,9 +1,8 @@
-use crate::apps::common::models::{ListData, PageParams, Res, RespData};
+use crate::apps::common::models::{ListData, PageParams, Res};
 use crate::apps::system::entities::sys_dict_type;
 use crate::apps::system::service;
 use crate::utils::jwt::Claims;
 use poem::{
-    error::BadRequest,
     handler,
     web::{Json, Query},
     Result,
@@ -45,7 +44,7 @@ pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Json<Res<String>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_type::add(db, req, user.id).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x.msg)),
+        Ok(x) => Json(Res::with_msg(&x)),
         Err(e) => Json(Res::with_err(&e.to_string())),
     }
 }
@@ -60,18 +59,24 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Json<Res<String>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_type::delete(db, req).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x.msg)),
+        Ok(x) => Json(Res::with_msg(&x)),
         Err(e) => Json(Res::with_err(&e.to_string())),
     }
 }
 
 // edit 修改
 #[handler]
-pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Result<Json<RespData>> {
-    edit_req.validate().map_err(BadRequest)?;
+pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Json<Res<String>> {
+    match edit_req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_type::edit(db, edit_req,user.id).await?;
-    Ok(Json(res))
+    let res = service::sys_dict_type::edit(db, edit_req, user.id).await;
+    match res {
+        Ok(x) => Json(Res::with_msg(&x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// get_user_by_id 获取用户Id获取用户   

@@ -1,4 +1,4 @@
-use crate::apps::common::models::{CudResData, ListData, PageParams, RespData};
+use crate::apps::common::models::{ListData, PageParams};
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
@@ -70,7 +70,7 @@ where
 }
 
 /// add 添加
-pub async fn add<'a, C>(db: &'a C, req: AddReq, user_id: String) -> Result<CudResData<String>>
+pub async fn add<'a, C>(db: &'a C, req: AddReq, user_id: String) -> Result<String>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -97,15 +97,11 @@ where
         .exec(db)
         .await
         .map_err(BadRequest)?;
-    let res = CudResData {
-        id: Some(uid),
-        msg: "添加成功".to_string(),
-    };
-    Ok(res)
+    Ok("添加成功".to_string())
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<CudResData<String>> {
+pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
     let mut s = SysDictType::delete_many();
 
     s = s.filter(sys_dict_type::Column::DictTypeId.is_in(delete_req.dict_type_ids));
@@ -123,15 +119,12 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<Cu
             StatusCode::BAD_REQUEST,
         )),
 
-        i => Ok(CudResData {
-            id: None,
-            msg: format!("成功删除{}条数据", i),
-        }),
+        i => Ok(format!("成功删除{}条数据", i)),
     }
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<RespData> {
+pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<String> {
     let uid = edit_req.dict_type_id;
     let s_s = SysDictType::find_by_id(uid.clone())
         .one(db)
@@ -151,7 +144,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
     // 更新
     let _aa = act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
 
-    Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)))
+    Ok(format!("用户<{}>数据更新成功", uid))
 }
 
 /// get_user_by_id 获取用户Id获取用户   

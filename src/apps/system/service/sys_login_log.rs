@@ -2,7 +2,7 @@ use chrono::Local;
 use poem::{error::BadRequest, Error, Result};
 use reqwest::StatusCode;
 use sea_orm::{
-    ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
+    ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
     QueryOrder, Set,TransactionTrait
 };
 

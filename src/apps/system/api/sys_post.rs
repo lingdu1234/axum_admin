@@ -6,13 +6,12 @@ use crate::{
     utils::jwt::Claims,
 };
 use poem::{
-    error::BadRequest,
     handler,
     web::{Json, Query},
     Result,
 };
 
-use crate::apps::common::models::{PageParams, RespData};
+use crate::apps::common::models::PageParams;
 use validator::Validate;
 
 use crate::database::{db_conn, DB};
@@ -49,7 +48,7 @@ pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Json<Res<String>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_post::add(db, req, user.id).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x.msg)),
+        Ok(x) => Json(Res::with_msg(&x)),
         Err(e) => Json(Res::with_err(&e.to_string())),
     }
 }
@@ -71,11 +70,17 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Json<Res<String>> {
 
 // edit 修改
 #[handler]
-pub async fn edit(Json(req): Json<EditReq>, user: Claims) -> Result<Json<RespData>> {
-    req.validate().map_err(BadRequest)?;
+pub async fn edit(Json(req): Json<EditReq>, user: Claims) -> Json<Res<String>> {
+    match req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_post::edit(db, req, user.id).await?;
-    Ok(Json(res))
+    let res = service::sys_post::edit(db, req, user.id).await;
+    match res {
+        Ok(x) => Json(Res::with_msg(&x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// get_user_by_id 获取用户Id获取用户   

@@ -1,4 +1,3 @@
-use poem::error::BadRequest;
 use poem::web::Query;
 use poem::{handler, web::Json, Result};
 
@@ -18,20 +17,42 @@ use super::super::models::sys_menu::{AddReq, DeleteReq, EditReq, SearchReq, SysM
 pub async fn get_sort_list(
     Query(page_params): Query<PageParams>,
     Query(search_req): Query<SearchReq>,
-) -> Result<Json<Res<ListData<sys_menu::Model>>>> {
+) -> Json<Res<ListData<sys_menu::Model>>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_menu::get_sort_list(db, page_params, search_req).await?;
-    Ok(Json(Res::with_data(res)))
+    let res = service::sys_menu::get_sort_list(db, page_params, search_req).await;
+    match res {
+        Ok(x) => Json(Res::with_data(x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
+}
+
+#[handler]
+pub async fn get_auth_list(
+    Query(page_params): Query<PageParams>,
+    Query(search_req): Query<SearchReq>,
+) -> Json<Res<ListData<sys_menu::Model>>> {
+    let db = DB.get_or_init(db_conn).await;
+    let res = service::sys_menu::get_auth_list(db, page_params, search_req).await;
+    match res {
+        Ok(x) => Json(Res::with_data(x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Result<Json<Res<MenuResp>>> {
-    search_req.validate().map_err(BadRequest)?;
+pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Json<Res<MenuResp>> {
+    match search_req.validate() {
+        Ok(_) => {}
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    }
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_menu::get_by_id(db, search_req).await?;
-    Ok(Json(Res::with_data(res)))
+    let res = service::sys_menu::get_by_id(db, search_req).await;
+    match res {
+        Ok(x) => Json(Res::with_data(x)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
+    }
 }
 
 /// add 添加
@@ -44,7 +65,7 @@ pub async fn add(Json(req): Json<AddReq>) -> Json<Res<String>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::add(db, req).await;
     match res {
-        Ok(res) => Json(Res::with_data_msg(res.id, &res.msg)),
+        Ok(x) => Json(Res::with_msg(&x)),
         Err(e) => Json(Res::with_err(&e.to_string())),
     }
 }
@@ -52,14 +73,10 @@ pub async fn add(Json(req): Json<AddReq>) -> Json<Res<String>> {
 /// delete 完全删除
 #[handler]
 pub async fn delete(Json(req): Json<DeleteReq>) -> Json<Res<String>> {
-    match req.validate() {
-        Ok(_) => {}
-        Err(e) => return Json(Res::with_err(&e.to_string())),
-    }
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_menu::delete(db, req).await;
+    let res = service::sys_menu::delete(db, req.id).await;
     match res {
-        Ok(res) => Json(Res::with_data_msg(res.id, &res.msg)),
+        Ok(x) => Json(Res::with_msg(&x)),
         Err(e) => Json(Res::with_err(&e.to_string())),
     }
 }
@@ -74,7 +91,7 @@ pub async fn edit(Json(edit_req): Json<EditReq>) -> Json<Res<String>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::edit(db, edit_req).await;
     match res {
-        Ok(res) => Json(Res::with_data_msg(res.id, &res.msg)),
+        Ok(x) => Json(Res::with_msg(&x)),
         Err(e) => Json(Res::with_err(&e.to_string())),
     }
 }
@@ -101,10 +118,9 @@ pub async fn get_routers(user: Claims) -> Result<Json<Res<Vec<SysMenuTree>>>> {
         .iter()
         .map(|v| v.role_id.clone())
         .collect::<Vec<String>>();
-    println!(" ==================={:?}", role_ids);
     // 检查是否超管用户
     let res = if CFG.system.super_user.contains(&user.id) {
-        service::sys_menu::get_all_menu_tree(db).await
+        service::sys_menu::get_all_router_tree(db).await
     } else {
         service::sys_menu::get_admin_menu_by_role_ids(db, role_ids).await
     };

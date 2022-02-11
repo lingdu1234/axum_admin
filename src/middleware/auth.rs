@@ -38,7 +38,6 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
             "".to_string()
         };
         let req_method = req.method().as_str();
-        println!("{}   =======================   {}", req_path, req_method);
         if let Some(auth) = req.headers().typed_get::<headers::Authorization<Bearer>>() {
             //  验证token
             // let validation = Validation {validate_exp: true,..Validation::default()};
@@ -59,13 +58,13 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
                     Err(err) => match *err.kind() {
                         ErrorKind::InvalidToken => {
                             return Err(Error::from_string(
-                                "Invalid token",
+                                "你的登录已失效，请重新登录",
                                 StatusCode::UNAUTHORIZED,
                             ));
                         }
                         ErrorKind::ExpiredSignature => {
                             return Err(Error::from_string(
-                                "Expired token",
+                                "你的登录已经过期，请重新登录",
                                 StatusCode::UNAUTHORIZED,
                             ));
                         }
@@ -90,7 +89,7 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
                     } else {
                         return Err(Error::from_string(
                             "你没有权限访问该页面",
-                            StatusCode::UNAUTHORIZED,
+                            StatusCode::FORBIDDEN,
                         ));
                     }
                 } else {

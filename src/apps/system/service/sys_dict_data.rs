@@ -6,7 +6,7 @@ use sea_orm::{
     PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
-use crate::apps::common::models::{CudResData, ListData, PageParams, RespData};
+use crate::apps::common::models::{ListData, PageParams};
 
 use super::super::entities::{prelude::SysDictData, sys_dict_data};
 use super::super::models::sys_dict_data::{AddReq, DeleteReq, EditReq, Resp, SearchReq};
@@ -78,7 +78,7 @@ where
 }
 
 /// add 添加
-pub async fn add<'a, C>(db: &'a C, add_req: AddReq, user_id: String) -> Result<CudResData<String>>
+pub async fn add<'a, C>(db: &'a C, add_req: AddReq, user_id: String) -> Result<String>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -120,15 +120,12 @@ where
         .await
         .map_err(BadRequest)?;
     txn.commit().await.map_err(BadRequest)?;
-    let res = CudResData {
-        id: Some(uid.clone()),
-        msg: "数据添加成功".to_string(),
-    };
+    let res = "数据添加成功".to_string();
     Ok(res)
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<CudResData<String>> {
+pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
     let mut s = SysDictData::delete_many();
 
     s = s.filter(sys_dict_data::Column::DictDataId.is_in(delete_req.dict_data_ids));
@@ -141,15 +138,12 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<Cu
             "你要删除的字典类型不存在",
             StatusCode::BAD_REQUEST,
         )),
-        i => Ok(CudResData {
-            id: None,
-            msg: format!("成功删除{}条数据", i),
-        }),
+        i => Ok(format!("成功删除{}条数据", i)),
     }
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<RespData> {
+pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<String> {
     let uid = edit_req.dict_data_id;
     let s_s = SysDictData::find_by_id(uid.clone())
         .one(db)
@@ -180,7 +174,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
     // 更新
     let _aa = act.update(db).await.map_err(BadRequest); //这个两种方式一样 都要多查询一次
 
-    Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)))
+    Ok(format!("用户<{}>数据更新成功", uid))
 }
 
 /// get_user_by_id 获取用户Id获取用户   

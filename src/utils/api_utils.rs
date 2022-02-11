@@ -1,4 +1,3 @@
-use std::fmt::{Error, Result};
 use std::{collections::HashSet, sync::Arc};
 
 use crate::apps::system;
@@ -42,6 +41,7 @@ pub async fn remove_api(api: &str) {
 
 pub async fn is_in(api: &str) -> bool {
     let apis = ALL_APIS.lock().await;
+    println!("========================={:#?}", apis);
     apis.contains(api)
 }
 pub async fn check_api_permission(api: &str, method: &str) -> bool {

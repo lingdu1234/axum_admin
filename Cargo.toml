@@ -20,7 +20,7 @@ chrono = {version = "0.4", features = ["serde"]}
 headers = "0.3.5"
 jsonwebtoken = "8.0.1"
 once_cell = "1.9.0"
-poem = {version = "1.2.5", features = ["static-files", "rustls"]}
+poem = {version = "1.2.5", features = ["static-files", "rustls", "anyhow"]}
 # poem = "=1.1.1"
 # poem-derive = "=1.1.1"
 # poem-openapi = "1.1.1"
@@ -46,7 +46,7 @@ tracing-subscriber = {git = "https://github.com/tokio-rs/tracing.git", version =
 # delay_timer = {version = "0.11.0", features = ["status-report"]}
 delay_timer = {version = "0.11.0"}
 reqwest = {version = "0.11", features = ["json"]}
-sea_orm_casbin_adapter = {version = "0.3", features = ["mysql", "runtime-tokio-rustls"]}
+sea_orm_casbin_adapter = {version = "0.3", features = ["mysql", "runtime-tokio-native-tls"]}
 # sea_orm_casbin_adapter = {git = "https://github.com/lingdu1234/sea_orm_casbin_adapter.git", features = ["mysql", "runtime-tokio-native-tls"]}
 user-agent-parser = "0.3.0"
 
@@ -64,7 +64,7 @@ captcha_rust = "0.1.3"
 # sea-orm
 [dependencies.sea-orm]
 default-features = false
-features = ["macros", "runtime-tokio-rustls"]
+features = ["macros", "runtime-tokio-native-tls"]
 version = "0.6.0"
 
 [features]

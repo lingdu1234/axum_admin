@@ -2,10 +2,10 @@ use std::collections::HashMap;
 
 use crate::{
     apps::{
-        common::models::{ListData, PageParams, RespData},
+        common::models::{ListData, PageParams},
         system::models::sys_menu::MenuResp,
     },
-    utils::{self, get_enforcer},
+    utils::get_enforcer,
 };
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
@@ -15,7 +15,6 @@ use sea_orm::{
     TransactionTrait,
 };
 use sea_orm_casbin_adapter::casbin::MgmtApi;
-use serde_json::json;
 
 use super::super::entities::{
     prelude::{SysRole, SysRoleDept},
@@ -75,7 +74,7 @@ pub async fn check_data_is_exist(role_name: String, db: &DatabaseConnection) -> 
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
+pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<String> {
     //  检查字典类型是否存在
     if check_data_is_exist(req.clone().role_name, db).await? {
         return Err(Error::from_string(
@@ -96,8 +95,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
     e.add_policies(permissions).await.map_err(BadRequest)?;
 
     txn.commit().await.map_err(BadRequest)?;
-    let res = json!({ "id": role_id });
-    Ok(RespData::with_data(res))
+    Ok("添加成功".to_string())
 }
 
 // 组合角色数据
@@ -145,7 +143,7 @@ pub async fn add_role(txn: &DatabaseTransaction, req: AddReq) -> Result<String> 
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<RespData> {
+pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
     let txn = db.begin().await.map_err(BadRequest)?;
     let mut s = SysRole::delete_many();
     s = s.filter(sys_role::Column::RoleId.is_in(delete_req.role_ids.clone()));
@@ -171,7 +169,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<Re
             StatusCode::BAD_REQUEST,
         )),
 
-        i => return Ok(RespData::with_msg(&format!("成功删除{}条数据", i))),
+        i => return Ok(format!("成功删除{}条数据", i)),
     }
 }
 
@@ -198,7 +196,7 @@ pub async fn eidt_check_data_is_exist(
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
+pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
     //  检查字典类型是否存在
     if eidt_check_data_is_exist(
         db,
@@ -248,7 +246,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
     // 提交事务
     txn.commit().await.map_err(BadRequest)?;
 
-    return Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)));
+    Ok(format!("用户<{}>数据更新成功", uid))
 }
 
 // set_status 状态修改

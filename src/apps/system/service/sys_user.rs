@@ -3,10 +3,9 @@ use poem::{error::BadRequest, http::StatusCode, Error, Request, Result};
 
 use scru128::scru128_string;
 use sea_orm::{
-    sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
-    EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
+    sea_query::Expr, ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait,
+    PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
-use serde_json::json;
 
 use crate::utils::{
     self,
@@ -15,7 +14,7 @@ use crate::utils::{
 
 use super::{
     super::{
-        super::common::models::{ListData, PageParams, RespData},
+        super::common::models::{ListData, PageParams},
         entities::{prelude::SysUser, sys_user},
         models::sys_user::{
             AddReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq,
@@ -154,7 +153,7 @@ pub async fn get_by_id(db: &DatabaseConnection, user_id: String) -> Result<UserR
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
+pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<String> {
     let uid = scru128::scru128_string();
     let salt = utils::rand_s(10);
     let passwd = utils::encrypt_password(&req.user_password, &salt);
@@ -188,9 +187,8 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<RespData> {
     }
 
     txn.commit().await.map_err(BadRequest)?;
-    let res = json!({ "user_id": uid });
 
-    Ok(RespData::with_data(res))
+    Ok("用户添加成功".to_string())
 }
 
 pub async fn reset_passwd(db: &DatabaseConnection, req: ResetPasswdReq) -> Result<String> {
@@ -261,7 +259,7 @@ pub async fn change_status(db: &DatabaseConnection, req: ChangeStatusReq) -> Res
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<RespData> {
+pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
     let mut s = SysUser::delete_many();
 
     s = s.filter(sys_user::Column::Id.is_in(req.clone().user_id));
@@ -279,12 +277,12 @@ pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<RespData>
     txn.commit().await.map_err(BadRequest)?;
     return match d.rows_affected {
         0 => Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
-        i => Ok(RespData::with_msg(&format!("成功删除{}条用户数据", i))),
+        i => Ok(format!("成功删除{}条用户数据", i)),
     };
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
+pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
     let uid = req.id;
     let s_u = SysUser::find_by_id(uid.clone())
         .one(db)
@@ -318,7 +316,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<RespData> {
     sys_role::add_role_by_user_id(&uid, req.role_ids).await?;
 
     txn.commit().await.map_err(BadRequest)?;
-    Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)))
+    Ok(format!("用户<{}>数据更新成功", uid))
 }
 
 /// 用户登录

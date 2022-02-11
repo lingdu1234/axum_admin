@@ -1,10 +1,10 @@
-use crate::apps::common::models::{CudResData, ListData, PageParams, RespData};
+use crate::apps::common::models::{ ListData, PageParams};
 use crate::apps::system::entities::sys_user_post;
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set,TransactionTrait
+    PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
 use super::super::entities::{prelude::*, sys_post};
@@ -95,11 +95,7 @@ pub async fn eidt_check_data_is_exist(
 
 /// add 添加
 
-pub async fn add(
-    db: &DatabaseConnection,
-    req: AddReq,
-    user_id: String,
-) -> Result<CudResData<String>> {
+pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
     if check_data_is_exist(req.clone().post_code, req.clone().post_name, db).await? {
         return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
@@ -122,11 +118,7 @@ pub async fn add(
     //  let re =   user.insert(db).await?; 这个多查询一次结果
     let _ = SysPost::insert(user).exec(&txn).await.map_err(BadRequest)?;
     txn.commit().await.map_err(BadRequest)?;
-    let res = CudResData {
-        id: Some(uid),
-        msg: format!("添加成功"),
-    };
-    Ok(res)
+    Ok("添加成功".to_string())
 }
 
 /// delete 完全删除
@@ -148,7 +140,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<RespData> {
+pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
     if eidt_check_data_is_exist(
         edit_req.clone().post_id,
@@ -179,7 +171,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
     };
     // 更新
     let _aa = act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
-    Ok(RespData::with_msg(&format!("用户<{}>数据更新成功", uid)))
+    Ok(format!("用户<{}>数据更新成功", uid))
 }
 
 /// get_user_by_id 获取用户Id获取用户   

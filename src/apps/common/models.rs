@@ -17,58 +17,13 @@ pub struct ListData<T> {
     pub page_num: usize,
 }
 
-#[derive(Debug, Serialize)]
-/// 增 删 改 数据返回
-pub struct CudResData<T> {
-    pub id: Option<T>,
-    pub msg: String,
-}
-
 #[derive(Deserialize, Debug, Serialize, Default)]
 pub struct PageParams {
     pub page_num: Option<usize>,
     pub page_size: Option<usize>,
 }
 
-#[derive(Deserialize, Debug, Serialize, Default)]
-pub struct RespData {
-    pub code: Option<i32>,
-    #[serde(flatten)]
-    pub data: Option<serde_json::Value>,
-    pub msg: Option<String>,
-}
-
-impl RespData {
-    pub fn with_data(data: serde_json::Value) -> Self {
-        Self {
-            code: Some(200),
-            data: Some(data),
-            msg: Some("success".to_string()),
-        }
-    }
-    pub fn with_msg(msg: &str) -> Self {
-        Self {
-            code: Some(200),
-            data: None,
-            msg: Some(msg.to_string()),
-        }
-    }
-    pub fn with_err(err: &str) -> Self {
-        Self {
-            code: Some(500),
-            data: None,
-            msg: Some(err.to_string()),
-        }
-    }
-    pub fn new(data: serde_json::Value, msg: &str) -> Self {
-        Self {
-            code: Some(200),
-            data: Some(data),
-            msg: Some(msg.to_string()),
-        }
-    }
-}
-
+/// 数据统一返回格式
 #[derive(Deserialize, Debug, Serialize, Default)]
 pub struct Res<T> {
     pub code: Option<i32>,

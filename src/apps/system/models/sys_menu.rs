@@ -86,10 +86,9 @@ pub struct AddReq {
     pub remark: String,
 }
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize)]
 pub struct DeleteReq {
-    #[validate(length(min = 1, message = "至少要有一个id"))]
-    pub ids: Vec<String>,
+    pub id: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Validate)]
