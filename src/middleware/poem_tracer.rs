@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use std::time::Instant;
 
 use tracing::{Instrument, Level};
 
@@ -37,31 +37,26 @@ impl<E: Endpoint> Endpoint for TracingEndpoint<E> {
         );
 
         async move {
-            let now = SystemTime::now();
+            let now = Instant::now();
             let res = self.inner.call(req).await;
+            let duration = now.elapsed();
 
-            match (res, now.elapsed()) {
-                (Ok(resp), Ok(duration)) => {
+            match res {
+                Ok(resp) => {
                     let resp = resp.into_response();
-
                     tracing::info!(
                         status = %resp.status(),
                         duration = ?duration,
-                        header = ?resp.headers(),
                         "response"
                     );
                     Ok(resp)
                 }
-                (Ok(resp), Err(_)) => {
-                    let resp = resp.into_response();
+                Err(err) => {
                     tracing::info!(
-                        status = %resp.status(),
-                        "response"
+                        error = %err,
+                        duration = ?duration,
+                        "error"
                     );
-                    Ok(resp)
-                }
-                (Err(err), _) => {
-                    tracing::error!(error = %err, "error");
                     Err(err)
                 }
             }

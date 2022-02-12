@@ -14,6 +14,7 @@ use poem::{listener::TcpListener, middleware::Cors, EndpointExt, Result, Route, 
 use std::time::Duration;
 
 use tracing_log::LogTracer;
+// use tracing_subscriber::fmt::time::LocalTime;
 use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
 
 //导入全局
@@ -49,7 +50,7 @@ async fn main() -> Result<(), std::io::Error> {
         .with_target(true) // don't include targets
         .with_thread_ids(true) // include the thread ID of the current thread
         .with_thread_names(true) // include the name of the current thread
-        // .with_timer(timer) // use RFC 3339 timestamps
+        // .with_timer(LocalTime::rfc_3339()) // use RFC 3339 timestamps
         .compact();
     let file_appender = tracing_appender::rolling::daily(&CFG.log.dir, &CFG.log.file); //文件输出设置
                                                                                        //文件输出
