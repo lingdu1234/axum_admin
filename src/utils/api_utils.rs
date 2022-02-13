@@ -1,4 +1,4 @@
-use std::{collections::HashSet, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
 use crate::apps::system;
 use crate::database::{db_conn, DB};
@@ -8,8 +8,8 @@ use sea_orm_casbin_adapter::casbin::CoreApi;
 use tokio::sync::Mutex;
 use tracing::info;
 
-pub static ALL_APIS: Lazy<Arc<Mutex<HashSet<String>>>> = Lazy::new(|| {
-    let apis: HashSet<String> = HashSet::new();
+pub static ALL_APIS: Lazy<Arc<Mutex<HashMap<String, String>>>> = Lazy::new(|| {
+    let apis: HashMap<String, String> = HashMap::new();
     Arc::new(Mutex::new(apis))
 });
 
@@ -20,7 +20,7 @@ pub async fn init_all_api() {
     match res {
         Ok(menus) => {
             for menu in menus {
-                apis.insert(menu.api.clone());
+                apis.insert(menu.api.clone(), menu.menu_name.clone());
             }
         }
         Err(e) => {
@@ -29,9 +29,9 @@ pub async fn init_all_api() {
     }
 }
 
-pub async fn add_api(api: &str) {
+pub async fn add_api(api: &str, menu_name: &str) {
     let mut apis = ALL_APIS.lock().await;
-    apis.insert(api.to_string());
+    apis.insert(api.to_string(), menu_name.to_string());
 }
 
 pub async fn remove_api(api: &str) {
@@ -41,8 +41,7 @@ pub async fn remove_api(api: &str) {
 
 pub async fn is_in(api: &str) -> bool {
     let apis = ALL_APIS.lock().await;
-    println!("========================={:#?}", apis);
-    apis.contains(api)
+    apis.get(api).is_some()
 }
 pub async fn check_api_permission(api: &str, method: &str) -> bool {
     let e = utils::get_enforcer(false).await;

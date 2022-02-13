@@ -9,3 +9,6 @@ pub mod sys_post;
 pub mod sys_role;
 pub mod sys_user;
 pub mod sys_user_online;
+
+// 操作日志
+pub mod sys_oper_log;

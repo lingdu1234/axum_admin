@@ -66,7 +66,8 @@ pub async fn run_once_task(job_id: String, task_id: i64, is_once: bool) {
 
 pub async fn add_circles_task(t: system::SysJobModel) -> Result<()> {
     let task_count = t.task_count;
-    let t_builder = task_builder::TASK_TIMER.lock().await;
+    // let t_builder = task_builder::TASK_TIMER.lock().await;
+    let t_builder = task_builder::TASK_TIMER.write().await;
     let task = task_builder::build_task(
         &t.job_id,
         &t.cron_expression,
@@ -92,7 +93,8 @@ pub async fn update_circles_task(t: system::SysJobModel) -> Result<()> {
         x @ 0..=9999 => x, //防止程序卡死,更新任务时，限制最大任务数
         _ => 9999_i64,
     };
-    let t_builder = task_builder::TASK_TIMER.lock().await;
+    // let t_builder = task_builder::TASK_TIMER.lock().await;
+    let t_builder = task_builder::TASK_TIMER.write().await;
     let task = task_builder::build_task(
         &t.job_id,
         &t.cron_expression,
@@ -304,7 +306,8 @@ pub fn get_task_end_time(cron_str: String, task_count: u64) -> Option<NaiveDateT
 
 //  任务执行完成，删除任务
 pub async fn delete_job(task_id: i64, is_manual: bool) -> Result<()> {
-    let t_builder = task_builder::TASK_TIMER.lock().await;
+    // let t_builder = task_builder::TASK_TIMER.lock().await;
+    let t_builder = task_builder::TASK_TIMER.write().await;
     match t_builder.remove_task(task_id as u64) {
         Ok(_) => match is_manual {
             false => return Ok(()),

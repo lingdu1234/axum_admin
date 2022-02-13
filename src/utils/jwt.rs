@@ -57,6 +57,9 @@ impl<'a> FromRequest<'a> for Claims {
 
         Ok(token_data.claims)
     }
+    async fn from_request_without_body(req: &'a Request) -> Result<Self> {
+        Self::from_request(req, &mut Default::default()).await
+    }
 }
 
 pub async fn authorize(payload: AuthPayload, token_id: String) -> Result<AuthBody> {

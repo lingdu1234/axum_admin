@@ -22,3 +22,5 @@ pub mod sys_user_online;
 pub mod sys_job;
 // 定时任务日志
 pub mod sys_job_log;
+// 操作日志
+pub mod sys_oper_log;

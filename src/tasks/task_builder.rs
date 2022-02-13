@@ -10,16 +10,16 @@ use delay_timer::{
 };
 use once_cell::sync::Lazy;
 use std::sync::Arc;
-use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 
-pub static TASK_TIMER: Lazy<Arc<Mutex<DelayTimer>>> = Lazy::new(|| {
+pub static TASK_TIMER: Lazy<Arc<RwLock<DelayTimer>>> = Lazy::new(|| {
     // let rt = RT.clone();
     let t_timeer = DelayTimerBuilder::default()
         // .enable_status_report()
         .tokio_runtime_by_default()
         // .tokio_runtime_shared_by_custom(rt)
         .build();
-    Arc::new(Mutex::new(t_timeer))
+    Arc::new(RwLock::new(t_timeer))
 });
 pub fn build_task(
     job_id: &str,

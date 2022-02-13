@@ -161,7 +161,7 @@ where
         remark: Set(req.remark),
         menu_type: Set(req.menu_type),
         query: Set(req.query),
-        api: Set(req.api.unwrap_or_else(|| "".to_string())),
+        api: Set(req.api),
         method: Set(req.method.unwrap_or_else(|| "".to_string())),
         order_sort: Set(req.order_sort),
         status: Set(req.status),
@@ -183,7 +183,7 @@ where
     txn.commit().await.map_err(BadRequest)?;
     let res = format!("{} 添加成功", uid);
     // 添加api到全局
-    utils::ApiUtils::add_api(reqq.api.unwrap().as_str()).await;
+    utils::ApiUtils::add_api(reqq.api.as_str(), reqq.menu_name.as_str()).await;
     Ok(res)
 }
 
@@ -227,7 +227,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
         menu_name: Set(req.menu_name),
         icon: Set(req.icon.unwrap_or_else(|| "".to_string())),
         remark: Set(req.remark),
-        api: Set(req.api.unwrap_or_else(|| "".to_string())),
+        api: Set(req.api),
         method: Set(req.method.unwrap_or_else(|| "".to_string())),
         query: Set(req.query),
         menu_type: Set(req.menu_type),
@@ -244,13 +244,13 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
     };
     // 更新
     let _aa = act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
-    match reqq.clone().api.unwrap() == s_s.clone().unwrap().api {
+    match reqq.clone().api == s_s.clone().unwrap().api {
         true => {
             // 不更新api
         }
         false => {
             utils::ApiUtils::remove_api(s_s.unwrap().api.as_str()).await;
-            utils::ApiUtils::add_api(reqq.api.unwrap().as_str()).await;
+            utils::ApiUtils::add_api(reqq.api.as_str(), reqq.menu_name.as_str()).await;
         }
     }
 
