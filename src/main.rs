@@ -48,7 +48,10 @@ async fn main() -> Result<(), std::io::Error> {
         .with_level(true) // don't include levels in formatted output
         .with_target(true) // don't include targets
         .with_thread_ids(true) // include the thread ID of the current thread
-        .with_thread_names(true) // include the name of the current thread
+        .with_thread_names(true)
+        // .with_file(true)
+        // .with_ansi(true)
+        // .with_line_number(true) // include the name of the current thread
         // .with_timer(LocalTime::rfc_3339()) // use RFC 3339 timestamps
         .compact();
     let file_appender = tracing_appender::rolling::daily(&CFG.log.dir, &CFG.log.file); //文件输出设置

@@ -109,11 +109,7 @@ async fn get_body_data(body: Body) -> Result<(Bytes, String), (StatusCode, Strin
 }
 
 async fn write_tracing_log(req_info: ReqInfo, res_info: ResInfo) {
-    tracing::info!(
-        "\n请求信息:{:#?} \n响应信息:{:#?}",
-        req_info.clone(),
-        res_info.clone()
-    );
+    tracing::info!("\n请求信息:{:#?} \n响应信息:{:#?}", req_info, res_info);
     match req_info.method.as_str() {
         "GET" => {}
         _ => {

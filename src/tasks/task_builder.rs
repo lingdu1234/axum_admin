@@ -5,7 +5,7 @@ use delay_timer::{
     anyhow::Result,
     entity::DelayTimer,
     prelude::*,
-    timer::task::{ScheduleIteratorTimeZone::Local, Task},
+    timer::task::{ScheduleIteratorTimeZone::Utc, Task},
     utils::convenience::async_template,
 };
 use once_cell::sync::Lazy;
@@ -38,7 +38,7 @@ fn build_task_async_task(
     task_id: u64,
 ) -> Result<Task> {
     let mut task_builder = TaskBuilder::default();
-    task_builder.set_schedule_iterator_time_zone(Local);
+    task_builder.set_schedule_iterator_time_zone(Utc);
     // .set_maximum_parallel_runnable_num(5);
     let t_name = job_name.to_string();
     let j_id = job_id.to_string();
