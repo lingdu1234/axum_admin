@@ -45,9 +45,16 @@ async fn db_table_init(db: &DatabaseConnection) {
     let builder = db.get_database_backend();
     let schema = Schema::new(builder);
     // 创建表
-    db.execute(builder.build(&schema.create_table_from_entity(sys_db_version::Entity)))
-        .await
-        .expect("数据库创建失败或者已经存在");
+    db.execute(
+        builder.build(
+            schema
+                .create_table_from_entity(sys_db_version::Entity)
+                .to_owned()
+                .if_not_exists(),
+        ),
+    )
+    .await
+    .expect("数据库创建失败或者已经存在");
     db.execute(builder.build(&schema.create_table_from_entity(sys_user::Entity)))
         .await
         .expect("数据库创建失败或者已经存在");
