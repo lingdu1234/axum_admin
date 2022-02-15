@@ -154,12 +154,26 @@ where
 
 /// delete 完全删除
 pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
-    let mut s = SysJob::delete_many();
+    let job_ids = delete_req.job_ids.clone();
+    // 删除任务
+    for job_id in job_ids.clone() {
+        match SysJob::find()
+            .filter(sys_job::Column::JobId.eq(job_id))
+            .one(db)
+            .await
+            .map_err(BadRequest)?
+        {
+            Some(m) => {
+                tasks::delete_job(m.task_id, true)
+                    .await
+                    .expect("任务删除失败");
+            }
+            None => {}
+        };
+    }
 
-    s = s.filter(sys_job::Column::JobId.is_in(delete_req.job_ids));
-
-    //开始删除
-    let d = s
+    let d = SysJob::delete_many()
+        .filter(sys_job::Column::JobId.is_in(job_ids.clone()))
         .exec(db)
         .await
         .map_err(|e| Error::from_string(e.to_string(), StatusCode::BAD_REQUEST))?;

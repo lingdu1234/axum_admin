@@ -14,7 +14,7 @@ use anyhow::{anyhow, Result};
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
-// use tokio::time::{sleep, Duration};
+use tokio::time::{sleep, Duration};
 
 pub static TASK_MODELS: Lazy<Arc<Mutex<HashMap<i64, TaskModel>>>> = Lazy::new(|| {
     let tasks: HashMap<i64, TaskModel> = HashMap::new();
@@ -43,6 +43,7 @@ pub async fn timer_task_init() -> Result<()> {
         // match t.task_count {
         // 0..=99 => {
         task_runner::add_circles_task(t.clone()).await?;
+        sleep(Duration::from_secs(1)).await;
         //     }
         //     _ => {
         //         tokio::spawn(async move {

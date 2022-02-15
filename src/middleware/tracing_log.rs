@@ -35,13 +35,16 @@ pub async fn tracing_log<E: Endpoint>(next: E, req: Request) -> Result<Response>
     let (req_bytes, req_data) = get_body_data(req_body).await.unwrap();
     let reqq = Request::from_parts(req_parts, Body::from(req_bytes));
     let client_info = utils::get_client_info(&reqq).await;
-    let user = Claims::from_request_without_body(&reqq).await.unwrap();
+    let (user, user_id) = match Claims::from_request_without_body(&reqq).await {
+        Ok(claims) => (claims.name.clone(), claims.id.clone()),
+        Err(_) => ("".to_string(), "".to_string()),
+    };
     let req_info = ReqInfo {
         path: reqq.uri().path().to_string(),
         ori_path: reqq.original_uri().to_string(),
         method: reqq.method().to_string(),
-        user: user.name,
-        user_id: user.id,
+        user,
+        user_id,
         client_info: client_info.clone(),
         data: req_data,
         query: reqq.uri().query().unwrap_or("").to_string(),
