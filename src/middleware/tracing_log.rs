@@ -111,5 +111,12 @@ async fn write_tracing_log(req_info: ReqInfo, res_info: ResInfo) {
         req_info.clone(),
         res_info.clone()
     );
-    system::sys_oper_log_add(req_info, res_info).await;
+    match req_info.method.as_str() {
+        "GET" => {}
+        _ => {
+            system::sys_oper_log_add(req_info, res_info)
+                .await
+                .expect("写入日志失败");
+        }
+    };
 }

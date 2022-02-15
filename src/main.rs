@@ -22,7 +22,6 @@ pub use crate::config::CFG;
 use crate::database::{db_conn, DB};
 
 //路由日志追踪
-use crate::middleware::{tracing_log::tracing_log, Tracing};
 // use std::sync::Arc;
 
 // pub static RT: Lazy<Arc<tokio::runtime::Runtime>> = Lazy::new(|| {
@@ -88,14 +87,17 @@ async fn main() -> Result<(), std::io::Error> {
     // 启动app  注意中间件顺序 最后的先执行，尤其AddData 顺序不对可能会导致数据丢失，无法在某些位置获取数据
 
     let app = Route::new()
-        .nest("/api", apps::api().around(tracing_log))
+        .nest(
+            "/api",
+            apps::api().around(middleware::tracing_log::tracing_log),
+        )
         .nest(
             "/",
             StaticFilesEndpoint::new(&CFG.web.dir)
                 .show_files_listing()
                 .index_file(&CFG.web.index),
         )
-        .with(Tracing)
+        // .with(Tracing)
         .with(cors);
 
     let server = Server::new(listener).name("poem-admin");

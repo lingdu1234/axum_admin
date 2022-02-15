@@ -227,9 +227,12 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
                 .expect("任务删除失败");
         }
         ("1", "1") => {
-            tasks::update_circles_task(uid.clone())
+            tasks::delete_job(s_s.clone().task_id, true)
                 .await
-                .expect("任务更新失败");
+                .expect("任务删除失败");
+            tasks::run_circles_task(uid.clone())
+                .await
+                .expect("任务添加失败");
         }
         (_, _) => {}
     };

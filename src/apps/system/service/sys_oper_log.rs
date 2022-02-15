@@ -83,16 +83,7 @@ pub async fn add(req: ReqInfo, res: ResInfo) -> Result<()> {
         _ => "0",        // 其他
     };
     let all_apis = ALL_APIS.lock().await;
-    let req_path_vec = req.path.split("/").collect::<Vec<&str>>();
-    let req_path = if req_path_vec.len() > 2 {
-        req_path_vec[1..].join("/")
-    } else {
-        "".to_string()
-    };
-    println!(
-        "=================++++++++++++++++++++++++++++++++++req_path: {}",
-        req_path
-    );
+    let req_path = req.path.as_str().replacen("/", "", 1);
     let api_name = all_apis
         .get(&req_path)
         .unwrap_or(&("".to_string()))

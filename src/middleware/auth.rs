@@ -31,12 +31,14 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
     type Output = E::Output;
 
     async fn call(&self, req: Request) -> Result<Self::Output> {
-        let req_vec = req.original_uri().path().split('/').collect::<Vec<&str>>();
-        let req_path = if req_vec.len() > 2 {
-            req_vec[2..].join("/")
-        } else {
-            "".to_string()
-        };
+        // let req_vec = req.original_uri().path().split('/').collect::<Vec<&str>>();
+        // let req_path = if req_vec.len() > 2 {
+        //     req_vec[2..].join("/")
+        // } else {
+        //     "".to_string()
+        // };
+        let req_ori = req.original_uri().path();
+        let req_path = req_ori.replacen("/api/", "", 1);
         let req_method = req.method().as_str();
         if let Some(auth) = req.headers().typed_get::<headers::Authorization<Bearer>>() {
             //  验证token

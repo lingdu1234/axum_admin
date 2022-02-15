@@ -7,10 +7,11 @@ mod sys_job;
 mod sys_job_log;
 mod sys_login_log;
 mod sys_menu;
+pub mod sys_oper_log;
 mod sys_post;
-mod sys_role;
-mod sys_user;
-mod sys_user_online;
+mod sys_role; //角色管理
+mod sys_user; // 用户管理
+mod sys_user_online; // 操作日志
 
 pub use common::get_captcha;
 pub use sys_user::login;
@@ -30,6 +31,7 @@ pub fn system_api() -> Route {
         .nest("/online", sys_user_online_api()) //在线用户
         .nest("/job", sys_job_api()) //定时任务
         .nest("/job_log", sys_job_log_api()) //定时任务日志
+        .nest("/oper_log", sys_oper_log_api()) //操作日志
 }
 
 fn sys_user_api() -> Route {
@@ -153,6 +155,13 @@ fn sys_job_log_api() -> Route {
     Route::new()
         .at("/list", get(sys_job_log::get_sort_list)) //获取筛选分页
         .at("/get_by_id", get(sys_job_log::get_by_id)) //按id获取
-        .at("/clean", delete(sys_job_log::clean)) //硬删除
+        .at("/clean", delete(sys_job_log::clean)) //清空
         .at("/delete", delete(sys_job_log::delete)) //硬删除
+}
+fn sys_oper_log_api() -> Route {
+    Route::new()
+        .at("/list", get(sys_oper_log::get_sort_list)) //获取筛选分页
+        .at("/get_by_id", get(sys_oper_log::get_by_id)) //按id获取
+        .at("/clean", delete(sys_oper_log::clean)) //清空
+        .at("/delete", delete(sys_oper_log::delete)) //硬删除
 }

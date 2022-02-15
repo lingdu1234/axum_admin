@@ -2,6 +2,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct SearchReq {
+    pub oper_id: Option<String>,
     pub title: Option<String>,
     pub oper_name: Option<String>,
     pub operator_type: Option<String>,

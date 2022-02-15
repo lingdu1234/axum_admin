@@ -88,67 +88,67 @@ pub async fn add_circles_task(t: system::SysJobModel) -> Result<()> {
     Ok(())
 }
 
-pub async fn update_circles_task(t: system::SysJobModel) -> Result<()> {
-    let task_count = match t.task_count {
-        x @ 0..=9999 => x, //防止程序卡死,更新任务时，限制最大任务数
-        _ => 9999_i64,
-    };
-    // let t_builder = task_builder::TASK_TIMER.lock().await;
-    let t_builder = task_builder::TASK_TIMER.write().await;
-    let task = task_builder::build_task(
-        &t.job_id,
-        &t.cron_expression,
-        &t.job_name,
-        task_count as u64,
-        t.task_id.try_into().unwrap_or(0),
-    );
-    let remark_update_info_t = format!(
-        "任务更新:--------    更新时间:{}\n任务名称:{}    修改后次数:{}\n任务时间:{}",
-        Local::now().naive_local().format("%Y-%m-%d %H:%M:%S"),
-        &t.job_name,
-        task_count,
-        t.cron_expression
-    );
-    let remark_update_info = remark_update_info_t.as_str();
-    match task {
-        Ok(x) => {
-            match t_builder.update_task(x) {
-                Ok(_) => {
-                    let mut task_models = TASK_MODELS.lock().await;
-                    let mut remark =
-                        t.remark.clone().unwrap_or_else(|| "".to_string()) + remark_update_info;
-                    task_models.entry(t.task_id).and_modify(|x| {
-                        x.model = t.clone();
-                        remark = remark.clone()
-                            + "    已运行次数:"
-                            + x.lot_count.to_string().as_str()
-                            + "\n";
-                        x.model.remark = Some(remark.clone());
-                        x.count = task_count;
-                        x.next_run_time =
-                            get_next_task_run_time(t.cron_expression.clone()).unwrap();
-                        x.lot_end_time =
-                            get_task_end_time(t.cron_expression.clone(), task_count as u64)
-                                .unwrap();
-                    });
-                    tokio::spawn(async move {
-                        let db = DB.get_or_init(db_conn).await;
-                        SysJobEntity::update_many()
-                            .col_expr(SysJobColumn::Remark, Expr::value(remark.clone()))
-                            .col_expr(SysJobColumn::TaskCount, Expr::value(task_count))
-                            .filter(SysJobColumn::JobId.eq(t.job_id.clone()))
-                            .exec(db)
-                            .await
-                            .expect("update job log failed");
-                    });
-                }
-                Err(e) => return Err(anyhow!("{:#?}", e)),
-            };
-        }
-        Err(e) => return Err(anyhow!("{:#?}", e)),
-    };
-    Ok(())
-}
+// pub async fn update_circles_task(t: system::SysJobModel) -> Result<()> {
+//     let task_count = match t.task_count {
+//         x @ 0..=9999 => x, //防止程序卡死,更新任务时，限制最大任务数
+//         _ => 9999_i64,
+//     };
+//     // let t_builder = task_builder::TASK_TIMER.lock().await;
+//     let t_builder = task_builder::TASK_TIMER.write().await;
+//     let task = task_builder::build_task(
+//         &t.job_id,
+//         &t.cron_expression,
+//         &t.job_name,
+//         task_count as u64,
+//         t.task_id.try_into().unwrap_or(0),
+//     );
+//     let remark_update_info_t = format!(
+//         "任务更新:--------    更新时间:{}\n任务名称:{}    修改后次数:{}\n任务时间:{}",
+//         Local::now().naive_local().format("%Y-%m-%d %H:%M:%S"),
+//         &t.job_name,
+//         task_count,
+//         t.cron_expression
+//     );
+//     let remark_update_info = remark_update_info_t.as_str();
+//     match task {
+//         Ok(x) => {
+//             match t_builder.update_task(x) {
+//                 Ok(_) => {
+//                     let mut task_models = TASK_MODELS.lock().await;
+//                     let mut remark =
+//                         t.remark.clone().unwrap_or_else(|| "".to_string()) + remark_update_info;
+//                     task_models.entry(t.task_id).and_modify(|x| {
+//                         x.model = t.clone();
+//                         remark = remark.clone()
+//                             + "    已运行次数:"
+//                             + x.lot_count.to_string().as_str()
+//                             + "\n";
+//                         x.model.remark = Some(remark.clone());
+//                         x.count = task_count;
+//                         x.next_run_time =
+//                             get_next_task_run_time(t.cron_expression.clone()).unwrap();
+//                         x.lot_end_time =
+//                             get_task_end_time(t.cron_expression.clone(), task_count as u64)
+//                                 .unwrap();
+//                     });
+//                     tokio::spawn(async move {
+//                         let db = DB.get_or_init(db_conn).await;
+//                         SysJobEntity::update_many()
+//                             .col_expr(SysJobColumn::Remark, Expr::value(remark.clone()))
+//                             .col_expr(SysJobColumn::TaskCount, Expr::value(task_count))
+//                             .filter(SysJobColumn::JobId.eq(t.job_id.clone()))
+//                             .exec(db)
+//                             .await
+//                             .expect("update job log failed");
+//                     });
+//                 }
+//                 Err(e) => return Err(anyhow!("{:#?}", e)),
+//             };
+//         }
+//         Err(e) => return Err(anyhow!("{:#?}", e)),
+//     };
+//     Ok(())
+// }
 
 async fn init_task_model(m: SysJobModel, task_count: i64) {
     let now = Local::now().naive_local();
