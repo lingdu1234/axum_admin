@@ -31,6 +31,7 @@ pub struct Res<T> {
     pub msg: Option<String>,
 }
 
+#[allow(unconditional_recursion)]
 impl IntoResponse for Res<serde_json::Value> {
     fn into_response(self) -> Response {
         let data = Self {
