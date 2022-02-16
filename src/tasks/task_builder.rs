@@ -1,6 +1,7 @@
 // use crate::RT;
 
-use super::run_once_task;
+use std::sync::Arc;
+
 use delay_timer::{
     anyhow::Result,
     entity::DelayTimer,
@@ -9,8 +10,9 @@ use delay_timer::{
     utils::convenience::async_template,
 };
 use once_cell::sync::Lazy;
-use std::sync::Arc;
 use tokio::sync::RwLock;
+
+use super::run_once_task;
 
 pub static TASK_TIMER: Lazy<Arc<RwLock<DelayTimer>>> = Lazy::new(|| {
     // let rt = RT.clone();

@@ -1,12 +1,15 @@
 use std::{collections::HashMap, sync::Arc};
 
-use crate::apps::system;
-use crate::database::{db_conn, DB};
-use crate::utils;
 use once_cell::sync::Lazy;
 use sea_orm_casbin_adapter::casbin::CoreApi;
 use tokio::sync::Mutex;
 use tracing::info;
+
+use crate::{
+    apps::system,
+    database::{db_conn, DB},
+    utils,
+};
 
 pub static ALL_APIS: Lazy<Arc<Mutex<HashMap<String, String>>>> = Lazy::new(|| {
     let apis: HashMap<String, String> = HashMap::new();

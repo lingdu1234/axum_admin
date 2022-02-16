@@ -1,15 +1,9 @@
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Request, Result};
-
 use scru128::scru128_string;
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait,
     PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
-};
-
-use crate::utils::{
-    self,
-    jwt::{AuthBody, AuthPayload, Claims},
 };
 
 use super::{
@@ -22,6 +16,10 @@ use super::{
         },
     },
     sys_login_log, sys_post, sys_role, sys_user_online,
+};
+use crate::utils::{
+    self,
+    jwt::{AuthBody, AuthPayload, Claims},
 };
 
 /// get_user_list 获取用户列表
@@ -264,9 +262,9 @@ pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
 
     s = s.filter(sys_user::Column::Id.is_in(req.clone().user_id));
 
-    //开始删除
+    // 开始删除
     let txn = db.begin().await.map_err(BadRequest)?;
-    //删除用户
+    // 删除用户
     let d = s.exec(&txn).await.map_err(BadRequest)?;
     for x in req.clone().user_id {
         // 删除用户职位数据

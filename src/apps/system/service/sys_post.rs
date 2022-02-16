@@ -1,5 +1,3 @@
-use crate::apps::common::models::{ListData, PageParams};
-use crate::apps::system::entities::sys_user_post;
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
@@ -7,8 +5,14 @@ use sea_orm::{
     PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
-use super::super::entities::{prelude::*, sys_post};
-use super::super::models::sys_post::{AddReq, DeleteReq, EditReq, Resp, SearchReq};
+use super::super::{
+    entities::{prelude::*, sys_post},
+    models::sys_post::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
+};
+use crate::apps::{
+    common::models::{ListData, PageParams},
+    system::entities::sys_user_post,
+};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -127,7 +131,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 
     s = s.filter(sys_post::Column::PostId.is_in(delete_req.post_ids));
 
-    //开始删除
+    // 开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
 
     match d.rows_affected {
@@ -170,7 +174,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
         ..s_r
     };
     // 更新
-    let _aa = act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
+    let _aa = act.update(db).await.map_err(BadRequest)?; // 这个两种方式一样 都要多查询一次
     Ok(format!("用户<{}>数据更新成功", uid))
 }
 
@@ -191,7 +195,9 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
         None => return Err(Error::from_string("数据不存在", StatusCode::BAD_REQUEST)),
     };
 
-    // let result: Resp = serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
+    // let result: Resp =
+    // serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?;
+    // //这种数据转换效率不知道怎么样
 
     Ok(res)
 }

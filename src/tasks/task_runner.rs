@@ -1,5 +1,11 @@
 use std::str::FromStr;
 
+use anyhow::{anyhow, Result};
+use chrono::{Local, NaiveDateTime};
+use delay_timer::prelude::cron_clock;
+use sea_orm::{sea_query::Expr, ColumnTrait, EntityTrait, QueryFilter, TransactionTrait};
+
+use super::{task, task_builder, TaskModel, TASK_MODELS};
 use crate::{
     apps::system::{
         self, get_job_by_id, sys_job_log_add, SysJobColumn, SysJobEntity, SysJobLogAddReq,
@@ -7,12 +13,6 @@ use crate::{
     },
     database::{db_conn, DB},
 };
-use anyhow::{anyhow, Result};
-use chrono::{Local, NaiveDateTime};
-use delay_timer::prelude::cron_clock;
-use sea_orm::{sea_query::Expr, ColumnTrait, EntityTrait, QueryFilter, TransactionTrait};
-
-use super::{task, task_builder, TaskModel, TASK_MODELS};
 
 pub async fn run_once_task(job_id: String, task_id: i64, is_once: bool) {
     let mut task_models = TASK_MODELS.lock().await;
@@ -41,14 +41,14 @@ pub async fn run_once_task(job_id: String, task_id: i64, is_once: bool) {
         job.model.invoke_target.clone(),
     )
     .await;
-    let task_end_time = Local::now().naive_local(); //获取结束时间
+    let task_end_time = Local::now().naive_local(); // 获取结束时间
     let elapsed_time: i64 = task_end_time
         .signed_duration_since(begin_time)
         .to_std()
         .unwrap()
         .as_millis()
         .try_into()
-        .unwrap_or(i64::MAX); //获取结束时间和开始时间的时间差，单位为毫秒
+        .unwrap_or(i64::MAX); // 获取结束时间和开始时间的时间差，单位为毫秒
     tokio::spawn(async move {
         match is_once {
             true => write_once_job_log(res, job, begin_time, elapsed_time).await,
@@ -103,9 +103,9 @@ pub async fn add_circles_task(t: system::SysJobModel) -> Result<()> {
 //         t.task_id.try_into().unwrap_or(0),
 //     );
 //     let remark_update_info_t = format!(
-//         "任务更新:--------    更新时间:{}\n任务名称:{}    修改后次数:{}\n任务时间:{}",
-//         Local::now().naive_local().format("%Y-%m-%d %H:%M:%S"),
-//         &t.job_name,
+//         "任务更新:--------    更新时间:{}\n任务名称:{}
+// 修改后次数:{}\n任务时间:{}",         Local::now().naive_local().format("%Y-%
+// m-%d %H:%M:%S"),         &t.job_name,
 //         task_count,
 //         t.cron_expression
 //     );
@@ -116,29 +116,29 @@ pub async fn add_circles_task(t: system::SysJobModel) -> Result<()> {
 //                 Ok(_) => {
 //                     let mut task_models = TASK_MODELS.lock().await;
 //                     let mut remark =
-//                         t.remark.clone().unwrap_or_else(|| "".to_string()) + remark_update_info;
-//                     task_models.entry(t.task_id).and_modify(|x| {
-//                         x.model = t.clone();
-//                         remark = remark.clone()
+//                         t.remark.clone().unwrap_or_else(|| "".to_string()) +
+// remark_update_info;                     
+// task_models.entry(t.task_id).and_modify(|x| {                         x.model
+// = t.clone();                         remark = remark.clone()
 //                             + "    已运行次数:"
 //                             + x.lot_count.to_string().as_str()
 //                             + "\n";
 //                         x.model.remark = Some(remark.clone());
 //                         x.count = task_count;
 //                         x.next_run_time =
-//                             get_next_task_run_time(t.cron_expression.clone()).unwrap();
-//                         x.lot_end_time =
-//                             get_task_end_time(t.cron_expression.clone(), task_count as u64)
-//                                 .unwrap();
-//                     });
+//                             
+// get_next_task_run_time(t.cron_expression.clone()).unwrap();                  
+// x.lot_end_time =                             
+// get_task_end_time(t.cron_expression.clone(), task_count as u64)              
+// .unwrap();                     });
 //                     tokio::spawn(async move {
 //                         let db = DB.get_or_init(db_conn).await;
 //                         SysJobEntity::update_many()
-//                             .col_expr(SysJobColumn::Remark, Expr::value(remark.clone()))
-//                             .col_expr(SysJobColumn::TaskCount, Expr::value(task_count))
-//                             .filter(SysJobColumn::JobId.eq(t.job_id.clone()))
-//                             .exec(db)
-//                             .await
+//                             .col_expr(SysJobColumn::Remark,
+// Expr::value(remark.clone()))                             
+// .col_expr(SysJobColumn::TaskCount, Expr::value(task_count))                  
+// .filter(SysJobColumn::JobId.eq(t.job_id.clone()))                            
+// .exec(db)                             .await
 //                             .expect("update job log failed");
 //                     });
 //                 }
@@ -198,7 +198,7 @@ async fn write_circle_job_log(
         Err(e) => (None, Some(format!("{:#?}", e)), "0".to_string()),
     };
     let job_remark_t = job.model.remark.clone().unwrap_or_else(|| "".to_string());
-    //获取结束时间和开始时间的时间差，单位为毫秒
+    // 获取结束时间和开始时间的时间差，单位为毫秒
 
     let (job_remark, job_status) = match job.count != 0 && job.count <= job.lot_count {
         false => (job_remark_t, "1".to_string()),
@@ -334,6 +334,7 @@ pub async fn delete_job(task_id: i64, is_manual: bool) -> Result<()> {
         Err(e) => return Err(anyhow!("delete task failed, {}", e.to_string())),
     };
 
-    //  通过 `DelayTimer` 好像不能获取正在运行的任务，所以咋暂时无法在无任务时关闭 DelayTimer
+    //  通过 `DelayTimer` 好像不能获取正在运行的任务，所以咋暂时无法在无任务时关闭
+    // DelayTimer
     Ok(())
 }

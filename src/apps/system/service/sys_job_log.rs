@@ -1,12 +1,14 @@
-use crate::apps::common::models::{ListData, PageParams};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
     QueryOrder, Set, TransactionTrait,
 };
 
-use super::super::entities::{prelude::SysJobLog, sys_job_log};
-use super::super::models::sys_job_log::{AddReq, DeleteReq, SearchReq};
+use super::super::{
+    entities::{prelude::SysJobLog, sys_job_log},
+    models::sys_job_log::{AddReq, DeleteReq, SearchReq},
+};
+use crate::apps::common::models::{ListData, PageParams};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -113,7 +115,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 
     s = s.filter(sys_job_log::Column::JobLogId.is_in(delete_req.job_log_ids));
 
-    //开始删除
+    // 开始删除
     let d = s
         .exec(db)
         .await
@@ -134,7 +136,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 pub async fn clean(db: &DatabaseConnection, job_id: String) -> Result<String> {
     let mut s = SysJobLog::delete_many();
     s = s.filter(sys_job_log::Column::JobId.eq(job_id));
-    //开始删除
+    // 开始删除
     let d = s
         .exec(db)
         .await

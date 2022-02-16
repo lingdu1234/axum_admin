@@ -1,12 +1,5 @@
 use std::collections::HashMap;
 
-use crate::{
-    apps::{
-        common::models::{ListData, PageParams},
-        system::models::sys_menu::MenuResp,
-    },
-    utils::get_enforcer,
-};
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
@@ -16,14 +9,26 @@ use sea_orm::{
 };
 use sea_orm_casbin_adapter::casbin::MgmtApi;
 
-use super::super::entities::{
-    prelude::{SysRole, SysRoleDept},
-    sys_role, sys_role_dept,
+use super::{
+    super::{
+        entities::{
+            prelude::{SysRole, SysRoleDept},
+            sys_role, sys_role_dept,
+        },
+        models::sys_role::{
+            AddOrCancelAuthRoleReq, AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq,
+            StatusReq,
+        },
+    },
+    sys_menu,
 };
-use super::super::models::sys_role::{
-    AddOrCancelAuthRoleReq, AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq,
+use crate::{
+    apps::{
+        common::models::{ListData, PageParams},
+        system::models::sys_menu::MenuResp,
+    },
+    utils::get_enforcer,
 };
-use super::sys_menu;
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -147,7 +152,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     let txn = db.begin().await.map_err(BadRequest)?;
     let mut s = SysRole::delete_many();
     s = s.filter(sys_role::Column::RoleId.is_in(delete_req.role_ids.clone()));
-    //开始删除
+    // 开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
     let mut e = get_enforcer(false).await;
     // 删除角色权限数据 和 部门权限数据

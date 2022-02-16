@@ -1,9 +1,10 @@
+use std::time::Instant;
+
 use bytes::Bytes;
 use poem::{
     http::StatusCode, Body, Endpoint, FromRequest, IntoResponse, Request, Response, Result,
 };
 use serde::Deserialize;
-use std::time::Instant;
 
 use crate::{
     apps::system,

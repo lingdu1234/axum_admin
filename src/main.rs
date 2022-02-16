@@ -9,19 +9,21 @@ mod tasks;
 pub mod utils;
 
 // use once_cell::sync::Lazy;
-use poem::endpoint::StaticFilesEndpoint;
-use poem::{listener::TcpListener, middleware::Cors, EndpointExt, Result, Route, Server};
 use std::time::Duration;
 
+use poem::{
+    endpoint::StaticFilesEndpoint, listener::TcpListener, middleware::Cors, EndpointExt, Result,
+    Route, Server,
+};
 use tracing_log::LogTracer;
 // use tracing_subscriber::fmt::time::LocalTime;
 use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
 
-//导入全局
+// 导入全局
 pub use crate::config::CFG;
 use crate::database::{db_conn, DB};
 
-//路由日志追踪
+// 路由日志追踪
 // use std::sync::Arc;
 
 // pub static RT: Lazy<Arc<tokio::runtime::Runtime>> = Lazy::new(|| {
@@ -37,7 +39,7 @@ async fn main() -> Result<(), std::io::Error> {
     }
     env::setup();
 
-    //日志追踪 将log转换到Tracing统一输出
+    // 日志追踪 将log转换到Tracing统一输出
     LogTracer::init().unwrap();
 
     // 系统变量设置
@@ -54,10 +56,10 @@ async fn main() -> Result<(), std::io::Error> {
         // .with_line_number(true) // include the name of the current thread
         // .with_timer(LocalTime::rfc_3339()) // use RFC 3339 timestamps
         .compact();
-    let file_appender = tracing_appender::rolling::daily(&CFG.log.dir, &CFG.log.file); //文件输出设置
-                                                                                       //文件输出
+    let file_appender = tracing_appender::rolling::daily(&CFG.log.dir, &CFG.log.file); // 文件输出设置
+                                                                                       // 文件输出
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
-    //标准控制台输出
+    // 标准控制台输出
     let (std_non_blocking, _guard) = tracing_appender::non_blocking(std::io::stdout());
     let collector = tracing_subscriber::registry()
         .with(EnvFilter::from_default_env().add_directive(tracing::Level::DEBUG.into()))
@@ -87,7 +89,8 @@ async fn main() -> Result<(), std::io::Error> {
     let cors = Cors::new();
     //  Swagger
     let listener = TcpListener::bind(&CFG.server.address);
-    // 启动app  注意中间件顺序 最后的先执行，尤其AddData 顺序不对可能会导致数据丢失，无法在某些位置获取数据
+    // 启动app  注意中间件顺序 最后的先执行，尤其AddData
+    // 顺序不对可能会导致数据丢失，无法在某些位置获取数据
 
     let app = Route::new()
         .nest(

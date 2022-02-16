@@ -1,22 +1,23 @@
-use crate::apps::{
-    common::models::{ListData, Res},
-    system::{entities::sys_role, service},
-};
 use poem::{
     handler,
     web::{Json, Query},
 };
-
-use crate::apps::common::models::PageParams;
 use validator::Validate;
 
-use crate::database::{db_conn, DB};
-
-use super::super::models::sys_role::{
-    AddOrCancelAuthRoleReq, AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq,
-    UpdateAuthRoleReq,
+use super::super::models::{
+    sys_role::{
+        AddOrCancelAuthRoleReq, AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq,
+        StatusReq, UpdateAuthRoleReq,
+    },
+    sys_user::{SearchReq as UserSearchReq, UserResp, UserWithDept},
 };
-use super::super::models::sys_user::{SearchReq as UserSearchReq, UserResp, UserWithDept};
+use crate::{
+    apps::{
+        common::models::{ListData, PageParams, Res},
+        system::{entities::sys_role, service},
+    },
+    database::{db_conn, DB},
+};
 
 /// get_list 获取列表
 /// page_params 分页参数

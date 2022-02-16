@@ -1,5 +1,3 @@
-use crate::apps::common::models::{ ListData, PageParams};
-use crate::apps::system::entities::sys_role_dept;
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
@@ -7,10 +5,14 @@ use sea_orm::{
     QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
-use crate::apps::system::models::sys_dept::RespTree;
-
-use super::super::entities::{prelude::*, sys_dept};
-use super::super::models::sys_dept::{AddReq, DeleteReq, DeptResp, EditReq, SearchReq};
+use super::super::{
+    entities::{prelude::*, sys_dept},
+    models::sys_dept::{AddReq, DeleteReq, DeptResp, EditReq, SearchReq},
+};
+use crate::apps::{
+    common::models::{ListData, PageParams},
+    system::{entities::sys_role_dept, models::sys_dept::RespTree},
+};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -106,7 +108,7 @@ pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
 
     s = s.filter(sys_dept::Column::DeptId.eq(req.dept_id));
 
-    //开始删除
+    // 开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
 
     match d.rows_affected {
@@ -150,7 +152,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
         ..s_r
     };
     // 更新
-    act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
+    act.update(db).await.map_err(BadRequest)?; // 这个两种方式一样 都要多查询一次
     Ok(format!("用户<{}>数据更新成功", uid))
 }
 

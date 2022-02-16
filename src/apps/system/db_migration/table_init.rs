@@ -1,18 +1,18 @@
-use crate::utils;
-
-use super::super::models::{
-    sys_dict_data::AddReq as SysDictDataAddReq, sys_dict_type::AddReq as SysDictTypeAddReq,
-};
-use super::super::{
-    entities::{
-        sys_dept::ActiveModel as SysDeptActiveModel, sys_menu::ActiveModel as SysMenuActiveModel, *,
-    },
-    service,
-};
 use chrono::{Local, NaiveDateTime};
 use scru128::scru128_string;
 use sea_orm::{ActiveModelTrait, EntityTrait, QueryOrder, Set, TransactionTrait};
 pub use sea_orm::{ConnectionTrait, DatabaseConnection, DatabaseTransaction, Schema};
+
+use super::super::{
+    entities::{
+        sys_dept::ActiveModel as SysDeptActiveModel, sys_menu::ActiveModel as SysMenuActiveModel, *,
+    },
+    models::{
+        sys_dict_data::AddReq as SysDictDataAddReq, sys_dict_type::AddReq as SysDictTypeAddReq,
+    },
+    service,
+};
+use crate::utils;
 
 pub async fn database_init(db: &DatabaseConnection) {
     // 1. 查看数据库版本

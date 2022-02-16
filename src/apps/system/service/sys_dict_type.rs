@@ -1,4 +1,3 @@
-use crate::apps::common::models::{ListData, PageParams};
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
@@ -6,8 +5,11 @@ use sea_orm::{
     PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
-use super::super::entities::{prelude::SysDictType, sys_dict_type};
-use super::super::models::sys_dict_type::{AddReq, DeleteReq, EditReq, Resp, SearchReq};
+use super::super::{
+    entities::{prelude::SysDictType, sys_dict_type},
+    models::sys_dict_type::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
+};
+use crate::apps::common::models::{ListData, PageParams};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -106,7 +108,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 
     s = s.filter(sys_dict_type::Column::DictTypeId.is_in(delete_req.dict_type_ids));
 
-    //开始删除
+    // 开始删除
     let d = s
         .exec(db)
         .await
@@ -142,7 +144,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
         ..s_r
     };
     // 更新
-    let _aa = act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
+    let _aa = act.update(db).await.map_err(BadRequest)?; // 这个两种方式一样 都要多查询一次
 
     Ok(format!("用户<{}>数据更新成功", uid))
 }
@@ -166,7 +168,9 @@ pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> 
         Some(m) => m,
         None => return Err(Error::from_string("没有找到数据", StatusCode::BAD_REQUEST)),
     };
-    // let result: Resp = serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
+    // let result: Resp =
+    // serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?;
+    // //这种数据转换效率不知道怎么样
     Ok(res)
 }
 
@@ -182,6 +186,8 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
         .await
         .map_err(BadRequest)?;
     // println!("{:?}", s);
-    // let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
+    // let result: Vec<Resp> =
+    // serde_json::from_value(serde_json::json!(s)).map_err(BadRequest)?;
+    // //这种数据转换效率不知道怎么样
     Ok(s)
 }

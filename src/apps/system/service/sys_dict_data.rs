@@ -1,15 +1,15 @@
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
-use sea_orm::ActiveValue::NotSet;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
+    ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, ConnectionTrait, DatabaseConnection,
+    EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
+use super::super::{
+    entities::{prelude::SysDictData, sys_dict_data},
+    models::sys_dict_data::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
+};
 use crate::apps::common::models::{ListData, PageParams};
-
-use super::super::entities::{prelude::SysDictData, sys_dict_data};
-use super::super::models::sys_dict_data::{AddReq, DeleteReq, EditReq, Resp, SearchReq};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -130,7 +130,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 
     s = s.filter(sys_dict_data::Column::DictDataId.is_in(delete_req.dict_data_ids));
 
-    //开始删除
+    // 开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
 
     match d.rows_affected {
@@ -172,7 +172,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
         ..s_r
     };
     // 更新
-    let _aa = act.update(db).await.map_err(BadRequest); //这个两种方式一样 都要多查询一次
+    let _aa = act.update(db).await.map_err(BadRequest); // 这个两种方式一样 都要多查询一次
 
     Ok(format!("用户<{}>数据更新成功", uid))
 }
@@ -236,6 +236,8 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
         .all(db)
         .await
         .map_err(BadRequest)?;
-    // let result: Vec<Resp> = serde_json::from_value(serde_json::json!(s)).map_err(BadRequest)?; //这种数据转换效率不知道怎么样
+    // let result: Vec<Resp> =
+    // serde_json::from_value(serde_json::json!(s)).map_err(BadRequest)?;
+    // //这种数据转换效率不知道怎么样
     Ok(s)
 }

@@ -3,7 +3,6 @@ use headers::{authorization::Bearer, Authorization};
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use once_cell::sync::Lazy;
 use poem::{http::StatusCode, web::TypedHeader, Error, FromRequest, Request, RequestBody, Result};
-
 use serde::{Deserialize, Serialize};
 
 use crate::CFG;
@@ -96,11 +95,12 @@ pub async fn authorize(payload: AuthPayload, token_id: String) -> Result<AuthBod
 // impl IntoResponse for AuthError {
 //     fn into_response(self) -> Response {
 //         let (status, error_message) = match self {
-//             AuthError::WrongCredentials => (StatusCode::UNAUTHORIZED, "Wrong credentials"),
-//             AuthError::MissingCredentials => (StatusCode::BAD_REQUEST, "Missing credentials"),
-//             AuthError::TokenCreation => (StatusCode::INTERNAL_SERVER_ERROR, "Token creation error"),
-//             AuthError::InvalidToken => (StatusCode::BAD_REQUEST, "Invalid token"),
-//         };
+//             AuthError::WrongCredentials => (StatusCode::UNAUTHORIZED, "Wrong
+// credentials"),             AuthError::MissingCredentials =>
+// (StatusCode::BAD_REQUEST, "Missing credentials"),             
+// AuthError::TokenCreation => (StatusCode::INTERNAL_SERVER_ERROR, "Token
+// creation error"),             AuthError::InvalidToken =>
+// (StatusCode::BAD_REQUEST, "Invalid token"),         };
 //         let body = Json(json!({
 //             "error": error_message,
 //         }));

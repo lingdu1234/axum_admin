@@ -3,28 +3,22 @@ use poem::{
     web::{Json, Query},
     Request, Result,
 };
-
 use validator::Validate;
-
-use crate::{
-    apps::common::models::{PageParams, Res},
-    CFG,
-};
-use crate::{
-    apps::system::{
-        models::sys_user::{UserInfo, UserWithDept},
-        service,
-    },
-    utils::jwt::AuthBody,
-};
-use crate::{
-    apps::{common::models::ListData, system::models::sys_user::UserInfomaion},
-    utils::jwt::Claims,
-};
-use crate::{db_conn, DB};
 
 use super::super::models::sys_user::{
     AddReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq,
+};
+use crate::{
+    apps::{
+        common::models::{ListData, PageParams, Res},
+        system::{
+            models::sys_user::{UserInfo, UserInfomaion, UserWithDept},
+            service,
+        },
+    },
+    db_conn,
+    utils::jwt::{AuthBody, Claims},
+    CFG, DB,
 };
 
 /// get_user_list 获取用户列表

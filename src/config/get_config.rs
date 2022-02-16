@@ -1,10 +1,12 @@
-use once_cell::sync::Lazy;
 use std::{fs::File, io::Read};
+
+use once_cell::sync::Lazy;
 
 use super::cfgs::Configs;
 
 const CFG_FILE: &str = "config/config.toml";
-//  只要是配置文件中的配置项，都可以通过这个结构体来获取，只要读取一次值后保存到内存，一直可供使用
+//  只要是配置文件中的配置项，都可以通过这个结构体来获取，
+// 只要读取一次值后保存到内存，一直可供使用
 pub static CFG: Lazy<Configs> = Lazy::new(self::Configs::init);
 
 impl Configs {

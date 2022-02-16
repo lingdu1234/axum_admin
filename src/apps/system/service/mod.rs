@@ -1,8 +1,8 @@
 pub mod common;
 
-//用户管理
+// 用户管理
 pub mod sys_user;
-//字典类型
+// 字典类型
 pub mod sys_dict_type;
 // 字典数据
 pub mod sys_dict_data;

@@ -1,13 +1,18 @@
-use super::super::entities::{prelude::SysOperLog, sys_oper_log};
-use super::super::models::sys_oper_log::{DeleteReq, SearchReq};
-use crate::apps::common::models::{ListData, PageParams};
-use crate::database::{db_conn, DB};
-use crate::middleware::tracing_log::{ReqInfo, ResInfo};
-use crate::utils::ApiUtils::ALL_APIS;
 use chrono::Local;
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
+};
+
+use super::super::{
+    entities::{prelude::SysOperLog, sys_oper_log},
+    models::sys_oper_log::{DeleteReq, SearchReq},
+};
+use crate::{
+    apps::common::models::{ListData, PageParams},
+    database::{db_conn, DB},
+    middleware::tracing_log::{ReqInfo, ResInfo},
+    utils::ApiUtils::ALL_APIS,
 };
 
 /// get_list 获取列表
@@ -125,7 +130,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 
     s = s.filter(sys_oper_log::Column::OperId.is_in(delete_req.oper_log_ids));
 
-    //开始删除
+    // 开始删除
     let d = s
         .exec(db)
         .await

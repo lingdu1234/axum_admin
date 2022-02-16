@@ -1,16 +1,20 @@
-use poem::web::Query;
-use poem::{handler, web::Json, Result};
-
+use poem::{
+    handler,
+    web::{Json, Query},
+    Result,
+};
 use validator::Validate;
 
-use crate::apps::common::models::{ListData, PageParams, Res};
-use crate::apps::system::entities::sys_menu;
-use crate::apps::system::models::sys_menu::MenuResp;
-use crate::apps::system::service;
-use crate::utils::jwt::Claims;
-use crate::{db_conn, CFG, DB};
-
 use super::super::models::sys_menu::{AddReq, DeleteReq, EditReq, SearchReq, SysMenuTree};
+use crate::{
+    apps::{
+        common::models::{ListData, PageParams, Res},
+        system::{entities::sys_menu, models::sys_menu::MenuResp, service},
+    },
+    db_conn,
+    utils::jwt::Claims,
+    CFG, DB,
+};
 
 /// get_all_menu_tree 获取全部菜单
 #[handler]

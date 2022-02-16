@@ -2,8 +2,8 @@ use chrono::Local;
 use poem::{error::BadRequest, Error, Result};
 use reqwest::StatusCode;
 use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
-    QueryOrder, Set,TransactionTrait
+    ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
+    TransactionTrait,
 };
 
 use super::super::{
@@ -90,7 +90,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 
     s = s.filter(sys_login_log::Column::InfoId.is_in(delete_req.info_ids));
 
-    //开始删除
+    // 开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
 
     match d.rows_affected {

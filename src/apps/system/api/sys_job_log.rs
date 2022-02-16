@@ -1,14 +1,16 @@
-use crate::apps::common::models::{ListData, PageParams, Res};
-use crate::apps::system::entities::sys_job_log;
-use crate::apps::system::service;
 use poem::{
     handler,
     web::{Json, Query},
 };
 
-use crate::database::{db_conn, DB};
-
 use super::super::models::sys_job_log::{CleanReq, DeleteReq, SearchReq};
+use crate::{
+    apps::{
+        common::models::{ListData, PageParams, Res},
+        system::{entities::sys_job_log, service},
+    },
+    database::{db_conn, DB},
+};
 
 /// get_list 获取列表
 /// page_params 分页参数

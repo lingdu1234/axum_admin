@@ -1,0 +1,10 @@
+edition = "2021"
+newline_style = "unix"
+unstable_features = true
+# comments
+format_code_in_doc_comments = true
+normalize_comments = true
+wrap_comments = true
+# imports
+group_imports = "StdExternalCrate"
+imports_granularity = "Crate"

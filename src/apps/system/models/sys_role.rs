@@ -73,5 +73,3 @@ pub struct Resp {
     pub remark: String,
     pub data_scope: String,
 }
-
-

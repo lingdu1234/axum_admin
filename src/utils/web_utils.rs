@@ -1,10 +1,10 @@
 use std::{borrow::Cow, collections::HashMap};
 
-pub use crate::config::CFG;
 use poem::Request;
-
 use serde::{Deserialize, Serialize};
 use user_agent_parser::UserAgentParser;
+
+pub use crate::config::CFG;
 
 pub async fn get_client_info(req: &Request) -> ClientInfo {
     let user_agent = req.headers().get("user-agent").unwrap().to_str().unwrap();

@@ -1,5 +1,3 @@
-use crate::apps::common::models::{ListData, PageParams};
-use crate::utils::{self, get_enforcer};
 use chrono::{Local, NaiveDateTime};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
@@ -8,9 +6,13 @@ use sea_orm::{
 };
 use sea_orm_casbin_adapter::casbin::MgmtApi;
 
-use super::super::entities::{prelude::*, sys_menu};
-use super::super::models::sys_menu::{
-    AddReq, EditReq, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu,
+use super::super::{
+    entities::{prelude::*, sys_menu},
+    models::sys_menu::{AddReq, EditReq, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu},
+};
+use crate::{
+    apps::common::models::{ListData, PageParams},
+    utils::{self, get_enforcer},
 };
 
 /// get_list 获取列表
@@ -243,7 +245,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
         ..s_r
     };
     // 更新
-    let _aa = act.update(db).await.map_err(BadRequest)?; //这个两种方式一样 都要多查询一次
+    let _aa = act.update(db).await.map_err(BadRequest)?; // 这个两种方式一样 都要多查询一次
     match reqq.clone().api == s_s.clone().unwrap().api {
         true => {
             // 不更新api

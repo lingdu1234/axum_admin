@@ -76,7 +76,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 
     s = s.filter(sys_user_online::Column::Id.is_in(delete_req.ids));
 
-    //开始删除
+    // 开始删除
     let d = s.exec(db).await.map_err(BadRequest)?;
 
     match d.rows_affected {

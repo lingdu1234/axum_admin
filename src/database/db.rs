@@ -1,6 +1,6 @@
-use sea_orm::entity::prelude::DatabaseConnection;
-use sea_orm::{ConnectOptions, Database};
 use std::time::Duration;
+
+use sea_orm::{entity::prelude::DatabaseConnection, ConnectOptions, Database};
 use tokio::sync::OnceCell;
 
 use crate::CFG;
