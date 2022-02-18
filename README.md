@@ -32,4 +32,7 @@
 3. 无用代码清理
 4. 。。。
 
-## 在线体验
+## 数据迁移
+1. 安装sea-orm cli 工具 `cargo install sea-orm-cli`
+2. 在 .env中设置数据库地址
+3. 运行迁移命令：`sea-orm-cli migrate up`
