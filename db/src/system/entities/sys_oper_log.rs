@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub oper_id: String,
-    pub time_id: i64,
+    pub time_id: i32,
     pub title: String,
     pub business_type: String,
     pub method: String,
@@ -19,15 +19,15 @@ pub struct Model {
     pub oper_url: String,
     pub oper_ip: String,
     pub oper_location: String,
-    #[sea_orm(column_type = "Text")]
+    #[sea_orm(column_type = "Custom(\"BLOB\".to_owned())")]
     pub oper_param: String,
-    #[sea_orm(column_type = "Text")]
+    #[sea_orm(column_type = "Custom(\"BLOB\".to_owned())")]
     pub url_param: String,
-    #[sea_orm(column_type = "Text")]
+    #[sea_orm(column_type = "Custom(\"BLOB\".to_owned())")]
     pub json_result: String,
     pub status: String,
     pub error_msg: String,
-    pub oper_time: DateTime,
+    pub oper_time: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]

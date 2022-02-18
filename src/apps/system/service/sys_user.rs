@@ -192,23 +192,11 @@ pub async fn reset_passwd(db: &DatabaseConnection, req: ResetPasswdReq) -> Resul
     let salt = utils::rand_s(10);
     let passwd = utils::encrypt_password(&req.new_passwd, &salt);
     let now: NaiveDateTime = Local::now().naive_local();
-    // let uid = req.user_id;
-    // let s_u = SysUser::find_by_id(uid.clone())
-    //     .one(db)
-    //     .await
-    //     .map_err(BadRequest)?;
-    // let s_user: sys_user::ActiveModel = s_u.unwrap().into();
-    // let now: NaiveDateTime = Local::now().naive_local();
-    // let user = sys_user::ActiveModel {
-    //     user_password: Set(passwd),
-    //     updated_at: Set(Some(now)),
-    //     ..s_user
-    // };
-    // 更新
     let txn = db.begin().await.map_err(BadRequest)?;
     // 更新用户信息
     SysUser::update_many()
         .col_expr(sys_user::Column::UserPassword, Expr::value(passwd))
+        .col_expr(sys_user::Column::UserSalt, Expr::value(salt))
         .col_expr(sys_user::Column::UpdatedAt, Expr::value(now))
         .filter(sys_user::Column::Id.eq(req.user_id))
         .exec(&txn)

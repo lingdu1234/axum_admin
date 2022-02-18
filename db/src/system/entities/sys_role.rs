@@ -14,8 +14,8 @@ pub struct Model {
     pub data_scope: String,
     pub status: String,
     pub remark: String,
-    pub created_at: Option<DateTime>,
-    pub updated_at: Option<DateTime>,
+    pub created_at: Option<String>,
+    pub updated_at: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]

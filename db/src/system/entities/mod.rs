@@ -2,8 +2,8 @@
 
 pub mod prelude;
 
+pub mod casbin_rule;
 pub mod seaql_migrations;
-pub mod sys_db_version;
 pub mod sys_dept;
 pub mod sys_dict_data;
 pub mod sys_dict_type;

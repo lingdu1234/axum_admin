@@ -41,15 +41,6 @@ async fn create_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
     db.execute(
         builder.build(
             schema
-                .create_table_from_entity(sys_db_version::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
                 .create_table_from_entity(sys_user::Entity)
                 .to_owned()
                 .if_not_exists(),
@@ -178,9 +169,6 @@ async fn create_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
 
 // 删除表格
 async fn drop_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-    manager
-        .drop_table(Table::drop().table(sys_db_version::Entity).to_owned())
-        .await?;
     manager
         .drop_table(Table::drop().table(sys_user::Entity).to_owned())
         .await?;

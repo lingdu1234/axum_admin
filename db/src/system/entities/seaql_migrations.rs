@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub version: String,
-    pub applied_at: i64,
+    pub applied_at: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]
