@@ -9,4 +9,5 @@ pub use super::{
     sys_oper_log::Entity as SysOperLog, sys_post::Entity as SysPost, sys_role::Entity as SysRole,
     sys_role_dept::Entity as SysRoleDept, sys_user::Entity as SysUser,
     sys_user_online::Entity as SysUserOnline, sys_user_post::Entity as SysUserPost,
+    sys_user_role::Entity as SysUserRole,
 };

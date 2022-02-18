@@ -54,7 +54,9 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<UserInfomaion>>
                 let post_ids = service::sys_post::get_post_ids_by_user_id(db, user.clone().id)
                     .await
                     .unwrap();
-                let role_ids = service::sys_role::get_role_ids_by_user_id(&user.clone().id).await;
+                let role_ids = service::sys_user_role::get_role_ids_by_user_id(db, &user.id)
+                    .await
+                    .expect("角色id获取失败");
                 let res = UserInfomaion {
                     user_info: user.clone(),
                     dept_id: user.dept_id,
@@ -70,13 +72,13 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<UserInfomaion>>
 
 /// add 添加
 #[handler]
-pub async fn add(Json(add_req): Json<AddReq>) -> Json<Res<String>> {
+pub async fn add(Json(add_req): Json<AddReq>, user: Claims) -> Json<Res<String>> {
     match add_req.validate() {
         Ok(_) => {}
         Err(e) => return Json(Res::with_err(&e.to_string())),
     }
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::add(db, add_req).await;
+    let res = service::sys_user::add(db, add_req, user.id).await;
     match res {
         Ok(x) => Json(Res::with_msg(&x)),
         Err(e) => Json(Res::with_err(&e.to_string())),
@@ -96,13 +98,13 @@ pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Json<Res<String>> {
 
 // edit 修改
 #[handler]
-pub async fn edit(Json(edit_req): Json<EditReq>) -> Json<Res<String>> {
+pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Json<Res<String>> {
     match edit_req.validate() {
         Ok(_) => {}
         Err(e) => return Json(Res::with_err(&e.to_string())),
     }
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::edit(db, edit_req).await;
+    let res = service::sys_user::edit(db, edit_req, user.id).await;
     match res {
         Ok(x) => Json(Res::with_msg(&x)),
         Err(e) => Json(Res::with_err(&e.to_string())),

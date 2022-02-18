@@ -19,3 +19,4 @@ pub mod sys_role_dept;
 pub mod sys_user;
 pub mod sys_user_online;
 pub mod sys_user_post;
+pub mod sys_user_role;

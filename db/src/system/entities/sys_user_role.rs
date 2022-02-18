@@ -8,16 +8,15 @@ pub struct Entity;
 
 impl EntityName for Entity {
     fn table_name(&self) -> &str {
-        "sys_api_rule"
+        "sys_user_role"
     }
 }
 
 #[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
 pub struct Model {
     pub id: String,
+    pub user_id: String,
     pub role_id: String,
-    pub api: String,
-    pub method: Option<String>,
     pub created_by: String,
     pub created_at: DateTime,
 }
@@ -25,9 +24,8 @@ pub struct Model {
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
 pub enum Column {
     Id,
+    UserId,
     RoleId,
-    Api,
-    Method,
     CreatedBy,
     CreatedAt,
 }
@@ -52,9 +50,8 @@ impl ColumnTrait for Column {
     fn def(&self) -> ColumnDef {
         match self {
             Self::Id => ColumnType::String(Some(32u32)).def(),
+            Self::UserId => ColumnType::String(Some(32u32)).def(),
             Self::RoleId => ColumnType::String(Some(32u32)).def(),
-            Self::Api => ColumnType::String(Some(255u32)).def(),
-            Self::Method => ColumnType::String(Some(10u32)).def().null(),
             Self::CreatedBy => ColumnType::String(Some(32u32)).def(),
             Self::CreatedAt => ColumnType::DateTime.def(),
         }
