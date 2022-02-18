@@ -1,14 +1,15 @@
+use db::{
+    common::res::{ListData, PageParams},
+    system::{
+        entities::{prelude::SysJobLog, sys_job_log},
+        models::sys_job_log::{AddReq, DeleteReq, SearchReq},
+    },
+};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
     QueryOrder, Set, TransactionTrait,
 };
-
-use super::super::{
-    entities::{prelude::SysJobLog, sys_job_log},
-    models::sys_job_log::{AddReq, DeleteReq, SearchReq},
-};
-use crate::apps::common::models::{ListData, PageParams};
 
 /// get_list 获取列表
 /// page_params 分页参数

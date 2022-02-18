@@ -24,7 +24,7 @@ jwt_exp = 14400 # 10天 14400
 jwt_secret = 'secret' 
 [database]
 db_type = 'mysql'
-link = 'mysql://root:password@192.168.1.11:13306/db'
+# link = 'mysql://root:password@192.168.1.11:13306/db'
 # link = 'mysql://root:password@127.0.0.1:13306/db'
 # link = 'postgres://postgres:password@192.168.1.11:15432/db'
-# link = 'sqlite://db/data.db'
+link = 'sqlite://data/sqlite/data.db'

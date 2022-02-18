@@ -1,8 +1,5 @@
 mod apps;
-//  配置文件
-mod config;
-// 数据库
-mod database;
+
 mod env;
 mod middleware;
 mod tasks;
@@ -11,6 +8,8 @@ pub mod utils;
 // use once_cell::sync::Lazy;
 use std::time::Duration;
 
+// 导入全局
+pub use configs::CFG;
 use poem::{
     endpoint::StaticFilesEndpoint, listener::TcpListener, middleware::Cors, EndpointExt, Result,
     Route, Server,
@@ -18,10 +17,6 @@ use poem::{
 use tracing_log::LogTracer;
 // use tracing_subscriber::fmt::time::LocalTime;
 use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
-
-// 导入全局
-pub use crate::config::CFG;
-use crate::database::{db_conn, DB};
 
 // 路由日志追踪
 // use std::sync::Arc;
@@ -78,7 +73,7 @@ async fn main() -> Result<(), std::io::Error> {
     //  数据库联机
 
     // 数据库初始化
-    database::migration::db_init().await;
+    // database::migration::db_init().await;
     //  casbin设置
     utils::get_enforcer(true).await;
     // apis全局初始化

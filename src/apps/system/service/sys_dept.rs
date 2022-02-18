@@ -1,17 +1,18 @@
 use chrono::{Local, NaiveDateTime};
+use db::{
+    common::res::{ListData, PageParams},
+    system::{
+        entities::{
+            prelude::{SysDept, SysRoleDept},
+            sys_dept, sys_role_dept,
+        },
+        models::sys_dept::{AddReq, DeleteReq, DeptResp, EditReq, RespTree, SearchReq},
+    },
+};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait,
     QueryFilter, QueryOrder, Set, TransactionTrait,
-};
-
-use super::super::{
-    entities::{prelude::*, sys_dept},
-    models::sys_dept::{AddReq, DeleteReq, DeptResp, EditReq, SearchReq},
-};
-use crate::apps::{
-    common::models::{ListData, PageParams},
-    system::{entities::sys_role_dept, models::sys_dept::RespTree},
 };
 
 /// get_list 获取列表
@@ -182,7 +183,7 @@ pub async fn get_by_id(db: &DatabaseConnection, id: String) -> Result<DeptResp> 
 pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<DeptResp>> {
     let s = SysDept::find()
         .filter(sys_dept::Column::DeletedAt.is_null())
-        .filter(sys_dept::Column::Status.eq(1))
+        .filter(sys_dept::Column::Status.eq("1"))
         .order_by(sys_dept::Column::OrderNum, Order::Asc)
         .into_model::<DeptResp>()
         .all(db)

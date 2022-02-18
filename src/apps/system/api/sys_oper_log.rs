@@ -1,17 +1,18 @@
+use db::{
+    common::res::{ListData, PageParams, Res},
+    db_conn,
+    system::{
+        entities::sys_oper_log,
+        models::sys_oper_log::{DeleteReq, SearchReq},
+    },
+    DB,
+};
 use poem::{
     handler,
     web::{Json, Query},
 };
 
-use super::super::models::sys_oper_log::{DeleteReq, SearchReq};
-use crate::{
-    apps::{
-        common::models::{ListData, PageParams, Res},
-        system::{entities::sys_oper_log, service},
-    },
-    database::{db_conn, DB},
-};
-
+use super::super::service;
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0

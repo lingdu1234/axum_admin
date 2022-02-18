@@ -1,3 +1,13 @@
+use configs::CFG;
+use db::{
+    common::res::{ListData, PageParams, Res},
+    db_conn,
+    system::models::sys_user::{
+        AddReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserInfo,
+        UserInfomaion, UserLoginReq, UserWithDept,
+    },
+    DB,
+};
 use poem::{
     handler,
     web::{Json, Query},
@@ -5,21 +15,8 @@ use poem::{
 };
 use validator::Validate;
 
-use super::super::models::sys_user::{
-    AddReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq,
-};
-use crate::{
-    apps::{
-        common::models::{ListData, PageParams, Res},
-        system::{
-            models::sys_user::{UserInfo, UserInfomaion, UserWithDept},
-            service,
-        },
-    },
-    db_conn,
-    utils::jwt::{AuthBody, Claims},
-    CFG, DB,
-};
+use super::super::service;
+use crate::utils::jwt::{AuthBody, Claims};
 
 /// get_user_list 获取用户列表
 /// page_params 分页参数

@@ -1,17 +1,20 @@
+use db::{
+    common::res::{ListData, PageParams, Res},
+    db_conn,
+    system::{
+        entities::sys_login_log,
+        models::sys_login_log::{DeleteReq, SearchReq},
+    },
+    DB,
+};
 use poem::{
     handler,
     web::{Json, Query},
 };
 use validator::Validate;
 
-use super::super::models::sys_login_log::{DeleteReq, SearchReq};
-use crate::{
-    apps::{
-        common::models::{ListData, PageParams, Res},
-        system::{entities::sys_login_log, service},
-    },
-    database::{db_conn, DB},
-};
+use super::super::service;
+
 /// get_list 获取列表
 /// page_params 分页参数
 #[handler]

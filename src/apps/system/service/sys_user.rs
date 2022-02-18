@@ -1,4 +1,14 @@
 use chrono::{Local, NaiveDateTime};
+use db::{
+    common::res::{ListData, PageParams},
+    system::{
+        entities::{prelude::SysUser, sys_user},
+        models::sys_user::{
+            AddReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq,
+            UserResp, UserWithDept,
+        },
+    },
+};
 use poem::{error::BadRequest, http::StatusCode, Error, Request, Result};
 use scru128::scru128_string;
 use sea_orm::{
@@ -6,17 +16,6 @@ use sea_orm::{
     PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
-use super::{
-    super::{
-        super::common::models::{ListData, PageParams},
-        entities::{prelude::SysUser, sys_user},
-        models::sys_user::{
-            AddReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq,
-            UserResp, UserWithDept,
-        },
-    },
-    sys_login_log, sys_post, sys_role, sys_user_online,
-};
 use crate::utils::{
     self,
     jwt::{AuthBody, AuthPayload, Claims},
@@ -177,11 +176,11 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<String> {
     SysUser::insert(user).exec(&txn).await.map_err(BadRequest)?;
     // 添加职位信息
     if let Some(x) = req.post_ids {
-        sys_post::add_post_by_user_id(&txn, uid.clone(), x).await?;
+        super::sys_post::add_post_by_user_id(&txn, uid.clone(), x).await?;
     }
     // 添加角色信息
     if let Some(x) = req.role_ids {
-        sys_role::add_role_by_user_id(&uid, x).await?;
+        super::sys_role::add_role_by_user_id(&uid, x).await?;
     }
 
     txn.commit().await.map_err(BadRequest)?;
@@ -268,9 +267,9 @@ pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
     let d = s.exec(&txn).await.map_err(BadRequest)?;
     for x in req.clone().user_id {
         // 删除用户职位数据
-        sys_post::delete_post_by_user_id(&txn, x.clone()).await?;
+        super::sys_post::delete_post_by_user_id(&txn, x.clone()).await?;
         // 删除用户角色数据
-        sys_role::delete_role_by_user_id(&x).await?;
+        super::sys_role::delete_role_by_user_id(&x).await?;
     }
     txn.commit().await.map_err(BadRequest)?;
     return match d.rows_affected {
@@ -307,11 +306,11 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
     user.update(&txn).await.map_err(BadRequest)?;
     //  更新岗位信息
     // 1.先删除用户岗位关系
-    sys_post::delete_post_by_user_id(&txn, uid.clone()).await?;
+    super::sys_post::delete_post_by_user_id(&txn, uid.clone()).await?;
     // 2.插入用户岗位关系
-    sys_post::add_post_by_user_id(&txn, uid.clone(), req.post_ids).await?;
+    super::sys_post::add_post_by_user_id(&txn, uid.clone(), req.post_ids).await?;
     // 更新用户角色信息
-    sys_role::add_role_by_user_id(&uid, req.role_ids).await?;
+    super::sys_role::add_role_by_user_id(&uid, req.role_ids).await?;
 
     txn.commit().await.map_err(BadRequest)?;
     Ok(format!("用户<{}>数据更新成功", uid))
@@ -418,7 +417,7 @@ pub async fn fresh_token(user: Claims) -> Result<AuthBody> {
         .unwrap();
     // 成功登录后
     // 更新原始在线日志
-    sys_user_online::update_online(user.clone().token_id, token.clone().exp).await?;
+    super::sys_user_online::update_online(user.clone().token_id, token.clone().exp).await?;
 
     Ok(token)
 }
@@ -437,12 +436,12 @@ pub async fn set_login_info(
     let u2 = u.clone();
     let status2 = status.clone();
     tokio::spawn(async {
-        sys_login_log::add(u2, user, msg, status2).await;
+        super::sys_login_log::add(u2, user, msg, status2).await;
     });
     // 如果成功，写入在线日志
     if status == "1" {
         if let (Some(token_id), Some(token)) = (token_id, token) {
-            sys_user_online::add(u, u_id, token_id, token.clone().exp).await;
+            super::sys_user_online::add(u, u_id, token_id, token.clone().exp).await;
         }
     }
 }

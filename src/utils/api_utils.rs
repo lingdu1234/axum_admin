@@ -1,15 +1,12 @@
 use std::{collections::HashMap, sync::Arc};
 
+use db::{db_conn, DB};
 use once_cell::sync::Lazy;
 use sea_orm_casbin_adapter::casbin::CoreApi;
 use tokio::sync::Mutex;
 use tracing::info;
 
-use crate::{
-    apps::system,
-    database::{db_conn, DB},
-    utils,
-};
+use crate::apps::system;
 
 pub static ALL_APIS: Lazy<Arc<Mutex<HashMap<String, String>>>> = Lazy::new(|| {
     let apis: HashMap<String, String> = HashMap::new();
@@ -47,7 +44,7 @@ pub async fn is_in(api: &str) -> bool {
     apis.get(api).is_some()
 }
 pub async fn check_api_permission(api: &str, method: &str) -> bool {
-    let e = utils::get_enforcer(false).await;
+    let e = super::get_enforcer(false).await;
     match e.enforce((api, method)) {
         Ok(_) => true,
         Err(err) => {

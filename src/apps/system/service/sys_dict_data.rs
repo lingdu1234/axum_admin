@@ -1,15 +1,16 @@
 use chrono::{Local, NaiveDateTime};
+use db::{
+    common::res::{ListData, PageParams},
+    system::{
+        entities::{prelude::SysDictData, sys_dict_data},
+        models::sys_dict_data::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
+    },
+};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, ConnectionTrait, DatabaseConnection,
     EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
-
-use super::super::{
-    entities::{prelude::SysDictData, sys_dict_data},
-    models::sys_dict_data::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
-};
-use crate::apps::common::models::{ListData, PageParams};
 
 /// get_list 获取列表
 /// page_params 分页参数

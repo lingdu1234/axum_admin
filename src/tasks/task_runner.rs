@@ -2,17 +2,16 @@ use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
 use chrono::{Local, NaiveDateTime};
+use db::{
+    db_conn,
+    system::{SysJobColumn, SysJobEntity, SysJobLogAddReq, SysJobModel},
+    DB,
+};
 use delay_timer::prelude::cron_clock;
 use sea_orm::{sea_query::Expr, ColumnTrait, EntityTrait, QueryFilter, TransactionTrait};
 
 use super::{task, task_builder, TaskModel, TASK_MODELS};
-use crate::{
-    apps::system::{
-        self, get_job_by_id, sys_job_log_add, SysJobColumn, SysJobEntity, SysJobLogAddReq,
-        SysJobModel,
-    },
-    database::{db_conn, DB},
-};
+use crate::apps::system::{get_job_by_id, sys_job_log_add};
 
 pub async fn run_once_task(job_id: String, task_id: i64, is_once: bool) {
     let mut task_models = TASK_MODELS.lock().await;
@@ -64,7 +63,7 @@ pub async fn run_once_task(job_id: String, task_id: i64, is_once: bool) {
     });
 }
 
-pub async fn add_circles_task(t: system::SysJobModel) -> Result<()> {
+pub async fn add_circles_task(t: SysJobModel) -> Result<()> {
     let task_count = t.task_count;
     // let t_builder = task_builder::TASK_TIMER.lock().await;
     let t_builder = task_builder::TASK_TIMER.write().await;
@@ -117,7 +116,7 @@ pub async fn add_circles_task(t: system::SysJobModel) -> Result<()> {
 //                     let mut task_models = TASK_MODELS.lock().await;
 //                     let mut remark =
 //                         t.remark.clone().unwrap_or_else(|| "".to_string()) +
-// remark_update_info;                     
+// remark_update_info;
 // task_models.entry(t.task_id).and_modify(|x| {                         x.model
 // = t.clone();                         remark = remark.clone()
 //                             + "    已运行次数:"
@@ -126,18 +125,18 @@ pub async fn add_circles_task(t: system::SysJobModel) -> Result<()> {
 //                         x.model.remark = Some(remark.clone());
 //                         x.count = task_count;
 //                         x.next_run_time =
-//                             
-// get_next_task_run_time(t.cron_expression.clone()).unwrap();                  
-// x.lot_end_time =                             
-// get_task_end_time(t.cron_expression.clone(), task_count as u64)              
+//
+// get_next_task_run_time(t.cron_expression.clone()).unwrap();
+// x.lot_end_time =
+// get_task_end_time(t.cron_expression.clone(), task_count as u64)
 // .unwrap();                     });
 //                     tokio::spawn(async move {
 //                         let db = DB.get_or_init(db_conn).await;
 //                         SysJobEntity::update_many()
 //                             .col_expr(SysJobColumn::Remark,
-// Expr::value(remark.clone()))                             
-// .col_expr(SysJobColumn::TaskCount, Expr::value(task_count))                  
-// .filter(SysJobColumn::JobId.eq(t.job_id.clone()))                            
+// Expr::value(remark.clone()))
+// .col_expr(SysJobColumn::TaskCount, Expr::value(task_count))
+// .filter(SysJobColumn::JobId.eq(t.job_id.clone()))
 // .exec(db)                             .await
 //                             .expect("update job log failed");
 //                     });

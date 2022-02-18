@@ -1,10 +1,9 @@
 use std::{borrow::Cow, collections::HashMap};
 
+use configs::CFG;
+use db::common::client::{ClientInfo, ClientNetInfo, UserAgentInfo};
 use poem::Request;
-use serde::{Deserialize, Serialize};
 use user_agent_parser::UserAgentParser;
-
-pub use crate::config::CFG;
 
 pub async fn get_client_info(req: &Request) -> ClientInfo {
     let user_agent = req.headers().get("user-agent").unwrap().to_str().unwrap();
@@ -65,24 +64,4 @@ async fn get_city_by_ip(ip: &str) -> Result<ClientNetInfo, Box<dyn std::error::E
         location,
         net_work,
     })
-}
-
-#[derive(Deserialize, Clone, Debug, Serialize)]
-pub struct ClientNetInfo {
-    pub ip: String,
-    pub location: String,
-    pub net_work: String,
-}
-
-#[derive(Deserialize, Clone, Debug, Serialize)]
-pub struct UserAgentInfo {
-    pub browser: String,
-    pub os: String,
-    pub device: String,
-}
-
-#[derive(Deserialize, Clone, Debug, Serialize)]
-pub struct ClientInfo {
-    pub net: ClientNetInfo,
-    pub ua: UserAgentInfo,
 }

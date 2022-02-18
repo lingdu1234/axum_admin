@@ -1,22 +1,21 @@
 use chrono::Local;
+use db::{
+    common::{
+        client::ClientInfo,
+        res::{ListData, PageParams},
+    },
+    db_conn,
+    system::{
+        entities::{prelude::SysUserOnline, sys_user_online},
+        models::sys_user_online::{DeleteReq, SearchReq},
+    },
+    DB,
+};
 use poem::{error::BadRequest, Error, Result};
 use reqwest::StatusCode;
 use sea_orm::{
     sea_query::Expr, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
     QueryOrder, Set, TransactionTrait,
-};
-
-use super::{
-    super::{
-        entities::{prelude::SysUserOnline, sys_user_online},
-        models::sys_user_online::{DeleteReq, SearchReq},
-    },
-    sys_dept, sys_user,
-};
-use crate::{
-    apps::common::models::{ListData, PageParams},
-    database::{db_conn, DB},
-    utils::web_utils::ClientInfo,
 };
 
 /// get_list 获取列表
@@ -113,10 +112,10 @@ pub async fn add(req: ClientInfo, u_id: String, token_id: String, token_exp: i64
     let db = DB.get_or_init(db_conn).await;
     let uid = scru128::scru128().to_string();
     let now = Local::now().naive_local();
-    let user = sys_user::get_by_id(db, u_id.clone())
+    let user = super::sys_user::get_by_id(db, u_id.clone())
         .await
         .expect("获取用户信息失败");
-    let dept = sys_dept::get_by_id(db, user.clone().dept_id)
+    let dept = super::sys_dept::get_by_id(db, user.clone().dept_id)
         .await
         .expect("获取部门信息失败");
     let active_model = sys_user_online::ActiveModel {

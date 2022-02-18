@@ -1,11 +1,7 @@
 use anyhow::{anyhow, Result};
 use chrono::Local;
+use db::{db_conn, system::SysUserOnlineEntity, DB};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
-
-use crate::{
-    apps::system::SysUserOnlineEntity,
-    database::{db_conn, DB},
-};
 
 //  检查在线用户任
 pub async fn check_user_online() -> Result<String> {

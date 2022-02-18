@@ -1,18 +1,20 @@
+use db::{
+    common::res::{ListData, PageParams, Res},
+    db_conn,
+    system::{
+        entities::sys_dept,
+        models::sys_dept::{AddReq, DeleteReq, DeptResp, EditReq, RespTree, SearchReq},
+    },
+    DB,
+};
 use poem::{
     handler,
     web::{Json, Query},
 };
 use validator::Validate;
 
-use super::super::models::sys_dept::{AddReq, DeleteReq, DeptResp, EditReq, SearchReq};
-use crate::{
-    apps::{
-        common::models::{ListData, PageParams, Res},
-        system::{entities::sys_dept, models::sys_dept::RespTree, service},
-    },
-    database::{db_conn, DB},
-    utils::jwt::Claims,
-};
+use super::super::service;
+use crate::utils::jwt::Claims;
 
 /// get_list 获取列表
 /// page_params 分页参数

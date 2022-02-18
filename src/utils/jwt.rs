@@ -97,7 +97,7 @@ pub async fn authorize(payload: AuthPayload, token_id: String) -> Result<AuthBod
 //         let (status, error_message) = match self {
 //             AuthError::WrongCredentials => (StatusCode::UNAUTHORIZED, "Wrong
 // credentials"),             AuthError::MissingCredentials =>
-// (StatusCode::BAD_REQUEST, "Missing credentials"),             
+// (StatusCode::BAD_REQUEST, "Missing credentials"),
 // AuthError::TokenCreation => (StatusCode::INTERNAL_SERVER_ERROR, "Token
 // creation error"),             AuthError::InvalidToken =>
 // (StatusCode::BAD_REQUEST, "Invalid token"),         };

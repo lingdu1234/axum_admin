@@ -1,6 +1,7 @@
 use captcha_rust::Captcha;
+use db::common::captcha::CaptchaImage;
 
-use crate::{apps::common::models::CaptchaImage, utils};
+use crate::utils;
 
 pub fn get_captcha() -> CaptchaImage {
     let captcha = Captcha::new(5, 130, 40);

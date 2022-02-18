@@ -1,4 +1,11 @@
 use chrono::{Local, NaiveDateTime};
+use db::{
+    common::res::{ListData, PageParams},
+    system::{
+        entities::{prelude::SysJob, sys_job},
+        models::sys_job::{AddReq, DeleteReq, EditReq, SearchReq, StatusReq},
+    },
+};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, ConnectionTrait,
@@ -6,17 +13,7 @@ use sea_orm::{
     TransactionTrait,
 };
 
-use super::super::{
-    entities::{prelude::SysJob, sys_job},
-    models::sys_job::{AddReq, DeleteReq, EditReq, SearchReq},
-};
-use crate::{
-    apps::{
-        common::models::{ListData, PageParams},
-        system::models::sys_job::StatusReq,
-    },
-    tasks,
-};
+use crate::tasks;
 
 /// get_list 获取列表
 /// page_params 分页参数

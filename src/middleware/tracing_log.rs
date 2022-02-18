@@ -1,35 +1,15 @@
 use std::time::Instant;
 
 use bytes::Bytes;
+use db::common::client::{ReqInfo, ResInfo};
 use poem::{
     http::StatusCode, Body, Endpoint, FromRequest, IntoResponse, Request, Response, Result,
 };
-use serde::Deserialize;
 
 use crate::{
     apps::system,
-    utils::{self, jwt::Claims, web_utils::ClientInfo},
+    utils::{self, jwt::Claims},
 };
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct ReqInfo {
-    pub path: String,
-    pub ori_path: String,
-    pub method: String,
-    pub user: String,
-    pub user_id: String,
-    pub client_info: ClientInfo,
-    pub data: String,
-    pub query: String,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct ResInfo {
-    pub duration: String,
-    pub status: String,
-    pub data: String,
-    pub err_msg: String,
-}
 
 pub async fn tracing_log<E: Endpoint>(next: E, req: Request) -> Result<Response> {
     let (req_parts, req_body) = req.into_parts();

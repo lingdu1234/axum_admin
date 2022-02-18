@@ -1,6 +1,22 @@
 use std::collections::HashMap;
 
 use chrono::{Local, NaiveDateTime};
+use db::{
+    common::res::{ListData, PageParams},
+    system::{
+        entities::{
+            prelude::{SysRole, SysRoleDept},
+            sys_role, sys_role_dept,
+        },
+        models::{
+            sys_menu::MenuResp,
+            sys_role::{
+                AddOrCancelAuthRoleReq, AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq,
+                StatusReq,
+            },
+        },
+    },
+};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
@@ -9,26 +25,7 @@ use sea_orm::{
 };
 use sea_orm_casbin_adapter::casbin::MgmtApi;
 
-use super::{
-    super::{
-        entities::{
-            prelude::{SysRole, SysRoleDept},
-            sys_role, sys_role_dept,
-        },
-        models::sys_role::{
-            AddOrCancelAuthRoleReq, AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq,
-            StatusReq,
-        },
-    },
-    sys_menu,
-};
-use crate::{
-    apps::{
-        common::models::{ListData, PageParams},
-        system::models::sys_menu::MenuResp,
-    },
-    utils::get_enforcer,
-};
+use crate::utils::get_enforcer;
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -113,7 +110,7 @@ where
     C: TransactionTrait + ConnectionTrait,
 {
     // 获取全部菜单
-    let menus = sys_menu::get_all(db).await?;
+    let menus = super::sys_menu::get_all(db).await?;
     let menu_map = menus
         .iter()
         .map(|x| (x.id.clone(), x.clone()))

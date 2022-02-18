@@ -1,3 +1,13 @@
+use configs::CFG;
+use db::{
+    common::res::{ListData, PageParams, Res},
+    db_conn,
+    system::{
+        entities::sys_menu,
+        models::sys_menu::{AddReq, DeleteReq, EditReq, MenuResp, SearchReq, SysMenuTree},
+    },
+    DB,
+};
 use poem::{
     handler,
     web::{Json, Query},
@@ -5,16 +15,8 @@ use poem::{
 };
 use validator::Validate;
 
-use super::super::models::sys_menu::{AddReq, DeleteReq, EditReq, SearchReq, SysMenuTree};
-use crate::{
-    apps::{
-        common::models::{ListData, PageParams, Res},
-        system::{entities::sys_menu, models::sys_menu::MenuResp, service},
-    },
-    db_conn,
-    utils::jwt::Claims,
-    CFG, DB,
-};
+use super::super::service;
+use crate::utils::jwt::Claims;
 
 /// get_all_menu_tree 获取全部菜单
 #[handler]

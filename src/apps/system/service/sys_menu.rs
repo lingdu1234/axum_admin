@@ -1,4 +1,11 @@
 use chrono::{Local, NaiveDateTime};
+use db::{
+    common::res::{ListData, PageParams},
+    system::{
+        entities::{prelude::*, sys_menu},
+        models::sys_menu::{AddReq, EditReq, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu},
+    },
+};
 use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, ModelTrait,
@@ -6,14 +13,7 @@ use sea_orm::{
 };
 use sea_orm_casbin_adapter::casbin::MgmtApi;
 
-use super::super::{
-    entities::{prelude::*, sys_menu},
-    models::sys_menu::{AddReq, EditReq, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu},
-};
-use crate::{
-    apps::common::models::{ListData, PageParams},
-    utils::{self, get_enforcer},
-};
+use crate::utils;
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -24,7 +24,7 @@ pub async fn get_sort_list(
     search_req: SearchReq,
 ) -> Result<ListData<sys_menu::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
-    let page_per_size = page_params.page_size.unwrap_or(usize::MAX);
+    let page_per_size = page_params.page_size.unwrap_or(u32::MAX as usize);
     //  生成查询条件
     let mut s = SysMenu::find();
 
@@ -71,7 +71,7 @@ pub async fn get_auth_list(
     search_req: SearchReq,
 ) -> Result<ListData<sys_menu::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
-    let page_per_size = page_params.page_size.unwrap_or(usize::MAX);
+    let page_per_size = page_params.page_size.unwrap_or(u32::MAX as usize);
     //  生成查询条件
     let mut s = SysMenu::find();
 
@@ -354,7 +354,7 @@ pub async fn get_all_menu_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTre
 /// 获取授权菜单信息
 pub async fn get_permissions(role_ids: Vec<String>) -> Vec<String> {
     let mut menu_apis: Vec<String> = Vec::new();
-    let e = get_enforcer(false).await;
+    let e = utils::get_enforcer(false).await;
     for role_id in role_ids {
         let policies = e.get_filtered_policy(0, vec![role_id]);
         for policy in policies {
