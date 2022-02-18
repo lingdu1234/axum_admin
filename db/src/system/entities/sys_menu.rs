@@ -14,8 +14,10 @@ pub struct Model {
     pub icon: String,
     pub menu_type: String,
     pub query: Option<String>,
+    #[sea_orm(unique)]
     pub order_sort: i32,
     pub status: String,
+    #[sea_orm(unique)]
     pub api: String,
     pub method: String,
     pub component: String,
@@ -24,9 +26,9 @@ pub struct Model {
     pub is_frame: String,
     pub is_data_scope: String,
     pub remark: String,
-    pub created_at: Option<String>,
-    pub updated_at: Option<String>,
-    pub deleted_at: Option<String>,
+    pub created_at: Option<DateTime>,
+    pub updated_at: Option<DateTime>,
+    pub deleted_at: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]

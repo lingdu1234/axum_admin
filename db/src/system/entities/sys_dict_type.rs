@@ -9,14 +9,15 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub dict_type_id: String,
     pub dict_name: String,
+    #[sea_orm(unique)]
     pub dict_type: String,
     pub status: String,
     pub create_by: String,
     pub update_by: Option<String>,
     pub remark: Option<String>,
-    pub created_at: Option<String>,
-    pub updated_at: Option<String>,
-    pub deleted_at: Option<String>,
+    pub created_at: Option<DateTime>,
+    pub updated_at: Option<DateTime>,
+    pub deleted_at: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]

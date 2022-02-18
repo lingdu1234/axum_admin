@@ -8,9 +8,9 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub job_id: String,
-    pub task_id: i32,
-    pub task_count: i32,
-    pub run_count: i32,
+    pub task_id: i64,
+    pub task_count: i64,
+    pub run_count: i64,
     #[sea_orm(primary_key, auto_increment = false)]
     pub job_name: String,
     pub job_params: Option<String>,
@@ -23,13 +23,14 @@ pub struct Model {
     pub status: String,
     pub create_by: String,
     pub update_by: Option<String>,
+    #[sea_orm(column_type = "Text", nullable)]
     pub remark: Option<String>,
-    pub last_time: Option<String>,
-    pub next_time: Option<String>,
-    pub end_time: Option<String>,
-    pub created_at: Option<String>,
-    pub updated_at: Option<String>,
-    pub deleted_at: Option<String>,
+    pub last_time: Option<DateTime>,
+    pub next_time: Option<DateTime>,
+    pub end_time: Option<DateTime>,
+    pub created_at: Option<DateTime>,
+    pub updated_at: Option<DateTime>,
+    pub deleted_at: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]

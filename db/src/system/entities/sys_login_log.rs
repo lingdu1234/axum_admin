@@ -17,7 +17,7 @@ pub struct Model {
     pub device: String,
     pub status: String,
     pub msg: String,
-    pub login_time: String,
+    pub login_time: DateTime,
     pub module: String,
 }
 

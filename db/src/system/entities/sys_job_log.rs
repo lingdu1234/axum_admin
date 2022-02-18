@@ -9,8 +9,8 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub job_log_id: String,
     pub job_id: String,
-    pub lot_id: i32,
-    pub lot_order: i32,
+    pub lot_id: i64,
+    pub lot_order: i64,
     pub job_name: String,
     pub job_group: String,
     pub invoke_target: String,
@@ -19,8 +19,8 @@ pub struct Model {
     pub status: String,
     pub exception_info: Option<String>,
     pub is_once: Option<String>,
-    pub created_at: String,
-    pub elapsed_time: i32,
+    pub created_at: DateTime,
+    pub elapsed_time: i64,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]
