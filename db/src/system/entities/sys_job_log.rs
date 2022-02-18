@@ -3,10 +3,17 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "sys_job_log")]
+#[derive(Copy, Clone, Default, Debug, DeriveEntity)]
+pub struct Entity;
+
+impl EntityName for Entity {
+    fn table_name(&self) -> &str {
+        "sys_job_log"
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
 pub struct Model {
-    #[sea_orm(primary_key, auto_increment = false)]
     pub job_log_id: String,
     pub job_id: String,
     pub lot_id: i64,
@@ -23,8 +30,60 @@ pub struct Model {
     pub elapsed_time: i64,
 }
 
+#[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
+pub enum Column {
+    JobLogId,
+    JobId,
+    LotId,
+    LotOrder,
+    JobName,
+    JobGroup,
+    InvokeTarget,
+    JobParams,
+    JobMessage,
+    Status,
+    ExceptionInfo,
+    IsOnce,
+    CreatedAt,
+    ElapsedTime,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DerivePrimaryKey)]
+pub enum PrimaryKey {
+    JobLogId,
+}
+
+impl PrimaryKeyTrait for PrimaryKey {
+    type ValueType = String;
+    fn auto_increment() -> bool {
+        false
+    }
+}
+
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {}
+
+impl ColumnTrait for Column {
+    type EntityName = Entity;
+    fn def(&self) -> ColumnDef {
+        match self {
+            Self::JobLogId => ColumnType::String(Some(32u32)).def(),
+            Self::JobId => ColumnType::String(Some(32u32)).def(),
+            Self::LotId => ColumnType::BigInteger.def(),
+            Self::LotOrder => ColumnType::BigInteger.def(),
+            Self::JobName => ColumnType::String(Some(64u32)).def(),
+            Self::JobGroup => ColumnType::String(Some(64u32)).def(),
+            Self::InvokeTarget => ColumnType::String(Some(500u32)).def(),
+            Self::JobParams => ColumnType::String(Some(500u32)).def().null(),
+            Self::JobMessage => ColumnType::String(Some(500u32)).def().null(),
+            Self::Status => ColumnType::Char(Some(1u32)).def(),
+            Self::ExceptionInfo => ColumnType::String(Some(2000u32)).def().null(),
+            Self::IsOnce => ColumnType::Char(Some(1u32)).def().null(),
+            Self::CreatedAt => ColumnType::DateTime.def(),
+            Self::ElapsedTime => ColumnType::BigInteger.def(),
+        }
+    }
+}
 
 impl RelationTrait for Relation {
     fn def(&self) -> RelationDef {

@@ -8,32 +8,33 @@ pub struct Entity;
 
 impl EntityName for Entity {
     fn table_name(&self) -> &str {
-        "sys_role_dept"
+        "sys_api_rule"
     }
 }
 
 #[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
 pub struct Model {
+    pub id: String,
     pub role_id: String,
-    pub dept_id: String,
-    pub created_at: Option<DateTime>,
+    pub api: String,
+    pub method: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
 pub enum Column {
+    Id,
     RoleId,
-    DeptId,
-    CreatedAt,
+    Api,
+    Method,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DerivePrimaryKey)]
 pub enum PrimaryKey {
-    RoleId,
-    DeptId,
+    Id,
 }
 
 impl PrimaryKeyTrait for PrimaryKey {
-    type ValueType = (String, String);
+    type ValueType = String;
     fn auto_increment() -> bool {
         false
     }
@@ -46,9 +47,10 @@ impl ColumnTrait for Column {
     type EntityName = Entity;
     fn def(&self) -> ColumnDef {
         match self {
+            Self::Id => ColumnType::String(Some(32u32)).def(),
             Self::RoleId => ColumnType::String(Some(32u32)).def(),
-            Self::DeptId => ColumnType::String(Some(32u32)).def(),
-            Self::CreatedAt => ColumnType::DateTime.def().null(),
+            Self::Api => ColumnType::String(Some(255u32)).def(),
+            Self::Method => ColumnType::String(Some(10u32)).def().null(),
         }
     }
 }
