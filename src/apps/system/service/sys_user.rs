@@ -4,8 +4,8 @@ use db::{
     system::{
         entities::{prelude::SysUser, sys_user},
         models::sys_user::{
-            AddReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq,
-            UserResp, UserWithDept,
+            AddReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq,
+            UserLoginReq, UserResp, UserWithDept,
         },
     },
 };
@@ -129,7 +129,7 @@ pub async fn get_un_auth_user(
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, user_id: String) -> Result<UserResp> {
+pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserResp> {
     let mut s = SysUser::find();
     // 不查找删除数据
     s = s.filter(sys_user::Column::DeletedAt.is_null());
@@ -246,22 +246,37 @@ pub async fn change_status(db: &DatabaseConnection, req: ChangeStatusReq) -> Res
     Ok(res)
 }
 
+pub async fn change_role(db: &DatabaseConnection, req: ChangeRoleReq) -> Result<String> {
+    let txn = db.begin().await.map_err(BadRequest)?;
+    // 更新用户信息
+    SysUser::update_many()
+        .col_expr(sys_user::Column::RoleId, Expr::value(req.clone().role_id))
+        .filter(sys_user::Column::Id.eq(req.user_id))
+        .exec(&txn)
+        .await
+        .map_err(BadRequest)?;
+    // user.update(&txn).await.map_err(BadRequest)?;
+    txn.commit().await.map_err(BadRequest)?;
+    let res = "用户角色切换成功".to_string();
+
+    Ok(res)
+}
+
 /// delete 完全删除
 pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
     let mut s = SysUser::delete_many();
 
-    s = s.filter(sys_user::Column::Id.is_in(req.clone().user_id));
+    s = s.filter(sys_user::Column::Id.is_in(req.clone().user_ids));
 
     // 开始删除
     let txn = db.begin().await.map_err(BadRequest)?;
     // 删除用户
     let d = s.exec(&txn).await.map_err(BadRequest)?;
-    for x in req.clone().user_id {
-        // 删除用户职位数据
-        super::sys_post::delete_post_by_user_id(&txn, x.clone()).await?;
-        // 删除用户角色数据
-        super::sys_role::delete_role_by_user_id(&x).await?;
-    }
+    // 删除用户职位数据
+    super::sys_post::delete_post_by_user_id(&txn, req.user_ids.clone()).await?;
+    // 删除用户角色数据
+    super::sys_user_role::delete_user_role_by_user_ids(&txn, req.user_ids, None).await?;
+
     txn.commit().await.map_err(BadRequest)?;
     return match d.rows_affected {
         0 => Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
@@ -298,7 +313,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, c_user_id: String) -> R
     user.update(&txn).await.map_err(BadRequest)?;
     //  更新岗位信息
     // 1.先删除用户岗位关系
-    super::sys_post::delete_post_by_user_id(&txn, uid.clone()).await?;
+    super::sys_post::delete_post_by_user_id(&txn, vec![uid.clone()]).await?;
     // 2.插入用户岗位关系
     super::sys_post::add_post_by_user_id(&txn, uid.clone(), req.post_ids).await?;
     // 更新用户角色信息

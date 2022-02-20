@@ -233,12 +233,12 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
     Ok(s)
 }
 
-pub async fn delete_post_by_user_id<C>(db: &C, user_id: String) -> Result<()>
+pub async fn delete_post_by_user_id<C>(db: &C, user_ids: Vec<String>) -> Result<()>
 where
     C: TransactionTrait + ConnectionTrait,
 {
     SysUserPost::delete_many()
-        .filter(sys_user_post::Column::UserId.eq(user_id))
+        .filter(sys_user_post::Column::UserId.is_in(user_ids))
         .exec(db)
         .await
         .map_err(BadRequest)?;

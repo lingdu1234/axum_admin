@@ -8,7 +8,7 @@ pub struct Entity;
 
 impl EntityName for Entity {
     fn table_name(&self) -> &str {
-        "sys_api_rule"
+        "sys_role_api"
     }
 }
 

@@ -1,8 +1,8 @@
 use std::{collections::HashMap, sync::Arc};
 
-use db::{db_conn, DB};
+use db::{db_conn, system::entities::sys_role_api, DB};
 use once_cell::sync::Lazy;
-use sea_orm_casbin_adapter::casbin::CoreApi;
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use tokio::sync::Mutex;
 use tracing::info;
 
@@ -43,13 +43,30 @@ pub async fn is_in(api: &str) -> bool {
     let apis = ALL_APIS.lock().await;
     apis.get(api).is_some()
 }
+
 pub async fn check_api_permission(api: &str, method: &str) -> bool {
-    let e = super::get_enforcer(false).await;
-    match e.enforce((api, method)) {
-        Ok(_) => true,
-        Err(err) => {
-            info!("检查权限失败:{:#?}", err);
+    let db = DB.get_or_init(db_conn).await;
+    match sys_role_api::Entity::find()
+        .filter(sys_role_api::Column::Api.eq(api))
+        .filter(sys_role_api::Column::Method.eq(method))
+        .one(db)
+        .await
+    {
+        Ok(x) => x.is_some(),
+        Err(e) => {
+            info!("检查API权限出现错误:{:#?}", e);
             false
         }
     }
 }
+
+// pub async fn check_api_permission(api: &str, method: &str) -> bool {
+//     let e = super::get_enforcer(false).await;
+//     match e.enforce((api, method)) {
+//         Ok(_) => true,
+//         Err(err) => {
+//             info!("检查权限失败:{:#?}", err);
+//             false
+//         }
+//     }
+// }

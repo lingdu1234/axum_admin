@@ -43,7 +43,9 @@ impl PrimaryKeyTrait for PrimaryKey {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter)]
-pub enum Relation {}
+pub enum Relation {
+    SysUser,
+}
 
 impl ColumnTrait for Column {
     type EntityName = Entity;
@@ -60,7 +62,18 @@ impl ColumnTrait for Column {
 
 impl RelationTrait for Relation {
     fn def(&self) -> RelationDef {
-        panic!("No RelationDef")
+        match self {
+            Self::SysUser => Entity::belongs_to(super::sys_user::Entity)
+                .from(Column::UserId)
+                .to(super::sys_user::Column::Id)
+                .into(),
+        }
+    }
+}
+
+impl Related<super::sys_user::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::SysUser.def()
     }
 }
 
