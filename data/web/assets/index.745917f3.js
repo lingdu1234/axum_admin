@@ -1,0 +1,1 @@
+import{_ as a}from"./index.48f8bbcc.js";import{g as o,o as n,i as t,j as c,k as l}from"./vendor.dda3acc4.js";const f={setup(u){const r=o("api/druid/login.html");return(d,e)=>(n(),t("div",null,[c(l(a),{src:r.value,"onUpdate:src":e[0]||(e[0]=s=>r.value=s)},null,8,["src"])]))}};export{f as default};

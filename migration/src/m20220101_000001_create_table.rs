@@ -3,7 +3,7 @@ use std::fs::{self};
 use db::system::entities::*;
 pub use sea_orm::{ConnectionTrait, DatabaseConnection, DatabaseTransaction, Schema};
 use sea_schema::migration::{
-    sea_orm::{DatabaseBackend, Statement},
+    sea_orm::{DatabaseBackend, EntityTrait, Statement},
     sea_query::*,
     *,
 };
@@ -164,6 +164,24 @@ async fn create_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         ),
     )
     .await?;
+    db.execute(
+        builder.build(
+            schema
+                .create_table_from_entity(sys_role_api::Entity)
+                .to_owned()
+                .if_not_exists(),
+        ),
+    )
+    .await?;
+    db.execute(
+        builder.build(
+            schema
+                .create_table_from_entity(sys_user_role::Entity)
+                .to_owned()
+                .if_not_exists(),
+        ),
+    )
+    .await?;
     Ok(())
 }
 
@@ -210,6 +228,12 @@ async fn drop_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         .await?;
     manager
         .drop_table(Table::drop().table(sys_oper_log::Entity).to_owned())
+        .await?;
+    manager
+        .drop_table(Table::drop().table(sys_role_api::Entity).to_owned())
+        .await?;
+    manager
+        .drop_table(Table::drop().table(sys_user_role::Entity).to_owned())
         .await?;
 
     Ok(())
