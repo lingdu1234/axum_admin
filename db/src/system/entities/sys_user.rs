@@ -3,12 +3,18 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "sys_user")]
+#[derive(Copy, Clone, Default, Debug, DeriveEntity)]
+pub struct Entity;
+
+impl EntityName for Entity {
+    fn table_name(&self) -> &str {
+        "sys_user"
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
 pub struct Model {
-    #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    #[sea_orm(unique)]
     pub user_name: String,
     pub user_nickname: String,
     pub user_password: String,
@@ -17,6 +23,7 @@ pub struct Model {
     pub user_email: String,
     pub sex: String,
     pub avatar: String,
+    pub role_id: Option<String>,
     pub dept_id: String,
     pub remark: String,
     pub is_admin: String,
@@ -28,8 +35,70 @@ pub struct Model {
     pub deleted_at: Option<DateTime>,
 }
 
+#[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
+pub enum Column {
+    Id,
+    UserName,
+    UserNickname,
+    UserPassword,
+    UserSalt,
+    UserStatus,
+    UserEmail,
+    Sex,
+    Avatar,
+    RoleId,
+    DeptId,
+    Remark,
+    IsAdmin,
+    PhoneNum,
+    LastLoginIp,
+    LastLoginTime,
+    CreatedAt,
+    UpdatedAt,
+    DeletedAt,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DerivePrimaryKey)]
+pub enum PrimaryKey {
+    Id,
+}
+
+impl PrimaryKeyTrait for PrimaryKey {
+    type ValueType = String;
+    fn auto_increment() -> bool {
+        false
+    }
+}
+
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {}
+
+impl ColumnTrait for Column {
+    type EntityName = Entity;
+    fn def(&self) -> ColumnDef {
+        match self {
+            Self::Id => ColumnType::String(Some(32u32)).def(),
+            Self::UserName => ColumnType::String(Some(60u32)).def().unique(),
+            Self::UserNickname => ColumnType::String(Some(50u32)).def(),
+            Self::UserPassword => ColumnType::String(Some(32u32)).def(),
+            Self::UserSalt => ColumnType::Char(Some(10u32)).def(),
+            Self::UserStatus => ColumnType::Char(Some(1u32)).def(),
+            Self::UserEmail => ColumnType::String(Some(100u32)).def(),
+            Self::Sex => ColumnType::Char(Some(1u32)).def(),
+            Self::Avatar => ColumnType::String(Some(255u32)).def(),
+            Self::RoleId => ColumnType::Char(Some(32u32)).def().null(),
+            Self::DeptId => ColumnType::Char(Some(32u32)).def(),
+            Self::Remark => ColumnType::String(Some(255u32)).def(),
+            Self::IsAdmin => ColumnType::Char(Some(1u32)).def(),
+            Self::PhoneNum => ColumnType::String(Some(20u32)).def(),
+            Self::LastLoginIp => ColumnType::String(Some(15u32)).def().null(),
+            Self::LastLoginTime => ColumnType::DateTime.def().null(),
+            Self::CreatedAt => ColumnType::DateTime.def().null(),
+            Self::UpdatedAt => ColumnType::DateTime.def().null(),
+            Self::DeletedAt => ColumnType::DateTime.def().null(),
+        }
+    }
+}
 
 impl RelationTrait for Relation {
     fn def(&self) -> RelationDef {

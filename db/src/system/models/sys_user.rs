@@ -34,6 +34,7 @@ pub struct AddReq {
     pub phone_num: Option<String>,
     pub post_ids: Option<Vec<String>>,
     pub role_ids: Option<Vec<String>>,
+    pub role_id: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Validate)]
@@ -50,7 +51,8 @@ pub struct EditReq {
     pub is_admin: String,
     pub phone_num: String,
     pub post_ids: Vec<String>,
-    pub role_ids: Vec<String>,
+    pub role_ids: Option<Vec<String>>,
+    pub role_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, FromQueryResult)]
@@ -66,6 +68,7 @@ pub struct UserResp {
     pub remark: String,
     pub is_admin: String,
     pub phone_num: String,
+    pub role_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -103,7 +106,7 @@ pub struct SearchReq {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct DeleteReq {
-    pub user_id: Vec<String>,
+    pub user_ids: Vec<String>,
 }
 
 ///  用户登录
@@ -136,4 +139,10 @@ pub struct ResetPasswdReq {
 pub struct ChangeStatusReq {
     pub user_id: String,
     pub status: String,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct ChangeRoleReq {
+    pub user_id: String,
+    pub role_id: String,
 }

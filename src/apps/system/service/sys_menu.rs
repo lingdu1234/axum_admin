@@ -11,7 +11,6 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, ModelTrait,
     Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
-use sea_orm_casbin_adapter::casbin::MgmtApi;
 
 use crate::utils;
 
@@ -352,17 +351,26 @@ pub async fn get_all_menu_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTre
 }
 
 /// 获取授权菜单信息
-pub async fn get_permissions(role_ids: Vec<String>) -> Vec<String> {
-    let mut menu_apis: Vec<String> = Vec::new();
-    let e = utils::get_enforcer(false).await;
-    for role_id in role_ids {
-        let policies = e.get_filtered_policy(0, vec![role_id]);
-        for policy in policies {
-            menu_apis.push(policy[1].clone());
-        }
-    }
-    menu_apis
+pub async fn get_permissions(
+    db: &DatabaseConnection,
+    role_ids: Vec<String>,
+) -> Result<Vec<String>> {
+    let menus = super::sys_role_api::get_api_by_role_ids(db, role_ids).await?;
+    let res = menus.iter().map(|x| x.api.clone()).collect::<Vec<String>>();
+    Ok(res)
 }
+
+// pub async fn get_permissions(role_ids: Vec<String>) -> Vec<String> {
+//     let mut menu_apis: Vec<String> = Vec::new();
+//     let e = utils::get_enforcer(false).await;
+//     for role_id in role_ids {
+//         let policies = e.get_filtered_policy(0, vec![role_id]);
+//         for policy in policies {
+//             menu_apis.push(policy[1].clone());
+//         }
+//     }
+//     menu_apis
+// }
 
 /// get_all 获取全部   
 /// db 数据库连接 使用db.0
@@ -370,7 +378,7 @@ pub async fn get_admin_menu_by_role_ids(
     db: &DatabaseConnection,
     role_ids: Vec<String>,
 ) -> Result<Vec<SysMenuTree>> {
-    let menu_apis = self::get_permissions(role_ids).await;
+    let menu_apis = self::get_permissions(db, role_ids).await?;
     //  todo 可能以后加条件判断
     let menu_all = get_all_router(db).await?;
     //  生成menus

@@ -1,1 +1,0 @@
-import{_ as o}from"./index.c83df884.js";import{r as n,o as c,i as s,j as r,z as t}from"./vendor.8d886737.js";const a={},_=t(" \u8868\u5355\u6784\u5EFA ");function d(i,l){const e=n("svg-icon");return c(),s("div",null,[_,r(e,{"icon-class":"build"})])}var p=o(a,[["render",d]]);export{p as default};

@@ -3,7 +3,7 @@
 use configs::CFG;
 use db::{db_conn, DB};
 use once_cell::sync::Lazy;
-use sea_orm_casbin_adapter::{casbin::prelude::*, SeaOrmAdapter};
+// use sea_orm_casbin_adapter::{casbin::prelude::*, SeaOrmAdapter};
 // use tokio::sync::{Mutex, OnceCell};
 
 pub static CASBIN_MODEL: Lazy<String> =

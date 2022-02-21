@@ -3,10 +3,17 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "sys_dict_data")]
+#[derive(Copy, Clone, Default, Debug, DeriveEntity)]
+pub struct Entity;
+
+impl EntityName for Entity {
+    fn table_name(&self) -> &str {
+        "sys_dict_data"
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
 pub struct Model {
-    #[sea_orm(primary_key, auto_increment = false)]
     pub dict_data_id: String,
     pub dict_sort: i32,
     pub dict_label: String,
@@ -24,8 +31,62 @@ pub struct Model {
     pub deleted_at: Option<DateTime>,
 }
 
+#[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
+pub enum Column {
+    DictDataId,
+    DictSort,
+    DictLabel,
+    DictValue,
+    DictType,
+    CssClass,
+    ListClass,
+    IsDefault,
+    Status,
+    CreateBy,
+    UpdateBy,
+    Remark,
+    CreatedAt,
+    UpdatedAt,
+    DeletedAt,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DerivePrimaryKey)]
+pub enum PrimaryKey {
+    DictDataId,
+}
+
+impl PrimaryKeyTrait for PrimaryKey {
+    type ValueType = String;
+    fn auto_increment() -> bool {
+        false
+    }
+}
+
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {}
+
+impl ColumnTrait for Column {
+    type EntityName = Entity;
+    fn def(&self) -> ColumnDef {
+        match self {
+            Self::DictDataId => ColumnType::String(Some(32u32)).def(),
+            Self::DictSort => ColumnType::Integer.def(),
+            Self::DictLabel => ColumnType::String(Some(100u32)).def(),
+            Self::DictValue => ColumnType::String(Some(100u32)).def(),
+            Self::DictType => ColumnType::String(Some(100u32)).def(),
+            Self::CssClass => ColumnType::String(Some(100u32)).def().null(),
+            Self::ListClass => ColumnType::String(Some(100u32)).def().null(),
+            Self::IsDefault => ColumnType::Char(Some(1u32)).def(),
+            Self::Status => ColumnType::Char(Some(1u32)).def(),
+            Self::CreateBy => ColumnType::String(Some(32u32)).def(),
+            Self::UpdateBy => ColumnType::String(Some(32u32)).def().null(),
+            Self::Remark => ColumnType::String(Some(500u32)).def().null(),
+            Self::CreatedAt => ColumnType::DateTime.def().null(),
+            Self::UpdatedAt => ColumnType::DateTime.def().null(),
+            Self::DeletedAt => ColumnType::DateTime.def().null(),
+        }
+    }
+}
 
 impl RelationTrait for Relation {
     fn def(&self) -> RelationDef {

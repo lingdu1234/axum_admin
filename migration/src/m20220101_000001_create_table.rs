@@ -3,7 +3,7 @@ use std::fs::{self};
 use db::system::entities::*;
 pub use sea_orm::{ConnectionTrait, DatabaseConnection, DatabaseTransaction, Schema};
 use sea_schema::migration::{
-    sea_orm::{DatabaseBackend, Statement},
+    sea_orm::{DatabaseBackend, EntityTrait, Statement},
     sea_query::*,
     *,
 };
@@ -38,191 +38,46 @@ async fn create_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
     let builder = manager.get_database_backend();
     let schema = Schema::new(builder);
 
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_db_version::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_user::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_dept::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_dict_type::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_dict_data::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_menu::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_post::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_user_post::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_role::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_role_dept::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_login_log::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_user_online::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_job::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_job_log::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
-    db.execute(
-        builder.build(
-            schema
-                .create_table_from_entity(sys_oper_log::Entity)
-                .to_owned()
-                .if_not_exists(),
-        ),
-    )
-    .await?;
+    creat_one_table(db, builder, &schema, sys_dept::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_dict_data::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_dict_type::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_job::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_menu::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_post::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_role_api::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_role_dept::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_role::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_user_post::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_user_role::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_user::Entity).await?;
+
+    creat_one_table(db, builder, &schema, sys_user_online::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_job_log::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_oper_log::Entity).await?;
+    creat_one_table(db, builder, &schema, sys_login_log::Entity).await?;
+
     Ok(())
 }
 
 // 删除表格
 async fn drop_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
-    manager
-        .drop_table(Table::drop().table(sys_db_version::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_user::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_dept::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_dict_type::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_dict_data::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_menu::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_post::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_user_post::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_role::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_role_dept::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_login_log::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_user_online::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_job::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_job_log::Entity).to_owned())
-        .await?;
-    manager
-        .drop_table(Table::drop().table(sys_oper_log::Entity).to_owned())
-        .await?;
+    //
+    drop_one_table(manager, sys_dept::Entity).await?;
+    drop_one_table(manager, sys_dict_data::Entity).await?;
+    drop_one_table(manager, sys_dict_type::Entity).await?;
+    drop_one_table(manager, sys_job::Entity).await?;
+    drop_one_table(manager, sys_menu::Entity).await?;
+    drop_one_table(manager, sys_post::Entity).await?;
+    drop_one_table(manager, sys_role_api::Entity).await?;
+    drop_one_table(manager, sys_role_dept::Entity).await?;
+    drop_one_table(manager, sys_role::Entity).await?;
+    drop_one_table(manager, sys_user_role::Entity).await?;
+    drop_one_table(manager, sys_user::Entity).await?;
+
+    drop_one_table(manager, sys_user_online::Entity).await?;
+    drop_one_table(manager, sys_job_log::Entity).await?;
+    drop_one_table(manager, sys_oper_log::Entity).await?;
+    drop_one_table(manager, sys_login_log::Entity).await?;
 
     Ok(())
 }
@@ -258,5 +113,38 @@ async fn init_data(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
         db.execute(stmt).await?;
     }
 
+    Ok(())
+}
+
+// 创建一张表
+async fn creat_one_table<E>(
+    db: &dyn ConnectionTrait,
+    builder: DatabaseBackend,
+    schema: &Schema,
+    e: E,
+) -> Result<(), DbErr>
+where
+    E: EntityTrait,
+{
+    db.execute(
+        builder.build(
+            schema
+                .create_table_from_entity(e)
+                .to_owned()
+                .if_not_exists(),
+        ),
+    )
+    .await?;
+    Ok(())
+}
+
+// 删除一张表
+async fn drop_one_table<T>(manager: &SchemaManager<'_>, t: T) -> Result<(), DbErr>
+where
+    T: IntoTableRef + 'static,
+{
+    manager
+        .drop_table(Table::drop().table(t).to_owned())
+        .await?;
     Ok(())
 }

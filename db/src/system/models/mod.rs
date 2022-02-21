@@ -12,3 +12,5 @@ pub mod sys_user_online;
 
 // 操作日志
 pub mod sys_oper_log;
+// 角色api
+pub mod sys_role_api;

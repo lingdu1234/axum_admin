@@ -26,6 +26,7 @@ features = ["macros", "runtime-tokio-native-tls"]
 version = "0.6.0"
 
 [features]
+# default = ["postgres"]
 default = ["postgres", "mysql", "sqlite"]
 mysql = ["sea-orm/sqlx-mysql"]
 postgres = ["sea-orm/sqlx-postgres"]

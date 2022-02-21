@@ -53,7 +53,7 @@ tracing-subscriber = {git = "https://github.com/tokio-rs/tracing.git", version =
 # delay_timer = {version = "0.11.0", features = ["status-report"]}
 delay_timer = {version = "0.11.0"}
 reqwest = {version = "0.11", features = ["json"]}
-sea_orm_casbin_adapter = {version = "0.3", features = ["mysql", "runtime-tokio-native-tls"]}
+# sea_orm_casbin_adapter = {version = "0.3", features = ["postgres", "mysql", "sqlite", "runtime-tokio-native-tls"]}
 # sea_orm_casbin_adapter = {git = "https://github.com/lingdu1234/sea_orm_casbin_adapter.git", features = ["mysql", "runtime-tokio-native-tls"]}
 user-agent-parser = "0.3.0"
 
@@ -75,6 +75,7 @@ features = ["macros", "runtime-tokio-native-tls"]
 version = "0.6.0"
 
 [features]
+# default = ["postgres", "mysql"]
 default = ["postgres", "mysql", "sqlite"]
 mysql = ["sea-orm/sqlx-mysql"]
 postgres = ["sea-orm/sqlx-postgres"]

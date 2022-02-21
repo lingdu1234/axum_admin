@@ -24,3 +24,7 @@ pub mod sys_job;
 pub mod sys_job_log;
 // 操作日志
 pub mod sys_oper_log;
+// 用户角色
+pub mod sys_user_role;
+// 角色api
+pub mod sys_role_api;

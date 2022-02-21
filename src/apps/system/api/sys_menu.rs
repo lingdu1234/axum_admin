@@ -11,7 +11,6 @@ use db::{
 use poem::{
     handler,
     web::{Json, Query},
-    Result,
 };
 use validator::Validate;
 
@@ -114,24 +113,27 @@ pub async fn get_all_menu_tree() -> Json<Res<Vec<SysMenuTree>>> {
 }
 /// 获取用户路由
 #[handler]
-pub async fn get_routers(user: Claims) -> Result<Json<Res<Vec<SysMenuTree>>>> {
+pub async fn get_routers(user: Claims) -> Json<Res<Vec<SysMenuTree>>> {
     let db = DB.get_or_init(db_conn).await;
     //    获取角色列表
-    let all_roles = service::sys_role::get_all(db).await?;
+    // let all_roles = match service::sys_role::get_all(db).await {
+    //     Ok(x) => x,
+    //     Err(e) => return Json(Res::with_err(&e.to_string())),
+    // };
     //  获取 用户角色
-    let roles = service::sys_role::get_admin_role(&user.id, all_roles).await?;
-    let role_ids = roles
-        .iter()
-        .map(|v| v.role_id.clone())
-        .collect::<Vec<String>>();
+    let role_id = match service::sys_role::get_current_admin_role(db, &user.id).await {
+        Ok(x) => x,
+        Err(e) => return Json(Res::with_err(&e.to_string())),
+    };
+
     // 检查是否超管用户
     let res = if CFG.system.super_user.contains(&user.id) {
         service::sys_menu::get_all_router_tree(db).await
     } else {
-        service::sys_menu::get_admin_menu_by_role_ids(db, role_ids).await
+        service::sys_menu::get_admin_menu_by_role_ids(db, vec![role_id]).await
     };
     match res {
-        Ok(res) => Ok(Json(Res::with_data(res))),
-        Err(e) => Ok(Json(Res::with_err(&e.to_string()))),
+        Ok(res) => Json(Res::with_data(res)),
+        Err(e) => Json(Res::with_err(&e.to_string())),
     }
 }

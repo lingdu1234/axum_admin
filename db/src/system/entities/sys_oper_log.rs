@@ -3,10 +3,17 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
-#[sea_orm(table_name = "sys_oper_log")]
+#[derive(Copy, Clone, Default, Debug, DeriveEntity)]
+pub struct Entity;
+
+impl EntityName for Entity {
+    fn table_name(&self) -> &str {
+        "sys_oper_log"
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
 pub struct Model {
-    #[sea_orm(primary_key, auto_increment = false)]
     pub oper_id: String,
     pub time_id: i64,
     pub title: String,
@@ -19,19 +26,76 @@ pub struct Model {
     pub oper_url: String,
     pub oper_ip: String,
     pub oper_location: String,
-    #[sea_orm(column_type = "Text")]
     pub oper_param: String,
-    #[sea_orm(column_type = "Text")]
     pub url_param: String,
-    #[sea_orm(column_type = "Text")]
     pub json_result: String,
     pub status: String,
     pub error_msg: String,
     pub oper_time: DateTime,
 }
 
+#[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
+pub enum Column {
+    OperId,
+    TimeId,
+    Title,
+    BusinessType,
+    Method,
+    RequestMethod,
+    OperatorType,
+    OperName,
+    DeptName,
+    OperUrl,
+    OperIp,
+    OperLocation,
+    OperParam,
+    UrlParam,
+    JsonResult,
+    Status,
+    ErrorMsg,
+    OperTime,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DerivePrimaryKey)]
+pub enum PrimaryKey {
+    OperId,
+}
+
+impl PrimaryKeyTrait for PrimaryKey {
+    type ValueType = String;
+    fn auto_increment() -> bool {
+        false
+    }
+}
+
 #[derive(Copy, Clone, Debug, EnumIter)]
 pub enum Relation {}
+
+impl ColumnTrait for Column {
+    type EntityName = Entity;
+    fn def(&self) -> ColumnDef {
+        match self {
+            Self::OperId => ColumnType::String(Some(32u32)).def(),
+            Self::TimeId => ColumnType::BigInteger.def(),
+            Self::Title => ColumnType::String(Some(50u32)).def(),
+            Self::BusinessType => ColumnType::Char(Some(1u32)).def(),
+            Self::Method => ColumnType::String(Some(100u32)).def(),
+            Self::RequestMethod => ColumnType::String(Some(10u32)).def(),
+            Self::OperatorType => ColumnType::Char(Some(1u32)).def(),
+            Self::OperName => ColumnType::String(Some(50u32)).def(),
+            Self::DeptName => ColumnType::String(Some(50u32)).def(),
+            Self::OperUrl => ColumnType::String(Some(5000u32)).def(),
+            Self::OperIp => ColumnType::String(Some(50u32)).def(),
+            Self::OperLocation => ColumnType::String(Some(255u32)).def(),
+            Self::OperParam => ColumnType::Text.def(),
+            Self::UrlParam => ColumnType::Text.def(),
+            Self::JsonResult => ColumnType::Text.def(),
+            Self::Status => ColumnType::Char(Some(1u32)).def(),
+            Self::ErrorMsg => ColumnType::String(Some(2000u32)).def(),
+            Self::OperTime => ColumnType::DateTime.def(),
+        }
+    }
+}
 
 impl RelationTrait for Relation {
     fn def(&self) -> RelationDef {

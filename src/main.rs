@@ -75,7 +75,7 @@ async fn main() -> Result<(), std::io::Error> {
     // 数据库初始化
     // database::migration::db_init().await;
     //  casbin设置
-    utils::get_enforcer(true).await;
+    // utils::get_enforcer(true).await;
     // apis全局初始化
     utils::ApiUtils::init_all_api().await;
     // 定时任务初始化

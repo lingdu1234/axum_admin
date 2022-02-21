@@ -44,6 +44,7 @@ fn sys_user_api() -> Route {
         .at("/get_info", get(sys_user::get_info)) // 获取用户信息
         .at("/reset_passwd", put(sys_user::reset_passwd)) // 重置密码
         .at("/change_status", put(sys_user::change_status)) // 修改状态
+        .at("/change_role", put(sys_user::change_role)) // 切换角色
         .at("/fresh_token", put(sys_user::fresh_token)) // 修改状态
 }
 

@@ -4,8 +4,8 @@ use db::{
     system::{
         entities::{prelude::SysUser, sys_user},
         models::sys_user::{
-            AddReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq, UserLoginReq,
-            UserResp, UserWithDept,
+            AddReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq,
+            UserLoginReq, UserResp, UserWithDept,
         },
     },
 };
@@ -129,7 +129,7 @@ pub async fn get_un_auth_user(
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, user_id: String) -> Result<UserResp> {
+pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserResp> {
     let mut s = SysUser::find();
     // 不查找删除数据
     s = s.filter(sys_user::Column::DeletedAt.is_null());
@@ -150,7 +150,7 @@ pub async fn get_by_id(db: &DatabaseConnection, user_id: String) -> Result<UserR
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<String> {
+pub async fn add(db: &DatabaseConnection, req: AddReq, c_user_id: String) -> Result<String> {
     let uid = scru128::scru128_string();
     let salt = utils::rand_s(10);
     let passwd = utils::encrypt_password(&req.user_password, &salt);
@@ -165,6 +165,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<String> {
         user_email: Set(req.user_email),
         sex: Set(req.sex.unwrap_or_else(|| "0".to_string())),
         dept_id: Set(req.dept_id),
+        role_id: Set(req.role_id),
         remark: Set(req.remark.unwrap_or_else(|| "".to_string())),
         is_admin: Set(req.is_admin.unwrap_or_else(|| "1".to_string())),
         phone_num: Set(req.phone_num.unwrap_or_else(|| "".to_string())),
@@ -179,8 +180,10 @@ pub async fn add(db: &DatabaseConnection, req: AddReq) -> Result<String> {
         super::sys_post::add_post_by_user_id(&txn, uid.clone(), x).await?;
     }
     // 添加角色信息
+    // 先删除原有的角色信息，再添加新的角色信息
+    super::sys_user_role::delete_user_role(&txn, &uid).await?;
     if let Some(x) = req.role_ids {
-        super::sys_role::add_role_by_user_id(&uid, x).await?;
+        super::sys_user_role::edit_user_role(&txn, &uid, x, c_user_id).await?;
     }
 
     txn.commit().await.map_err(BadRequest)?;
@@ -192,23 +195,11 @@ pub async fn reset_passwd(db: &DatabaseConnection, req: ResetPasswdReq) -> Resul
     let salt = utils::rand_s(10);
     let passwd = utils::encrypt_password(&req.new_passwd, &salt);
     let now: NaiveDateTime = Local::now().naive_local();
-    // let uid = req.user_id;
-    // let s_u = SysUser::find_by_id(uid.clone())
-    //     .one(db)
-    //     .await
-    //     .map_err(BadRequest)?;
-    // let s_user: sys_user::ActiveModel = s_u.unwrap().into();
-    // let now: NaiveDateTime = Local::now().naive_local();
-    // let user = sys_user::ActiveModel {
-    //     user_password: Set(passwd),
-    //     updated_at: Set(Some(now)),
-    //     ..s_user
-    // };
-    // 更新
     let txn = db.begin().await.map_err(BadRequest)?;
     // 更新用户信息
     SysUser::update_many()
         .col_expr(sys_user::Column::UserPassword, Expr::value(passwd))
+        .col_expr(sys_user::Column::UserSalt, Expr::value(salt))
         .col_expr(sys_user::Column::UpdatedAt, Expr::value(now))
         .filter(sys_user::Column::Id.eq(req.user_id))
         .exec(&txn)
@@ -255,22 +246,37 @@ pub async fn change_status(db: &DatabaseConnection, req: ChangeStatusReq) -> Res
     Ok(res)
 }
 
+pub async fn change_role(db: &DatabaseConnection, req: ChangeRoleReq) -> Result<String> {
+    let txn = db.begin().await.map_err(BadRequest)?;
+    // 更新用户信息
+    SysUser::update_many()
+        .col_expr(sys_user::Column::RoleId, Expr::value(req.clone().role_id))
+        .filter(sys_user::Column::Id.eq(req.user_id))
+        .exec(&txn)
+        .await
+        .map_err(BadRequest)?;
+    // user.update(&txn).await.map_err(BadRequest)?;
+    txn.commit().await.map_err(BadRequest)?;
+    let res = "用户角色切换成功".to_string();
+
+    Ok(res)
+}
+
 /// delete 完全删除
 pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
     let mut s = SysUser::delete_many();
 
-    s = s.filter(sys_user::Column::Id.is_in(req.clone().user_id));
+    s = s.filter(sys_user::Column::Id.is_in(req.clone().user_ids));
 
     // 开始删除
     let txn = db.begin().await.map_err(BadRequest)?;
     // 删除用户
     let d = s.exec(&txn).await.map_err(BadRequest)?;
-    for x in req.clone().user_id {
-        // 删除用户职位数据
-        super::sys_post::delete_post_by_user_id(&txn, x.clone()).await?;
-        // 删除用户角色数据
-        super::sys_role::delete_role_by_user_id(&x).await?;
-    }
+    // 删除用户职位数据
+    super::sys_post::delete_post_by_user_id(&txn, req.user_ids.clone()).await?;
+    // 删除用户角色数据
+    super::sys_user_role::delete_user_role_by_user_ids(&txn, req.user_ids, None).await?;
+
     txn.commit().await.map_err(BadRequest)?;
     return match d.rows_affected {
         0 => Err(Error::from_string("用户不存在", StatusCode::BAD_REQUEST)),
@@ -279,7 +285,7 @@ pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
+pub async fn edit(db: &DatabaseConnection, req: EditReq, c_user_id: String) -> Result<String> {
     let uid = req.id;
     let s_u = SysUser::find_by_id(uid.clone())
         .one(db)
@@ -298,6 +304,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
         is_admin: Set(req.is_admin),
         phone_num: Set(req.phone_num),
         updated_at: Set(Some(now)),
+        role_id: Set(req.role_id),
         ..s_user
     };
     // 更新
@@ -306,11 +313,15 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
     user.update(&txn).await.map_err(BadRequest)?;
     //  更新岗位信息
     // 1.先删除用户岗位关系
-    super::sys_post::delete_post_by_user_id(&txn, uid.clone()).await?;
+    super::sys_post::delete_post_by_user_id(&txn, vec![uid.clone()]).await?;
     // 2.插入用户岗位关系
     super::sys_post::add_post_by_user_id(&txn, uid.clone(), req.post_ids).await?;
     // 更新用户角色信息
-    super::sys_role::add_role_by_user_id(&uid, req.role_ids).await?;
+    // 先删除原有的角色信息，再添加新的角色信息
+    super::sys_user_role::delete_user_role(&txn, &uid).await?;
+    if let Some(x) = req.role_ids {
+        super::sys_user_role::edit_user_role(&txn, &uid, x, c_user_id).await?;
+    }
 
     txn.commit().await.map_err(BadRequest)?;
     Ok(format!("用户<{}>数据更新成功", uid))

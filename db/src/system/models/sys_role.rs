@@ -5,6 +5,7 @@ use validator::Validate;
 #[derive(Deserialize, Debug, Validate)]
 pub struct SearchReq {
     pub role_id: Option<String>,
+    pub role_ids: Option<Vec<String>>,
     #[validate(length(min = 1))]
     pub name: Option<String>,
     pub status: Option<String>,
