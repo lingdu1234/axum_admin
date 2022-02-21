@@ -11,12 +11,16 @@ use std::time::Duration;
 // 导入全局
 pub use configs::CFG;
 use poem::{
-    endpoint::StaticFilesEndpoint, listener::TcpListener, middleware::Cors, EndpointExt, Result,
-    Route, Server,
+    endpoint::StaticFilesEndpoint,
+    listener::{Listener, RustlsConfig, TcpListener},
+    middleware::Cors,
+    EndpointExt, Result, Route, Server,
 };
 use tracing_log::LogTracer;
 // use tracing_subscriber::fmt::time::LocalTime;
 use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
+
+use crate::utils::cert::CERT_KEY;
 
 // 路由日志追踪
 // use std::sync::Arc;
@@ -51,8 +55,8 @@ async fn main() -> Result<(), std::io::Error> {
         // .with_line_number(true) // include the name of the current thread
         // .with_timer(LocalTime::rfc_3339()) // use RFC 3339 timestamps
         .compact();
-    let file_appender = tracing_appender::rolling::daily(&CFG.log.dir, &CFG.log.file); // 文件输出设置
-                                                                                       // 文件输出
+    let file_appender = tracing_appender::rolling::hourly(&CFG.log.dir, &CFG.log.file); // 文件输出设置
+                                                                                        // 文件输出
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
     // 标准控制台输出
     let (std_non_blocking, _guard) = tracing_appender::non_blocking(std::io::stdout());
@@ -83,7 +87,6 @@ async fn main() -> Result<(), std::io::Error> {
     //  跨域
     let cors = Cors::new();
     //  Swagger
-    let listener = TcpListener::bind(&CFG.server.address);
     // 启动app  注意中间件顺序 最后的先执行，尤其AddData
     // 顺序不对可能会导致数据丢失，无法在某些位置获取数据
 
@@ -101,16 +104,38 @@ async fn main() -> Result<(), std::io::Error> {
         // .with(Tracing)
         .with(cors);
 
-    let server = Server::new(listener).name("poem-admin");
-    tracing::info!("Server started");
-    server
-        .run_with_graceful_shutdown(
-            app,
-            async move {
-                let _ = tokio::signal::ctrl_c().await;
-            },
-            Some(Duration::from_secs(1)),
-        )
-        .await
+    match CFG.server.env.as_str() {
+        "prod" => {
+            let listener = TcpListener::bind(&CFG.server.address).rustls(
+                RustlsConfig::new()
+                    .key(&*CERT_KEY.key)
+                    .cert(&*CERT_KEY.cert),
+            );
+            let server = Server::new(listener).name(&CFG.server.name);
+            server
+                .run_with_graceful_shutdown(
+                    app,
+                    async move {
+                        let _ = tokio::signal::ctrl_c().await;
+                    },
+                    Some(Duration::from_secs(1)),
+                )
+                .await
+        }
+        _ => {
+            let listener = TcpListener::bind(&CFG.server.address);
+            let server = Server::new(listener).name(&CFG.server.name);
+            server
+                .run_with_graceful_shutdown(
+                    app,
+                    async move {
+                        let _ = tokio::signal::ctrl_c().await;
+                    },
+                    Some(Duration::from_secs(1)),
+                )
+                .await
+        }
+    }
+
     // })
 }

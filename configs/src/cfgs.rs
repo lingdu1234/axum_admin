@@ -29,6 +29,7 @@ pub struct Server {
     /// 服务器(IP地址:端口)     
     /// `0.0.0.0:3000`
     pub address: String,
+    pub env: String,
 }
 
 /// server 配置文件
