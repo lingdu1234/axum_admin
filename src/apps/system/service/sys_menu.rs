@@ -72,7 +72,7 @@ pub async fn get_auth_list(
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(u32::MAX as usize);
     //  生成查询条件
-    let mut s = SysMenu::find();
+    let mut s = SysMenu::find().filter(sys_menu::Column::MenuType.eq("F"));
 
     if let Some(x) = search_req.menu_name {
         s = s.filter(sys_menu::Column::MenuName.contains(&x));
@@ -90,11 +90,11 @@ pub async fn get_auth_list(
     if let Some(x) = search_req.end_time {
         s = s.filter(sys_menu::Column::CreatedAt.lte(x));
     }
+
     // 获取全部数据条数
     let total = s.clone().count(db).await.map_err(BadRequest)?;
     // 分页获取数据
     let paginator = s
-        .filter(sys_menu::Column::MenuType.eq("F"))
         .order_by_asc(sys_menu::Column::OrderSort)
         .paginate(db, page_per_size);
     let total_pages = paginator.num_pages().await.map_err(BadRequest)?;

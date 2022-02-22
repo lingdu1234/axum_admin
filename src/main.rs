@@ -13,7 +13,7 @@ pub use configs::CFG;
 use poem::{
     endpoint::StaticFilesEndpoint,
     listener::{Listener, RustlsConfig, TcpListener},
-    middleware::Cors,
+    middleware::{Compression, Cors},
     EndpointExt, Result, Route, Server,
 };
 use tracing_log::LogTracer;
@@ -93,7 +93,8 @@ async fn main() -> Result<(), std::io::Error> {
     let app = Route::new()
         .nest(
             "/api",
-            apps::api().around(middleware::tracing_log::tracing_log),
+            // apps::api().around(middleware::tracing_log::tracing_log),
+            apps::api().with(middleware::poem_tracer::Tracing),
         )
         .nest(
             "/",
@@ -102,7 +103,8 @@ async fn main() -> Result<(), std::io::Error> {
                 .index_file(&CFG.web.index),
         )
         // .with(Tracing)
-        .with(cors);
+        .with(cors)
+        .with(Compression::new());
 
     match CFG.server.env.as_str() {
         "prod" => {

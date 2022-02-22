@@ -27,7 +27,7 @@ chrono = {version = "0.4", features = ["serde"]}
 headers = "0.3.5"
 jsonwebtoken = "8.0.1"
 once_cell = "1.9.0"
-poem = {version = "1.2", features = ["static-files", "rustls"]}
+poem = {version = "1.2", features = ["static-files", "rustls", "compression"]}
 # poem = "=1.1.1"
 # poem-derive = "=1.1.1"
 # poem-openapi = "1.1.1"
