@@ -2,6 +2,7 @@ use core::time::Duration;
 use std::time::Instant;
 
 use chrono::Local;
+use configs::CFG;
 use db::{
     common::{
         ctx::{ReqCtx, UserInfo},
@@ -12,8 +13,8 @@ use db::{
     DB,
 };
 use poem::{
-    http::{StatusCode, Uri},
-    Body, Endpoint, Error, FromRequest, IntoResponse, Middleware, Request, Response, Result,
+    http::StatusCode, Body, Endpoint, Error, FromRequest, IntoResponse, Middleware, Request,
+    Response, Result,
 };
 use sea_orm::{EntityTrait, Set};
 
@@ -50,24 +51,35 @@ impl<E: Endpoint> Endpoint for ContextEndpoint<E> {
             Ok(claims) => claims,
         };
         let body = req.take_body();
-        let uri = req.uri();
-        let body_data = match get_body_data(body, &uri).await {
+
+        let method = req.method().to_string();
+        let body_data = match get_body_data(body).await {
             Err(e) => return Err(e),
-            Ok(body_data) => body_data,
+            Ok(v) => v,
         };
 
+        let ctx_data = match method.clone().as_str() {
+            "GET" => req.uri().query().unwrap_or("").to_string(),
+            _ => body_data.clone(),
+        };
         let req_ctx = ReqCtx {
             ori_uri: req.original_uri().to_string(),
-            path: uri.path().replacen("/", "", 1),
-            method: req.method().to_string(),
+            path: req.uri().path().replacen("/", "", 1),
+            method: method.clone(),
             user: UserInfo {
                 id: claims.id,
                 token_id: claims.token_id,
                 name: claims.name,
             },
-            data: body_data,
+            data: ctx_data,
         };
+
         req.extensions_mut().insert(req_ctx.clone());
+
+        if method.as_str() != "GET" && !body_data.clone().is_empty() {
+            req.set_body(Body::from(body_data));
+        }
+
         // 开始请求数据
         let now = Instant::now();
         let res_end = self.inner.call(req).await;
@@ -102,21 +114,15 @@ impl<E: Endpoint> Endpoint for ContextEndpoint<E> {
 }
 
 /// 获取body数据
-async fn get_body_data(body: Body, uri: &Uri) -> Result<String> {
+async fn get_body_data(body: Body) -> Result<String> {
     let bytes = match body.into_bytes().await {
         Ok(bytes) => bytes,
         Err(e) => return Err(Error::from_string(e.to_string(), StatusCode::BAD_REQUEST)),
     };
 
-    let body_data = match std::str::from_utf8(&bytes) {
-        Ok(x) => x,
+    match std::str::from_utf8(&bytes) {
+        Ok(x) => Ok(x.to_string()),
         Err(e) => return Err(Error::from_string(e.to_string(), StatusCode::BAD_REQUEST)),
-    };
-    if !body_data.is_empty() {
-        Ok(body_data.to_string())
-    } else {
-        let q = uri.query().unwrap_or("");
-        Ok(q.to_string())
     }
 }
 
@@ -128,6 +134,9 @@ pub async fn oper_log_add(
     err_msg: String,
     duration: Duration,
 ) -> Result<()> {
+    if !CFG.log.enable_oper_log {
+        return Ok(());
+    }
     let now = Local::now().naive_local();
     // 打印日志
     let req_data = req.clone();
@@ -187,8 +196,16 @@ pub async fn oper_log_add(
         oper_url: Set(req.ori_uri),
         oper_ip: Set(user.ipaddr),
         oper_location: Set(user.login_location),
-        oper_param: Set(req.data.clone().split_at(10000).0.to_string()),
-        json_result: Set(res.split_at(10000).0.to_string()),
+        oper_param: Set(if req.data.len() > 1000 {
+            req.data.split_at(1000).0.to_string()
+        } else {
+            req.data
+        }),
+        json_result: Set(if res.len() > 10000 {
+            res.split_at(10000).0.to_string()
+        } else {
+            res
+        }),
         status: Set(status),
         error_msg: Set(err_msg),
         duration: Set(d),

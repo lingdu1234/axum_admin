@@ -1,13 +1,18 @@
 use poem::{get, post, EndpointExt, Route};
 
-use crate::middleware::Auth;
+use crate::middleware;
 
 pub mod system;
 
 pub fn api() -> Route {
     Route::new()
         .nest("/comm", no_auth_api()) // 无需授权Api
-        .nest("/system", system::system_api().with(Auth)) // 系统管理模块
+        .nest(
+            "/system",
+            system::system_api()
+                .with(middleware::Auth)
+                .with(middleware::ctx::Context),
+        ) // 系统管理模块
 }
 
 //

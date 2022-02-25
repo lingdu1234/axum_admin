@@ -10,7 +10,7 @@ use poem::{
     EndpointExt, Result, Route, Server,
 };
 use poem_admin::{
-    apps, middleware, my_env, tasks,
+    apps, my_env, tasks,
     utils::{self, cert::CERT_KEY},
 };
 use tracing_log::LogTracer;
@@ -87,15 +87,7 @@ async fn main() -> Result<(), std::io::Error> {
     // 顺序不对可能会导致数据丢失，无法在某些位置获取数据
 
     let app = Route::new()
-        .nest(
-            "/api",
-            // apps::api().around(middleware::tracing_log::tracing_log),
-            apps::api()
-                // .with(middleware::PoemLoging)
-                .with(middleware::ctx::Context),
-            // apps::api().with(middleware::poem_tracer::Tracing),
-            // apps::api(),
-        )
+        .nest("/api", apps::api())
         .nest(
             "/",
             StaticFilesEndpoint::new(&CFG.web.dir)
