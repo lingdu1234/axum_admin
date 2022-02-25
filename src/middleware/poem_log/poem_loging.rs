@@ -34,6 +34,7 @@ impl<E: Endpoint> Endpoint for LogingEndpoint<E> {
     type Output = Response;
 
     async fn call(&self, mut req: Request) -> Result<Self::Output> {
+        println!("BBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
         let request_id = scru128::scru128_string();
         let header = req.headers().clone();
         let remote_addr = req.remote_addr().clone();
@@ -41,26 +42,32 @@ impl<E: Endpoint> Endpoint for LogingEndpoint<E> {
         let ori_uri = req.original_uri().clone();
         let method = req.method().clone();
         let version = req.version().clone();
-        let user = match Claims::from_request_without_body(&req).await {
-            Ok(claims) => (claims.name.clone(), claims.id.clone()),
-            Err(_) => ("".to_string(), "".to_string()),
+        let claims = match Claims::from_request_without_body(&req).await {
+            Ok(claims) => claims,
+            Err(_) => Claims {
+                id: "".to_string(),
+                name: "".to_string(),
+                token_id: "".to_string(),
+                exp: 999999999,
+            },
         };
         let body = req.take_body();
         let req_id = request_id.clone();
-        tokio::spawn(async move {
-            write_req_log(
-                req_id,
-                body,
-                header,
-                remote_addr,
-                uri,
-                ori_uri,
-                method,
-                version,
-                user,
-            )
-            .await;
-        });
+        println!("--------------------{:#?}", claims);
+        // tokio::spawn(async move {
+        //     write_req_log(
+        //         req_id,
+        //         body,
+        //         header,
+        //         remote_addr,
+        //         uri,
+        //         ori_uri,
+        //         method,
+        //         version,
+        //         user,
+        //     )
+        //     .await;
+        // });
         // 开始处理请求
         let now = Instant::now();
         let res = self.inner.call(req).await;

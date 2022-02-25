@@ -1,26 +1,23 @@
-mod apps;
-
-mod env;
-mod middleware;
-mod tasks;
-pub mod utils;
-
 // use once_cell::sync::Lazy;
 use std::time::Duration;
 
-// 导入全局
-pub use configs::CFG;
+use configs::CFG;
+//
 use poem::{
     endpoint::StaticFilesEndpoint,
     listener::{Listener, RustlsConfig, TcpListener},
     middleware::{Compression, Cors},
     EndpointExt, Result, Route, Server,
 };
+use poem_admin::{
+    apps, middleware, my_env, tasks,
+    utils::{self, cert::CERT_KEY},
+};
 use tracing_log::LogTracer;
 // use tracing_subscriber::fmt::time::LocalTime;
 use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
 
-use crate::utils::cert::CERT_KEY;
+// use crate::utils::cert::CERT_KEY;
 
 // 路由日志追踪
 // use std::sync::Arc;
@@ -36,7 +33,7 @@ async fn main() -> Result<(), std::io::Error> {
     if std::env::var_os("RUST_LOG").is_none() {
         std::env::set_var("RUST_LOG", &CFG.log.log_level);
     }
-    env::setup();
+    my_env::setup();
 
     // 日志追踪 将log转换到Tracing统一输出
     LogTracer::init().unwrap();
@@ -86,7 +83,6 @@ async fn main() -> Result<(), std::io::Error> {
     tasks::timer_task_init().await.expect("定时任务初始化失败");
     //  跨域
     let cors = Cors::new();
-    //  Swagger
     // 启动app  注意中间件顺序 最后的先执行，尤其AddData
     // 顺序不对可能会导致数据丢失，无法在某些位置获取数据
 
@@ -94,8 +90,11 @@ async fn main() -> Result<(), std::io::Error> {
         .nest(
             "/api",
             // apps::api().around(middleware::tracing_log::tracing_log),
-            apps::api().with(middleware::PoemLoging),
+            apps::api()
+                // .with(middleware::PoemLoging)
+                .with(middleware::ctx::Context),
             // apps::api().with(middleware::poem_tracer::Tracing),
+            // apps::api(),
         )
         .nest(
             "/",
@@ -104,8 +103,8 @@ async fn main() -> Result<(), std::io::Error> {
                 .index_file(&CFG.web.index),
         )
         // .with(Tracing)
-        .with(cors)
-        .with(Compression::new());
+        .with(Compression::new())
+        .with(cors);
 
     match CFG.server.env.as_str() {
         "prod" => {

@@ -1,16 +1,19 @@
 use chrono::{Duration, Local};
 use headers::{authorization::Bearer, Authorization};
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{
+    decode, encode, errors::ErrorKind, DecodingKey, EncodingKey, Header, Validation,
+};
 use once_cell::sync::Lazy;
 use poem::{http::StatusCode, web::TypedHeader, Error, FromRequest, Request, RequestBody, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::CFG;
+use crate::apps::system::check_user_online;
 
 pub static KEYS: Lazy<Keys> = Lazy::new(|| {
     let secret = &CFG.jwt.jwt_secret;
     Keys::new(secret.as_bytes())
 });
+use configs::CFG;
 
 pub struct Keys {
     pub encoding: EncodingKey,
@@ -31,6 +34,7 @@ pub struct AuthPayload {
     pub id: String,
     pub name: String,
 }
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     pub id: String,
@@ -51,9 +55,40 @@ impl<'a> FromRequest<'a> for Claims {
                 .map_err(|_| Error::from_string("InvalidToken", StatusCode::BAD_REQUEST))?;
         // Decode the user data
         let token_data =
-            decode::<Claims>(bearer.token(), &KEYS.decoding, &Validation::default())
-                .map_err(|_| Error::from_string("InvalidToken", StatusCode::BAD_REQUEST))?;
-
+            match decode::<Claims>(bearer.token(), &KEYS.decoding, &Validation::default()) {
+                Ok(token) => {
+                    let token_id = token.claims.token_id.clone();
+                    let (x, _) = check_user_online(None, token_id).await;
+                    if x {
+                        token
+                    } else {
+                        return Err(Error::from_string(
+                            "该账户已经退出",
+                            StatusCode::UNAUTHORIZED,
+                        ));
+                    }
+                }
+                Err(err) => match *err.kind() {
+                    ErrorKind::InvalidToken => {
+                        return Err(Error::from_string(
+                            "你的登录已失效，请重新登录",
+                            StatusCode::UNAUTHORIZED,
+                        ));
+                    }
+                    ErrorKind::ExpiredSignature => {
+                        return Err(Error::from_string(
+                            "你的登录已经过期，请重新登录",
+                            StatusCode::UNAUTHORIZED,
+                        ));
+                    }
+                    _ => {
+                        return Err(Error::from_string(
+                            err.to_string(),
+                            StatusCode::UNAUTHORIZED,
+                        ));
+                    }
+                },
+            };
         Ok(token_data.claims)
     }
     async fn from_request_without_body(req: &'a Request) -> Result<Self> {

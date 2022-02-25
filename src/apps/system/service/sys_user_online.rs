@@ -80,7 +80,10 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     }
 }
 
-pub async fn check_online(db: Option<&DatabaseConnection>, id: String) -> bool {
+pub async fn check_online(
+    db: Option<&DatabaseConnection>,
+    id: String,
+) -> (bool, Option<sys_user_online::Model>) {
     let db = match db {
         Some(x) => x,
         None => DB.get_or_init(db_conn).await,
@@ -92,7 +95,7 @@ pub async fn check_online(db: Option<&DatabaseConnection>, id: String) -> bool {
         .await
         .expect("查询失败");
 
-    model.is_some()
+    (model.is_some(), model)
 }
 
 pub async fn log_out(db: &DatabaseConnection, token_id: String) -> Result<String> {

@@ -87,6 +87,8 @@ pub struct Log {
     pub dir: String,
     /// `file` 日志输出文件名
     pub file: String,
+    /// 允许操作日志输出
+    pub enable_oper_log: bool,
 }
 
 // #[derive(Debug, Deserialize)]

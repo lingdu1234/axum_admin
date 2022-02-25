@@ -1,3 +1,8 @@
-pub mod captcha; // 验证码信息
-pub mod client; // 客户端信息以及返回信息
-pub mod res; // 统一数据返回
+/// 验证码信息
+pub mod captcha;
+/// 客户端信息以及返回信息
+pub mod client;
+/// 请求上下文
+pub mod ctx;
+/// 统一数据返回
+pub mod res;

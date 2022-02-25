@@ -27,10 +27,10 @@ pub struct Model {
     pub oper_ip: String,
     pub oper_location: String,
     pub oper_param: String,
-    pub url_param: String,
     pub json_result: String,
     pub status: String,
     pub error_msg: String,
+    pub duration: i64,
     pub oper_time: DateTime,
 }
 
@@ -49,10 +49,10 @@ pub enum Column {
     OperIp,
     OperLocation,
     OperParam,
-    UrlParam,
     JsonResult,
     Status,
     ErrorMsg,
+    Duration,
     OperTime,
 }
 
@@ -88,10 +88,10 @@ impl ColumnTrait for Column {
             Self::OperIp => ColumnType::String(Some(50u32)).def(),
             Self::OperLocation => ColumnType::String(Some(255u32)).def(),
             Self::OperParam => ColumnType::Text.def(),
-            Self::UrlParam => ColumnType::Text.def(),
             Self::JsonResult => ColumnType::Text.def(),
             Self::Status => ColumnType::Char(Some(1u32)).def(),
             Self::ErrorMsg => ColumnType::String(Some(2000u32)).def(),
+            Self::Duration => ColumnType::BigInteger.def(),
             Self::OperTime => ColumnType::DateTime.def(),
         }
     }

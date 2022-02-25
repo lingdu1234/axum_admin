@@ -1,16 +1,10 @@
-use headers::{authorization::Bearer, HeaderMapExt};
-use jsonwebtoken::{decode, errors::ErrorKind, Validation};
+use configs::CFG;
+use db::common::ctx::ReqCtx;
 use poem::{http::StatusCode, Endpoint, Error, Middleware, Request, Result};
 
-use crate::{
-    apps::system::check_user_online,
-    utils::{
-        jwt::{Claims, KEYS},
-        ApiUtils,
-    },
-    CFG,
-};
+use crate::utils::ApiUtils;
 
+/// 菜单授权中间件
 #[derive(Clone, Debug)]
 pub struct Auth;
 
@@ -31,68 +25,25 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
     type Output = E::Output;
 
     async fn call(&self, req: Request) -> Result<Self::Output> {
-        let req_ori = req.original_uri().path();
-        let req_path = req_ori.replacen("/api/", "", 1);
-        let req_method = req.method().as_str();
-        if let Some(auth) = req.headers().typed_get::<headers::Authorization<Bearer>>() {
-            //  验证token
-            // let validation = Validation {validate_exp: true,..Validation::default()};
-            let token_data =
-                match decode::<Claims>(auth.0.token(), &KEYS.decoding, &Validation::default()) {
-                    Ok(token) => {
-                        let token_id = token.claims.token_id.clone();
-                        let x = check_user_online(None, token_id).await;
-                        if x {
-                            token
-                        } else {
-                            return Err(Error::from_string(
-                                "该账户已经退出",
-                                StatusCode::UNAUTHORIZED,
-                            ));
-                        }
-                    }
-                    Err(err) => match *err.kind() {
-                        ErrorKind::InvalidToken => {
-                            return Err(Error::from_string(
-                                "你的登录已失效，请重新登录",
-                                StatusCode::UNAUTHORIZED,
-                            ));
-                        }
-                        ErrorKind::ExpiredSignature => {
-                            return Err(Error::from_string(
-                                "你的登录已经过期，请重新登录",
-                                StatusCode::UNAUTHORIZED,
-                            ));
-                        }
-                        _ => {
-                            return Err(Error::from_string(
-                                err.to_string(),
-                                StatusCode::UNAUTHORIZED,
-                            ));
-                        }
-                    },
-                };
-            // 如果是超级用户，则不需要验证权限，直接放行
-            if CFG.system.super_user.contains(&token_data.claims.id) {
-                return self.ep.call(req).await;
-            }
-
-            // 验证api权限，如果不在路由表中，则放行，否则验证权限
-            if !req_path.is_empty() {
-                if ApiUtils::is_in(&req_path).await {
-                    if ApiUtils::check_api_permission(&req_path, req_method).await {
-                        return self.ep.call(req).await;
-                    } else {
-                        return Err(Error::from_string(
-                            "你没有权限访问该页面",
-                            StatusCode::FORBIDDEN,
-                        ));
-                    }
-                } else {
-                    return self.ep.call(req).await;
-                }
-            }
+        let ctx = req.extensions().get::<ReqCtx>().expect("ReqCtx not found");
+        // 如果是超级用户，则不需要验证权限，直接放行
+        if CFG.system.super_user.contains(&ctx.user.id) {
+            return self.ep.call(req).await;
         }
-        Err(Error::from_status(StatusCode::UNAUTHORIZED))
+
+        // 验证api权限，如果不在路由表中，则放行，否则验证权限
+
+        if ApiUtils::is_in(&ctx.path).await {
+            if ApiUtils::check_api_permission(&ctx.path, &ctx.method).await {
+                return self.ep.call(req).await;
+            } else {
+                return Err(Error::from_string(
+                    "你没有权限访问该页面",
+                    StatusCode::FORBIDDEN,
+                ));
+            }
+        } else {
+            return self.ep.call(req).await;
+        }
     }
 }
