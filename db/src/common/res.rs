@@ -85,7 +85,3 @@ impl<T: Serialize> Res<T> {
         }
     }
 }
-
-pub fn with_log() {
-    println!("{}", "hello");
-}

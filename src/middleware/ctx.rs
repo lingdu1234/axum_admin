@@ -81,7 +81,9 @@ impl<E: Endpoint> Endpoint for ContextEndpoint<E> {
                     None => "".to_string(),
                 };
                 tokio::spawn(async move {
-                    oper_log_add(req_ctx, res_ctx, "1".to_string(), "".to_string(), duration).await;
+                    oper_log_add(req_ctx, res_ctx, "1".to_string(), "".to_string(), duration)
+                        .await
+                        .expect("oper_log_add_err");
                 });
 
                 Ok(res)
@@ -89,7 +91,9 @@ impl<E: Endpoint> Endpoint for ContextEndpoint<E> {
             Err(e) => {
                 let ee = e.to_string();
                 tokio::spawn(async move {
-                    oper_log_add(req_ctx, "".to_string(), "0".to_string(), ee, duration).await;
+                    oper_log_add(req_ctx, "".to_string(), "0".to_string(), ee, duration)
+                        .await
+                        .expect("oper_log_add_err");
                 });
                 Err(e)
             }
@@ -109,10 +113,10 @@ async fn get_body_data(body: Body, uri: &Uri) -> Result<String> {
         Err(e) => return Err(Error::from_string(e.to_string(), StatusCode::BAD_REQUEST)),
     };
     if !body_data.is_empty() {
-        return Ok(body_data.to_string());
+        Ok(body_data.to_string())
     } else {
         let q = uri.query().unwrap_or("");
-        return Ok(q.to_string());
+        Ok(q.to_string())
     }
 }
 
@@ -129,7 +133,7 @@ pub async fn oper_log_add(
     let req_data = req.clone();
     let res_data = res.clone();
     let err_msg_data = err_msg.clone();
-    let duration_data = duration.clone();
+    let duration_data = duration;
     tokio::spawn(async move {
         tracing::info!(
             "\n请求路径:{:?}\n完成时间:{:?}\n消耗时间:{:?}微秒 | {:?}毫秒\n请求数据:{:?}\n响应数据:{}\n错误信息:{:?}\n",
@@ -164,7 +168,7 @@ pub async fn oper_log_add(
         _ => "0",        // 其他
     };
     let all_apis = ALL_APIS.lock().await;
-    let req_path = req.path.as_str().replacen("/", "", 1);
+    let req_path = req.path.as_str().replacen('/', "", 1);
     let api_name = all_apis
         .get(&req_path)
         .unwrap_or(&("".to_string()))

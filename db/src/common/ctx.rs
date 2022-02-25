@@ -1,5 +1,3 @@
-use serde::{Deserialize, Serialize};
-
 #[derive(Clone, Debug)]
 pub struct ReqCtx {
     pub ori_uri: String,

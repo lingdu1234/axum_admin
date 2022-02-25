@@ -3,7 +3,7 @@ use std::path::Path;
 use configs::CFG;
 use once_cell::sync::Lazy;
 
-pub static CERT_KEY: Lazy<CertKey> = Lazy::new(|| get_cert_key());
+pub static CERT_KEY: Lazy<CertKey> = Lazy::new(get_cert_key);
 
 pub struct CertKey {
     pub cert: Vec<u8>,
@@ -22,6 +22,5 @@ fn get_cert_key() -> CertKey {
 }
 
 fn get_string<P: AsRef<Path>>(path: P) -> Vec<u8> {
-    let s = std::fs::read(path).expect("读取文件失败");
-    s
+    std::fs::read(path).expect("读取文件失败")
 }
