@@ -22,12 +22,12 @@ use crate::utils::jwt::Claims;
 pub async fn get_sort_list(
     Query(page_params): Query<PageParams>,
     Query(search_req): Query<SearchReq>,
-) -> Json<Res<ListData<sys_menu::Model>>> {
+) -> Res<ListData<sys_menu::Model>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_sort_list(db, page_params, search_req).await;
     match res {
-        Ok(x) => Json(Res::with_data(x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_data(x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
@@ -35,95 +35,95 @@ pub async fn get_sort_list(
 pub async fn get_auth_list(
     Query(page_params): Query<PageParams>,
     Query(search_req): Query<SearchReq>,
-) -> Json<Res<ListData<sys_menu::Model>>> {
+) -> Res<ListData<sys_menu::Model>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_auth_list(db, page_params, search_req).await;
     match res {
-        Ok(x) => Json(Res::with_data(x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_data(x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Json<Res<MenuResp>> {
+pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Res<MenuResp> {
     match search_req.validate() {
         Ok(_) => {}
-        Err(e) => return Json(Res::with_err(&e.to_string())),
+        Err(e) => return Res::with_err(&e.to_string()),
     }
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_by_id(db, search_req).await;
     match res {
-        Ok(x) => Json(Res::with_data(x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_data(x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 /// add 添加
 #[handler]
-pub async fn add(Json(req): Json<AddReq>) -> Json<Res<String>> {
+pub async fn add(Json(req): Json<AddReq>) -> Res<String> {
     match req.validate() {
         Ok(_) => {}
-        Err(e) => return Json(Res::with_err(&e.to_string())),
+        Err(e) => return Res::with_err(&e.to_string()),
     }
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::add(db, req).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 /// delete 完全删除
 #[handler]
-pub async fn delete(Json(req): Json<DeleteReq>) -> Json<Res<String>> {
+pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::delete(db, req.id).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 // edit 修改
 #[handler]
-pub async fn edit(Json(edit_req): Json<EditReq>) -> Json<Res<String>> {
+pub async fn edit(Json(edit_req): Json<EditReq>) -> Res<String> {
     match edit_req.validate() {
         Ok(_) => {}
-        Err(e) => return Json(Res::with_err(&e.to_string())),
+        Err(e) => return Res::with_err(&e.to_string()),
     }
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::edit(db, edit_req).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 /// get_all_menu_tree 获取全部菜单树
 #[handler]
-pub async fn get_all_menu_tree() -> Json<Res<Vec<SysMenuTree>>> {
+pub async fn get_all_menu_tree() -> Res<Vec<SysMenuTree>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_all_menu_tree(db).await;
     match res {
-        Ok(res) => Json(Res::with_data(res)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_data(x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 /// 获取用户路由
 #[handler]
-pub async fn get_routers(user: Claims) -> Json<Res<Vec<SysMenuTree>>> {
+pub async fn get_routers(user: Claims) -> Res<Vec<SysMenuTree>> {
     let db = DB.get_or_init(db_conn).await;
     //    获取角色列表
     // let all_roles = match service::sys_role::get_all(db).await {
     //     Ok(x) => x,
-    //     Err(e) => return Json(Res::with_err(&e.to_string())),
+    //     Err(e) => return Res::with_err(&e.to_string()),
     // };
     //  获取 用户角色
     let role_id = match service::sys_role::get_current_admin_role(db, &user.id).await {
         Ok(x) => x,
-        Err(e) => return Json(Res::with_err(&e.to_string())),
+        Err(e) => return Res::with_err(&e.to_string()),
     };
 
     // 检查是否超管用户
@@ -133,7 +133,7 @@ pub async fn get_routers(user: Claims) -> Json<Res<Vec<SysMenuTree>>> {
         service::sys_menu::get_admin_menu_by_role_ids(db, vec![role_id]).await
     };
     match res {
-        Ok(res) => Json(Res::with_data(res)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_data(x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }

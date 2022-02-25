@@ -1,6 +1,6 @@
+use anyhow::Result;
 use chrono::Local;
 use db::system::entities::{sys_user, sys_user_role};
-use poem::{error::BadRequest, Result};
 use sea_orm::{
     sea_query::Expr, ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, Set, TransactionTrait,
     Value,
@@ -31,16 +31,14 @@ where
             .collect::<Vec<_>>(),
     )
     .exec(db)
-    .await
-    .map_err(BadRequest)?;
+    .await?;
 
     sys_user::Entity::update_many()
         .col_expr(sys_user::Column::RoleId, Expr::value(Value::String(None)))
         .filter(sys_user::Column::Id.eq(user_id))
         .filter(sys_user::Column::RoleId.is_not_in(role_ids))
         .exec(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     Ok(())
 }
 // 给角色批量添加用户
@@ -66,8 +64,7 @@ where
             .collect::<Vec<_>>(),
     )
     .exec(db)
-    .await
-    .map_err(BadRequest)?;
+    .await?;
     Ok(())
 }
 
@@ -80,8 +77,7 @@ where
     sys_user_role::Entity::delete_many()
         .filter(sys_user_role::Column::UserId.eq(user_id))
         .exec(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     Ok(())
 }
 
@@ -93,8 +89,7 @@ where
     let s = sys_user_role::Entity::find()
         .filter(sys_user_role::Column::UserId.eq(user_id))
         .all(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     let res = s.iter().map(|x| x.role_id.clone()).collect::<Vec<_>>();
     Ok(res)
 }
@@ -107,8 +102,7 @@ where
     let s = sys_user_role::Entity::find()
         .filter(sys_user_role::Column::RoleId.eq(role_id))
         .all(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     let res = s.iter().map(|x| x.user_id.clone()).collect::<Vec<_>>();
     Ok(res)
 }
@@ -128,6 +122,6 @@ where
         d = d.filter(sys_user_role::Column::RoleId.eq(role_id))
     };
 
-    d.exec(db).await.map_err(BadRequest)?;
+    d.exec(db).await?;
     Ok(())
 }

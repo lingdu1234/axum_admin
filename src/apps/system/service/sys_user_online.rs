@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use chrono::Local;
 use db::{
     common::{
@@ -11,8 +12,6 @@ use db::{
     },
     DB,
 };
-use poem::{error::BadRequest, Error, Result};
-use reqwest::StatusCode;
 use sea_orm::{
     sea_query::Expr, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
     QueryOrder, Set, TransactionTrait,
@@ -49,17 +48,14 @@ pub async fn get_sort_list(
         s = s.filter(sys_user_online::Column::LoginTime.lte(x));
     }
     // 获取全部数据条数
-    let total = s.clone().count(db).await.map_err(BadRequest)?;
+    let total = s.clone().count(db).await?;
     // 分页获取数据
     let paginator = s
         .order_by_desc(sys_user_online::Column::LoginTime)
         .paginate(db, page_per_size);
 
-    let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
-    let list = paginator
-        .fetch_page(page_num - 1)
-        .await
-        .map_err(BadRequest)?;
+    let total_pages = paginator.num_pages().await?;
+    let list = paginator.fetch_page(page_num - 1).await?;
     let res = ListData {
         list,
         total,
@@ -76,13 +72,10 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     s = s.filter(sys_user_online::Column::Id.is_in(delete_req.ids));
 
     // 开始删除
-    let d = s.exec(db).await.map_err(BadRequest)?;
+    let d = s.exec(db).await?;
 
     match d.rows_affected {
-        0 => Err(Error::from_string(
-            "删除失败,数据不存在",
-            StatusCode::BAD_REQUEST,
-        )),
+        0 => Err(anyhow!("删除失败,数据不存在")),
         i => Ok(format!("成功删除{}条数据", i)),
     }
 }
@@ -104,7 +97,7 @@ pub async fn check_online(db: Option<&DatabaseConnection>, id: String) -> bool {
 
 pub async fn log_out(db: &DatabaseConnection, token_id: String) -> Result<String> {
     let s = SysUserOnline::delete_many().filter(sys_user_online::Column::TokenId.eq(token_id));
-    s.exec(db).await.map_err(BadRequest)?;
+    s.exec(db).await?;
     Ok("成功退出登录".to_string())
 }
 
@@ -133,32 +126,23 @@ pub async fn add(req: ClientInfo, u_id: String, token_id: String, token_exp: i64
         device: Set(req.ua.device),
         login_time: Set(now),
     };
-    let txn = db
-        .begin()
-        .await
-        .map_err(BadRequest)
-        .expect("begin txn error");
+    let txn = db.begin().await.expect("begin txn error");
     //  let re =   user.insert(db).await?; 这个多查询一次结果
     let _ = SysUserOnline::insert(active_model)
         .exec(&txn)
         .await
-        .map_err(BadRequest)
         .expect("insert error");
-    txn.commit()
-        .await
-        .map_err(BadRequest)
-        .expect("commit txn error");
+    txn.commit().await.expect("commit txn error");
 }
 
 pub async fn update_online(token_id: String, token_exp: i64) -> Result<String> {
     let db = DB.get_or_init(db_conn).await;
-    let txn = db.begin().await.map_err(BadRequest)?;
+    let txn = db.begin().await?;
     SysUserOnline::update_many()
         .col_expr(sys_user_online::Column::TokenExp, Expr::value(token_exp))
         .filter(sys_user_online::Column::TokenId.eq(token_id))
         .exec(&txn)
-        .await
-        .map_err(BadRequest)?;
-    txn.commit().await.map_err(BadRequest)?;
+        .await?;
+    txn.commit().await?;
     Ok("token更新成功".to_string())
 }

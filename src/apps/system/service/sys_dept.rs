@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use chrono::{Local, NaiveDateTime};
 use db::{
     common::res::{ListData, PageParams},
@@ -9,7 +10,6 @@ use db::{
         models::sys_dept::{AddReq, DeleteReq, DeptResp, EditReq, RespTree, SearchReq},
     },
 };
-use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait,
     QueryFilter, QueryOrder, Set, TransactionTrait,
@@ -45,16 +45,13 @@ pub async fn get_sort_list(
         s = s.filter(sys_dept::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
-    let total = s.clone().count(db).await.map_err(BadRequest)?;
+    let total = s.clone().count(db).await?;
     // 分页获取数据
     let paginator = s
         .order_by_asc(sys_dept::Column::OrderNum)
         .paginate(db, page_per_size);
-    let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
-    let list = paginator
-        .fetch_page(page_num - 1)
-        .await
-        .map_err(BadRequest)?;
+    let total_pages = paginator.num_pages().await?;
+    let list = paginator.fetch_page(page_num - 1).await?;
 
     let res = ListData {
         total,
@@ -67,7 +64,7 @@ pub async fn get_sort_list(
 
 pub async fn check_data_is_exist(dept_name: String, db: &DatabaseConnection) -> Result<bool> {
     let s1 = SysDept::find().filter(sys_dept::Column::DeptName.eq(dept_name));
-    let count1 = s1.count(db).await.map_err(BadRequest)?;
+    let count1 = s1.count(db).await?;
     Ok(count1 > 0)
 }
 
@@ -76,7 +73,7 @@ pub async fn check_data_is_exist(dept_name: String, db: &DatabaseConnection) -> 
 pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
     if check_data_is_exist(req.clone().dept_name, db).await? {
-        return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
+        return Err(anyhow!("数据已存在",));
     }
 
     let uid = scru128::scru128().to_string();
@@ -94,10 +91,10 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Resul
         created_at: Set(Some(now)),
         ..Default::default()
     };
-    let txn = db.begin().await.map_err(BadRequest)?;
+    let txn = db.begin().await?;
     //  let re =   user.insert(db).await?; 这个多查询一次结果
-    let _ = SysDept::insert(user).exec(&txn).await.map_err(BadRequest)?;
-    txn.commit().await.map_err(BadRequest)?;
+    let _ = SysDept::insert(user).exec(&txn).await?;
+    txn.commit().await?;
     let res = "添加成功".to_string();
 
     Ok(res)
@@ -110,13 +107,10 @@ pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
     s = s.filter(sys_dept::Column::DeptId.eq(req.dept_id));
 
     // 开始删除
-    let d = s.exec(db).await.map_err(BadRequest)?;
+    let d = s.exec(db).await?;
 
     match d.rows_affected {
-        0 => Err(Error::from_string(
-            "删除失败,数据不存在",
-            StatusCode::BAD_REQUEST,
-        )),
+        0 => Err(anyhow!("删除失败,数据不存在",)),
         i => Ok(format!("成功删除{}条数据", i)),
     }
 }
@@ -128,16 +122,12 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
         .filter(sys_dept::Column::DeptName.eq(req.clone().dept_name))
         .filter(sys_dept::Column::DeptId.ne(req.clone().dept_id))
         .count(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     if s1 > 0 {
-        return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
+        return Err(anyhow!("数据已存在",));
     }
     let uid = req.dept_id;
-    let s_s = SysDept::find_by_id(uid.clone())
-        .one(db)
-        .await
-        .map_err(BadRequest)?;
+    let s_s = SysDept::find_by_id(uid.clone()).one(db).await?;
     let s_r: sys_dept::ActiveModel = s_s.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
     let act = sys_dept::ActiveModel {
@@ -153,7 +143,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
         ..s_r
     };
     // 更新
-    act.update(db).await.map_err(BadRequest)?; // 这个两种方式一样 都要多查询一次
+    act.update(db).await?; // 这个两种方式一样 都要多查询一次
     Ok(format!("用户<{}>数据更新成功", uid))
 }
 
@@ -165,14 +155,9 @@ pub async fn get_by_id(db: &DatabaseConnection, id: String) -> Result<DeptResp> 
     //
     s = s.filter(sys_dept::Column::DeptId.eq(id));
 
-    let res = match s
-        .into_model::<DeptResp>()
-        .one(db)
-        .await
-        .map_err(BadRequest)?
-    {
+    let res = match s.into_model::<DeptResp>().one(db).await? {
         Some(m) => m,
-        None => return Err(Error::from_string("数据不存在", StatusCode::BAD_REQUEST)),
+        None => return Err(anyhow!("数据不存在",)),
     };
 
     Ok(res)
@@ -187,8 +172,7 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<DeptResp>> {
         .order_by(sys_dept::Column::OrderNum, Order::Asc)
         .into_model::<DeptResp>()
         .all(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     Ok(s)
 }
 
@@ -225,7 +209,7 @@ pub async fn get_dept_by_role_id(db: &DatabaseConnection, role_id: String) -> Re
     let mut dept_ids: Vec<String> = Vec::new();
     let mut s = SysRoleDept::find();
     s = s.filter(sys_role_dept::Column::RoleId.eq(role_id));
-    let res = s.all(db).await.map_err(BadRequest)?;
+    let res = s.all(db).await?;
     for item in res {
         dept_ids.push(item.dept_id);
     }

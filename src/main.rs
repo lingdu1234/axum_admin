@@ -94,7 +94,8 @@ async fn main() -> Result<(), std::io::Error> {
         .nest(
             "/api",
             // apps::api().around(middleware::tracing_log::tracing_log),
-            apps::api().with(middleware::poem_tracer::Tracing),
+            apps::api().with(middleware::PoemLoging),
+            // apps::api().with(middleware::poem_tracer::Tracing),
         )
         .nest(
             "/",

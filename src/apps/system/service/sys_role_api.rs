@@ -1,8 +1,7 @@
+use anyhow::Result;
 use chrono::Local;
 use db::system::{entities::sys_role_api, models::sys_role_api::AddReq};
-use poem::{error::BadRequest, Result};
 use sea_orm::{ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, Set, TransactionTrait};
-
 // 添加修改用户角色
 pub async fn add_role_api<C>(db: &C, role_apis: Vec<AddReq>, created_by: &str) -> Result<()>
 where
@@ -23,8 +22,7 @@ where
             .collect::<Vec<_>>(),
     )
     .exec(db)
-    .await
-    .map_err(BadRequest)?;
+    .await?;
     Ok(())
 }
 
@@ -35,8 +33,7 @@ where
     sys_role_api::Entity::delete_many()
         .filter(sys_role_api::Column::RoleId.is_in(role_ids))
         .exec(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     Ok(())
 }
 
@@ -50,7 +47,6 @@ where
     let res = sys_role_api::Entity::find()
         .filter(sys_role_api::Column::RoleId.is_in(role_ids))
         .all(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     Ok(res)
 }

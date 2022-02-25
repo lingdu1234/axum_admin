@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use chrono::{Local, NaiveDateTime};
 use db::{
     common::res::{ListData, PageParams},
@@ -6,7 +7,6 @@ use db::{
         models::sys_job::{AddReq, DeleteReq, EditReq, SearchReq, StatusReq},
     },
 };
-use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, ConnectionTrait,
     DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set,
@@ -39,16 +39,13 @@ pub async fn get_sort_list(
         s = s.filter(sys_job::Column::Status.eq(x));
     }
     // 获取全部数据条数
-    let total = s.clone().count(db).await.map_err(BadRequest)?;
+    let total = s.clone().count(db).await?;
     // 分页获取数据
     let paginator = s
         .order_by_asc(sys_job::Column::JobId)
         .paginate(db, page_per_size);
-    let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
-    let list = paginator
-        .fetch_page(page_num - 1)
-        .await
-        .map_err(BadRequest)?;
+    let total_pages = paginator.num_pages().await?;
+    let list = paginator.fetch_page(page_num - 1).await?;
 
     let res = ListData {
         total,
@@ -66,13 +63,11 @@ where
     let c1 = SysJob::find()
         .filter(sys_job::Column::JobName.eq(job_name))
         .count(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     let c2 = SysJob::find()
         .filter(sys_job::Column::TaskId.eq(task_id))
         .count(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     Ok(c1 > 0 || c2 > 0)
 }
 
@@ -89,14 +84,12 @@ where
         .filter(sys_job::Column::JobName.eq(job_name))
         .filter(sys_job::Column::JobId.ne(job_id))
         .count(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     let c2 = SysJob::find()
         .filter(sys_job::Column::TaskId.eq(task_id))
         .filter(sys_job::Column::JobId.ne(job_id))
         .count(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     Ok(c1 > 0 || c2 > 0)
 }
 
@@ -107,7 +100,7 @@ where
 {
     //  检查字典类型是否存在
     if check_job_add_is_exist(db, &req.job_name, req.task_id).await? {
-        return Err(Error::from_string("任务已存在", StatusCode::BAD_REQUEST));
+        return Err(anyhow!("任务已存在",));
     }
     let uid = scru128::scru128_string();
     let now: NaiveDateTime = Local::now().naive_local();
@@ -140,10 +133,7 @@ where
         created_at: Set(Some(now)),
         ..Default::default()
     };
-    SysJob::insert(add_data.clone())
-        .exec(db)
-        .await
-        .map_err(BadRequest)?;
+    SysJob::insert(add_data.clone()).exec(db).await?;
     if status.as_str() == "1" {
         tasks::run_circles_task(uid.clone())
             .await
@@ -163,8 +153,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
         match SysJob::find()
             .filter(sys_job::Column::JobId.eq(job_id))
             .one(db)
-            .await
-            .map_err(BadRequest)?
+            .await?
         {
             Some(m) => {
                 tasks::delete_job(m.task_id, true)
@@ -179,14 +168,11 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
         .filter(sys_job::Column::JobId.is_in(job_ids.clone()))
         .exec(db)
         .await
-        .map_err(|e| Error::from_string(e.to_string(), StatusCode::BAD_REQUEST))?;
+        .map_err(|e| anyhow!(e.to_string(),))?;
 
     match d.rows_affected {
         // 0 => return Err("你要删除的字典类型不存在".into()),
-        0 => Err(Error::from_string(
-            "你要删除的字典类型不存在",
-            StatusCode::BAD_REQUEST,
-        )),
+        0 => Err(anyhow!("你要删除的字典类型不存在",)),
 
         i => Ok(format!("成功删除{}条数据", i)),
     }
@@ -196,7 +182,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
     if check_job_edit_is_exist(db, &req.job_name, req.task_id, &req.job_id).await? {
-        return Err(Error::from_string("任务已存在", StatusCode::BAD_REQUEST));
+        return Err(anyhow!("任务已存在",));
     }
     let uid = req.job_id;
     let s_s = get_by_id(db, uid.clone()).await?;
@@ -231,7 +217,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
         ..s_r
     };
     // 更新
-    act.update(db).await.map_err(BadRequest)?;
+    act.update(db).await?;
     match (s_s.status.as_str(), status.clone().as_str()) {
         ("0", "1") => {
             tasks::run_circles_task(uid.clone())
@@ -265,12 +251,11 @@ where
     let s = SysJob::find()
         .filter(sys_job::Column::JobId.eq(job_id))
         .one(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
 
     let res = match s {
         Some(m) => m,
-        None => return Err(Error::from_string("没有找到数据", StatusCode::BAD_REQUEST)),
+        None => return Err(anyhow!("没有找到数据",)),
     };
     Ok(res)
 }
@@ -283,8 +268,7 @@ pub async fn get_active_job(db: &DatabaseConnection) -> Result<Vec<sys_job::Mode
         .filter(sys_job::Column::Status.eq("1".to_string()))
         .order_by(sys_job::Column::JobId, Order::Asc)
         .all(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     Ok(s)
 }
 
@@ -295,8 +279,7 @@ pub async fn set_status(db: &DatabaseConnection, req: StatusReq) -> Result<Strin
         .col_expr(sys_job::Column::Status, Expr::value(req.status.clone()))
         .filter(sys_job::Column::JobId.eq(req.job_id.clone()))
         .exec(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     match req.status.clone().as_str() {
         "1" => {
             tasks::run_circles_task(job.clone().job_id)
@@ -308,7 +291,7 @@ pub async fn set_status(db: &DatabaseConnection, req: StatusReq) -> Result<Strin
                 .await
                 .expect("任务删除失败");
         }
-        _ => return Err(Error::from_string("状态值错误", StatusCode::BAD_REQUEST)),
+        _ => return Err(anyhow!("状态值错误",)),
     };
     Ok(format!("{}修改成功", req.job_id))
 }

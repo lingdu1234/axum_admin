@@ -1,5 +1,6 @@
 /target
 /data/log
+/data/_web
 .idea
 *.http
 .git
@@ -8,5 +9,5 @@
 .env
 /config/config.toml
 /config/cert
-.exe
+*.exe
 /test

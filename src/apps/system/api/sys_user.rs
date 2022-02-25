@@ -20,36 +20,35 @@ use crate::utils::jwt::{AuthBody, Claims};
 
 /// get_user_list 获取用户列表
 /// page_params 分页参数
-/// db 数据库连接 使用db.0
 #[handler]
 pub async fn get_sort_list(
     Query(page_params): Query<PageParams>,
     Query(req): Query<SearchReq>,
-) -> Json<Res<ListData<UserWithDept>>> {
+) -> Res<ListData<UserWithDept>> {
     match req.validate() {
         Ok(_) => {}
-        Err(e) => return Json(Res::with_err(&e.to_string())),
+        Err(e) => return Res::with_err(&e.to_string()),
     };
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::get_sort_list(db, page_params, req).await;
     match res {
-        Ok(x) => Json(Res::with_data(x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_data(x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 /// get_user_by_id 获取用户Id获取用户   
-/// db 数据库连接 使用db.0
+
 #[handler]
-pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<UserInfomaion>> {
+pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<UserInfomaion> {
     match req.validate() {
         Ok(_) => {}
-        Err(e) => return Json(Res::with_err(&e.to_string())),
+        Err(e) => return Res::with_err(&e.to_string()),
     };
     let db = DB.get_or_init(db_conn).await;
     match req.user_id {
         Some(user_id) => match service::sys_user::get_by_id(db, &user_id).await {
-            Err(e) => Json(Res::with_err(&e.to_string())),
+            Err(e) => Res::with_err(&e.to_string()),
             Ok(user) => {
                 let post_ids = service::sys_post::get_post_ids_by_user_id(db, user.clone().id)
                     .await
@@ -63,85 +62,86 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<UserInfomaion>>
                     post_ids,
                     role_ids,
                 };
-                Json(Res::with_data(res))
+                Res::with_data(res)
             }
         },
-        None => Json(Res::with_msg("用户id不能为空")),
+        None => Res::with_msg("用户id不能为空"),
     }
 }
 
 /// add 添加
 #[handler]
-pub async fn add(Json(add_req): Json<AddReq>, user: Claims) -> Json<Res<String>> {
+pub async fn add(Json(add_req): Json<AddReq>, user: Claims) -> Res<String> {
     match add_req.validate() {
         Ok(_) => {}
-        Err(e) => return Json(Res::with_err(&e.to_string())),
+        Err(e) => return Res::with_err(&e.to_string()),
     }
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::add(db, add_req, user.id).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 /// delete 完全删除
 #[handler]
-pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Json<Res<String>> {
+pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::delete(db, delete_req).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 // edit 修改
 #[handler]
-pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Json<Res<String>> {
+pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
     match edit_req.validate() {
         Ok(_) => {}
-        Err(e) => return Json(Res::with_err(&e.to_string())),
+        Err(e) => return Res::with_err(&e.to_string()),
     }
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::edit(db, edit_req, user.id).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 /// 用户登录
 #[handler]
-pub async fn login(Json(login_req): Json<UserLoginReq>, request: &Request) -> Json<Res<AuthBody>> {
+pub async fn login(Json(login_req): Json<UserLoginReq>, request: &Request) -> Res<AuthBody> {
+    println!("{:?}", login_req);
     match login_req.validate() {
         Ok(_) => {}
-        Err(e) => return Json(Res::with_err(&e.to_string())),
+        Err(e) => return Res::with_err(&e.to_string()),
     }
     let db = DB.get_or_init(db_conn).await;
     match service::sys_user::login(db, login_req, request).await {
-        Ok(res) => Json(Res::with_data(res)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_data(x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 /// 获取用户登录信息
 #[handler]
-pub async fn get_info(user: Claims) -> Json<Res<UserInfo>> {
+pub async fn get_info(user: Claims) -> Res<UserInfo> {
     let db = DB.get_or_init(db_conn).await;
     //  获取用户信息
     let user_info = match service::sys_user::get_by_id(db, &user.id).await {
         Ok(x) => x,
-        Err(e) => return Json(Res::with_err(&e.to_string())),
+        Err(e) => return Res::with_err(&e.to_string()),
     };
     //    获取角色列表
     let all_roles = match service::sys_role::get_all(db).await {
         Ok(x) => x,
-        Err(e) => return Json(Res::with_err(&e.to_string())),
+        Err(e) => return Res::with_err(&e.to_string()),
     };
     //  获取 用户角色
     let roles = match service::sys_role::get_all_admin_role(db, &user.id, all_roles).await {
         Ok(x) => x,
-        Err(e) => return Json(Res::with_err(&e.to_string())),
+        Err(e) => return Res::with_err(&e.to_string()),
     };
     // let mut role_names: Vec<String> = Vec::new();
     let mut role_ids: Vec<String> = Vec::new();
@@ -157,7 +157,7 @@ pub async fn get_info(user: Claims) -> Json<Res<UserInfo>> {
     } else {
         match service::sys_menu::get_permissions(db, role_ids.clone()).await {
             Ok(x) => x,
-            Err(e) => return Json(Res::with_err(&e.to_string())),
+            Err(e) => return Res::with_err(&e.to_string()),
         }
     };
     // 获取用户菜单信息
@@ -171,46 +171,46 @@ pub async fn get_info(user: Claims) -> Json<Res<UserInfo>> {
         permissions,
     };
 
-    Json(Res::with_data(res))
+    Res::with_data(res)
 }
 
 // edit 修改
 #[handler]
-pub async fn reset_passwd(Json(req): Json<ResetPasswdReq>) -> Json<Res<String>> {
+pub async fn reset_passwd(Json(req): Json<ResetPasswdReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::reset_passwd(db, req).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 // edit 修改
 #[handler]
-pub async fn change_status(Json(req): Json<ChangeStatusReq>) -> Json<Res<String>> {
+pub async fn change_status(Json(req): Json<ChangeStatusReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::change_status(db, req).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 // fresh_token 刷新token
 #[handler]
-pub async fn fresh_token(user: Claims) -> Json<Res<AuthBody>> {
+pub async fn fresh_token(user: Claims) -> Res<AuthBody> {
     let res = service::sys_user::fresh_token(user).await;
     match res {
-        Ok(x) => Json(Res::with_data(x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_data(x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 #[handler]
-pub async fn change_role(Json(req): Json<ChangeRoleReq>) -> Json<Res<String>> {
+pub async fn change_role(Json(req): Json<ChangeRoleReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::change_role(db, req).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }

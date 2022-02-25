@@ -1,4 +1,4 @@
-use poem::{IntoResponse, Response};
+use poem::{http::StatusCode, IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize)]
 /// 查 数据返回
@@ -24,14 +24,23 @@ pub struct Res<T> {
 }
 
 #[allow(unconditional_recursion)]
-impl IntoResponse for Res<serde_json::Value> {
+impl<T> IntoResponse for Res<T>
+where
+    T: Serialize + Send,
+{
     fn into_response(self) -> Response {
         let data = Self {
             code: self.code,
             data: self.data,
             msg: self.msg,
         };
-        data.into_response()
+        let bytes = match serde_json::to_vec(&data) {
+            Ok(v) => v,
+            Err(e) => {
+                return Response::from((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            }
+        };
+        bytes.into_response()
     }
 }
 

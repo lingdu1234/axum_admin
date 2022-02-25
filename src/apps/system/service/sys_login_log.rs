@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use chrono::Local;
 use db::{
     common::{
@@ -11,8 +12,6 @@ use db::{
     },
     DB,
 };
-use poem::{error::BadRequest, Error, Result};
-use reqwest::StatusCode;
 use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
     TransactionTrait,
@@ -54,7 +53,7 @@ pub async fn get_sort_list(
         s = s.filter(sys_login_log::Column::LoginTime.lte(x));
     }
     // 获取全部数据条数
-    let total = s.clone().count(db).await.map_err(BadRequest)?;
+    let total = s.clone().count(db).await?;
     // 分页获取数据
     // let paginator = s
     //     .order_by_desc(sys_login_log::Column::LoginTime)
@@ -72,11 +71,8 @@ pub async fn get_sort_list(
     };
 
     let paginator = page.paginate(db, page_per_size);
-    let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
-    let list = paginator
-        .fetch_page(page_num - 1)
-        .await
-        .map_err(BadRequest)?;
+    let total_pages = paginator.num_pages().await?;
+    let list = paginator.fetch_page(page_num - 1).await?;
     let res = ListData {
         list,
         total,
@@ -93,20 +89,17 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     s = s.filter(sys_login_log::Column::InfoId.is_in(delete_req.info_ids));
 
     // 开始删除
-    let d = s.exec(db).await.map_err(BadRequest)?;
+    let d = s.exec(db).await?;
 
     match d.rows_affected {
-        0 => Err(Error::from_string(
-            "删除失败,数据不存在",
-            StatusCode::BAD_REQUEST,
-        )),
+        0 => Err(anyhow!("删除失败,数据不存在",)),
         i => Ok(format!("成功删除{}条数据", i)),
     }
 }
 
 pub async fn clean(db: &DatabaseConnection) -> Result<String> {
     let s = SysLoginLog::delete_many();
-    s.exec(db).await.map_err(BadRequest)?;
+    s.exec(db).await?;
     Ok("数据已清空".to_string())
 }
 
@@ -128,19 +121,11 @@ pub async fn add(req: ClientInfo, user: String, msg: String, status: String) {
         login_time: Set(now),
         module: Set("系统后台".to_string()),
     };
-    let txn = db
-        .begin()
-        .await
-        .map_err(BadRequest)
-        .expect("begin txn error");
+    let txn = db.begin().await.expect("begin txn error");
     //  let re =   user.insert(db).await?; 这个多查询一次结果
     let _ = SysLoginLog::insert(active_model)
         .exec(db)
         .await
-        .map_err(BadRequest)
         .expect("insert error");
-    txn.commit()
-        .await
-        .map_err(BadRequest)
-        .expect("commit txn error");
+    txn.commit().await.expect("commit txn error");
 }
