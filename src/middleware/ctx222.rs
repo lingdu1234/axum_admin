@@ -25,22 +25,11 @@ impl<E: Endpoint> Endpoint for ContextEndpoint<E> {
     type Output = E::Output;
     // type Output = Response;
 
-    async fn call(&self, mut req: Request) -> Result<Self::Output> {
+    async fn call(&self, req: Request) -> Result<Self::Output> {
         // 请求信息ctx注入
-        let user = match req.extensions().get::<UserInfo>() {
-            Some(x) => x.clone(),
-            None => match Claims::from_request_without_body(&req).await {
-                Err(e) => return Err(e),
-                Ok(claims) => {
-                    let u = UserInfo {
-                        id: claims.id,
-                        token_id: claims.token_id,
-                        name: claims.name,
-                    };
-                    req.extensions_mut().insert(u.clone());
-                    u
-                }
-            },
+        let claims = match Claims::from_request_without_body(&req).await {
+            Err(e) => return Err(e),
+            Ok(claims) => claims,
         };
         let ori_uri = req.original_uri().to_string();
         let method = req.method().to_string();
@@ -56,7 +45,11 @@ impl<E: Endpoint> Endpoint for ContextEndpoint<E> {
             path,
             path_params,
             method: method.clone(),
-            user,
+            user: UserInfo {
+                id: claims.id,
+                token_id: claims.token_id,
+                name: claims.name,
+            },
             data: body_data.clone(),
         };
 

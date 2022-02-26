@@ -29,7 +29,12 @@ pub struct Server {
     /// 服务器(IP地址:端口)     
     /// `0.0.0.0:3000`
     pub address: String,
-    pub env: String,
+    /// 服务器ssl
+    pub ssl: bool,
+    /// 响应数据gzip
+    pub content_gzip: bool,
+    /// 缓存时间
+    pub cache_time: u64,
 }
 
 /// server 配置文件

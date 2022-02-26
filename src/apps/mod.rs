@@ -1,3 +1,4 @@
+use configs::CFG;
 use poem::{get, post, EndpointExt, Route};
 
 use crate::middleware;
@@ -10,8 +11,10 @@ pub fn api() -> Route {
         .nest(
             "/system",
             system::system_api()
-                .with(middleware::Auth)
-                .with(middleware::ctx::Context),
+                .with(middleware::ApiAuth)
+                .with_if(CFG.log.enable_oper_log, middleware::OperLog)
+                .with(middleware::Ctx)
+                .with(middleware::Cache),
         ) // 系统管理模块
 }
 

@@ -13,9 +13,8 @@ use poem_admin::{
     apps, my_env, tasks,
     utils::{self, cert::CERT_KEY},
 };
-use tracing_log::LogTracer;
-// use tracing_subscriber::fmt::time::LocalTime;
-use tracing_subscriber::{fmt, subscribe::CollectExt, EnvFilter};
+// use tracing_log::LogTracer;
+use tracing_subscriber::{fmt, fmt::time::LocalTime, subscribe::CollectExt, EnvFilter};
 
 // use crate::utils::cert::CERT_KEY;
 
@@ -35,10 +34,20 @@ async fn main() -> Result<(), std::io::Error> {
     }
     my_env::setup();
 
+    // 设置日志输出
+
     // 日志追踪 将log转换到Tracing统一输出
-    LogTracer::init().unwrap();
+    // LogTracer::init().unwrap();
 
     // 系统变量设置
+    let log_env = match CFG.log.log_level.as_str() {
+        "TRACE" => tracing::Level::TRACE,
+        "DEBUG" => tracing::Level::DEBUG,
+        "INFO" => tracing::Level::INFO,
+        "WARN" => tracing::Level::WARN,
+        "ERROR" => tracing::Level::ERROR,
+        _ => tracing::Level::INFO,
+    };
 
     //  日志设置
     // let timer = LocalTime::new(time::format_description::well_known::Rfc3339);
@@ -50,7 +59,7 @@ async fn main() -> Result<(), std::io::Error> {
         // .with_file(true)
         // .with_ansi(true)
         // .with_line_number(true) // include the name of the current thread
-        // .with_timer(LocalTime::rfc_3339()) // use RFC 3339 timestamps
+        .with_timer(LocalTime::rfc_3339()) // use RFC 3339 timestamps
         .compact();
     let file_appender = tracing_appender::rolling::hourly(&CFG.log.dir, &CFG.log.file); // 文件输出设置
                                                                                         // 文件输出
@@ -58,7 +67,7 @@ async fn main() -> Result<(), std::io::Error> {
     // 标准控制台输出
     let (std_non_blocking, _guard) = tracing_appender::non_blocking(std::io::stdout());
     let collector = tracing_subscriber::registry()
-        .with(EnvFilter::from_default_env().add_directive(tracing::Level::DEBUG.into()))
+        .with(EnvFilter::from_default_env().add_directive(log_env.into()))
         .with(
             fmt::Subscriber::new()
                 .event_format(format.clone())
@@ -71,7 +80,6 @@ async fn main() -> Result<(), std::io::Error> {
                 .with_writer(non_blocking), // .pretty(),
         );
     tracing::collect::set_global_default(collector).expect("Unable to set a global collector");
-    //  数据库联机
 
     // 数据库初始化
     // database::migration::db_init().await;
@@ -95,11 +103,11 @@ async fn main() -> Result<(), std::io::Error> {
                 .index_file(&CFG.web.index),
         )
         // .with(Tracing)
-        .with(Compression::new())
+        .with_if(CFG.server.content_gzip, Compression::new())
         .with(cors);
 
-    match CFG.server.env.as_str() {
-        "prod" => {
+    match CFG.server.ssl {
+        true => {
             let listener = TcpListener::bind(&CFG.server.address).rustls(
                 RustlsConfig::new()
                     .key(&*CERT_KEY.key)
@@ -116,7 +124,7 @@ async fn main() -> Result<(), std::io::Error> {
                 )
                 .await
         }
-        _ => {
+        false => {
             let listener = TcpListener::bind(&CFG.server.address);
             let server = Server::new(listener).name(&CFG.server.name);
             server

@@ -1,19 +1,30 @@
-
 [server]
 name = "poem-admin"
 version = "0.1.0"
 # 服务器ip 端口
 address = "0.0.0.0:3000"
+# 服务器ssl
+ssl = false
+# 响应数据压缩
+content_gzip = true
+# 缓存时间 单位秒
+cache_time = 10
 [web]
-dir = "data/web"
+dir = "data/_web"
 index = "index.html"
 upload_dir = "data/upload"
+[cert]
+cert = "config/cert/cert.pem"
+key = "config/cert/key.pem"
 [casbin]
 model_file = "config/casbin_conf/rbac_model.conf"
 policy_file = "config/casbin_conf/rbac_policy.csv"
 [log]
-dir = "data/log" 
-file = "app_log" 
+dir = "data/log"
+file = "app_log"
+# 允许操作日志
+enable_oper_log = true
+# 日志级别
 log_level = "DEBUG" # DEBUG TRACE  INFO  WARN ERROR
 [system]
 super_user = ["00TV87DDOBJPU75J4TGUOC3NNG", "00TV876BOIIDCR9H7JA1KNNIGH"]

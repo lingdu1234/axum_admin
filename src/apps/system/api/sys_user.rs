@@ -113,7 +113,6 @@ pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
 /// 用户登录
 #[handler]
 pub async fn login(Json(login_req): Json<UserLoginReq>, request: &Request) -> Res<AuthBody> {
-    println!("{:?}", login_req);
     match login_req.validate() {
         Ok(_) => {}
         Err(e) => return Res::with_err(&e.to_string()),
