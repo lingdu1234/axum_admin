@@ -1,8 +1,8 @@
 use db::common::{captcha::CaptchaImage, res::Res};
-use poem::{handler, web::Json};
+use poem::handler;
 
 #[handler]
-pub fn get_captcha() -> Json<Res<CaptchaImage>> {
+pub fn get_captcha() -> Res<CaptchaImage> {
     let res = super::super::service::common::get_captcha();
-    Json(Res::with_data(res))
+    Res::with_data(res)
 }

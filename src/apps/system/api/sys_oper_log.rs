@@ -20,53 +20,53 @@ use super::super::service;
 pub async fn get_sort_list(
     Query(page_params): Query<PageParams>,
     Query(req): Query<SearchReq>,
-) -> Json<Res<ListData<sys_oper_log::Model>>> {
+) -> Res<ListData<sys_oper_log::Model>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_oper_log::get_sort_list(db, page_params, req).await;
     match res {
-        Ok(x) => Json(Res::with_data(x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_data(x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 /// delete 完全删除
 #[handler]
-pub async fn delete(Json(req): Json<DeleteReq>) -> Json<Res<String>> {
+pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
     // match req.validate() {
     //     Ok(_) => {}
-    //     Err(e) => return Json(Res::with_err(&e.to_string())),
+    //     Err(e) => return Res::with_err(&e.to_string()),
     // };
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_oper_log::delete(db, req).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 #[handler]
-pub async fn clean() -> Json<Res<String>> {
+pub async fn clean() -> Res<String> {
     //  数据验证
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_oper_log::clean(db).await;
     match res {
-        Ok(x) => Json(Res::with_msg(&x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_by_id(Query(req): Query<SearchReq>) -> Json<Res<sys_oper_log::Model>> {
+pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<sys_oper_log::Model> {
     let id = match req.oper_id {
-        None => return Json(Res::with_err("id不能为空")),
+        None => return Res::with_err("id不能为空"),
         Some(x) => x,
     };
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_oper_log::get_by_id(db, id).await;
     match res {
-        Ok(x) => Json(Res::with_data(x)),
-        Err(e) => Json(Res::with_err(&e.to_string())),
+        Ok(x) => Res::with_data(x),
+        Err(e) => Res::with_err(&e.to_string()),
     }
 }

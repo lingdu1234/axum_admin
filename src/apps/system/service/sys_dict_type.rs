@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use chrono::{Local, NaiveDateTime};
 use db::{
     common::res::{ListData, PageParams},
@@ -6,7 +7,6 @@ use db::{
         models::sys_dict_type::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
     },
 };
-use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
     PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
@@ -42,16 +42,13 @@ pub async fn get_sort_list(
         s = s.filter(sys_dict_type::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
-    let total = s.clone().count(db).await.map_err(BadRequest)?;
+    let total = s.clone().count(db).await?;
     // 分页获取数据
     let paginator = s
         .order_by_asc(sys_dict_type::Column::DictTypeId)
         .paginate(db, page_per_size);
-    let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
-    let list = paginator
-        .fetch_page(page_num - 1)
-        .await
-        .map_err(BadRequest)?;
+    let total_pages = paginator.num_pages().await?;
+    let list = paginator.fetch_page(page_num - 1).await?;
 
     let res = ListData {
         total,
@@ -68,7 +65,7 @@ where
 {
     let mut s = SysDictType::find();
     s = s.filter(sys_dict_type::Column::DictType.eq(dict_type));
-    let count = s.count(db).await.map_err(BadRequest)?;
+    let count = s.count(db).await?;
     Ok(count > 0)
 }
 
@@ -79,10 +76,7 @@ where
 {
     //  检查字典类型是否存在
     if check_dict_type_is_exist(&req.dict_type, db).await? {
-        return Err(Error::from_string(
-            "字典类型已存在",
-            StatusCode::BAD_REQUEST,
-        ));
+        return Err(anyhow!("字典类型已存在"));
     }
     let uid = scru128::scru128_string();
     let now: NaiveDateTime = Local::now().naive_local();
@@ -96,10 +90,7 @@ where
         created_at: Set(Some(now)),
         ..Default::default()
     };
-    SysDictType::insert(dict_type)
-        .exec(db)
-        .await
-        .map_err(BadRequest)?;
+    SysDictType::insert(dict_type).exec(db).await?;
     Ok("添加成功".to_string())
 }
 
@@ -110,17 +101,11 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     s = s.filter(sys_dict_type::Column::DictTypeId.is_in(delete_req.dict_type_ids));
 
     // 开始删除
-    let d = s
-        .exec(db)
-        .await
-        .map_err(|e| Error::from_string(e.to_string(), StatusCode::BAD_REQUEST))?;
+    let d = s.exec(db).await?;
 
     match d.rows_affected {
         // 0 => return Err("你要删除的字典类型不存在".into()),
-        0 => Err(Error::from_string(
-            "你要删除的字典类型不存在",
-            StatusCode::BAD_REQUEST,
-        )),
+        0 => Err(anyhow!("你要删除的字典类型不存在")),
 
         i => Ok(format!("成功删除{}条数据", i)),
     }
@@ -129,10 +114,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 // edit 修改
 pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<String> {
     let uid = edit_req.dict_type_id;
-    let s_s = SysDictType::find_by_id(uid.clone())
-        .one(db)
-        .await
-        .map_err(BadRequest)?;
+    let s_s = SysDictType::find_by_id(uid.clone()).one(db).await?;
     let s_r: sys_dict_type::ActiveModel = s_s.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
     let act = sys_dict_type::ActiveModel {
@@ -145,7 +127,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
         ..s_r
     };
     // 更新
-    let _aa = act.update(db).await.map_err(BadRequest)?; // 这个两种方式一样 都要多查询一次
+    let _aa = act.update(db).await?; // 这个两种方式一样 都要多查询一次
 
     Ok(format!("用户<{}>数据更新成功", uid))
 }
@@ -159,18 +141,15 @@ pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> 
     if let Some(x) = req.dict_type_id {
         s = s.filter(sys_dict_type::Column::DictTypeId.eq(x));
     } else {
-        return Err(Error::from_string(
-            "请求参数错误,请输入Id",
-            StatusCode::BAD_REQUEST,
-        ));
+        return Err(anyhow!("请求参数错误,请输入Id"));
     }
 
-    let res = match s.into_model::<Resp>().one(db).await.map_err(BadRequest)? {
+    let res = match s.into_model::<Resp>().one(db).await? {
         Some(m) => m,
-        None => return Err(Error::from_string("没有找到数据", StatusCode::BAD_REQUEST)),
+        None => return Err(anyhow!("没有找到数据")),
     };
     // let result: Resp =
-    // serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?;
+    // serde_json::from_value(serde_json::json!(res))?;
     // //这种数据转换效率不知道怎么样
     Ok(res)
 }
@@ -184,11 +163,10 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
         .order_by(sys_dict_type::Column::DictTypeId, Order::Asc)
         .into_model::<Resp>()
         .all(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     // println!("{:?}", s);
     // let result: Vec<Resp> =
-    // serde_json::from_value(serde_json::json!(s)).map_err(BadRequest)?;
+    // serde_json::from_value(serde_json::json!(s))?;
     // //这种数据转换效率不知道怎么样
     Ok(s)
 }

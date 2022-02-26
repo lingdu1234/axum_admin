@@ -1,5 +1,6 @@
 pub mod api_utils;
 // pub mod casbin_service;
+pub mod cert;
 pub mod jwt;
 pub mod rand_utils;
 pub mod web_utils;

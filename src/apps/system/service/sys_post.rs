@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use chrono::{Local, NaiveDateTime};
 use db::{
     common::res::{ListData, PageParams},
@@ -6,7 +7,6 @@ use db::{
         models::sys_post::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
     },
 };
-use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
     PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
@@ -42,16 +42,13 @@ pub async fn get_sort_list(
         s = s.filter(sys_post::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
-    let total = s.clone().count(db).await.map_err(BadRequest)?;
+    let total = s.clone().count(db).await?;
     // 分页获取数据
     let paginator = s
         .order_by_asc(sys_post::Column::PostId)
         .paginate(db, page_per_size);
-    let total_pages = paginator.num_pages().await.map_err(BadRequest)?;
-    let list = paginator
-        .fetch_page(page_num - 1)
-        .await
-        .map_err(BadRequest)?;
+    let total_pages = paginator.num_pages().await?;
+    let list = paginator.fetch_page(page_num - 1).await?;
 
     let res = ListData {
         total,
@@ -69,8 +66,8 @@ pub async fn check_data_is_exist(
 ) -> Result<bool> {
     let s1 = SysPost::find().filter(sys_post::Column::PostCode.eq(post_code));
     let s2 = SysPost::find().filter(sys_post::Column::PostName.eq(post_name));
-    let count1 = s1.count(db).await.map_err(BadRequest)?;
-    let count2 = s2.count(db).await.map_err(BadRequest)?;
+    let count1 = s1.count(db).await?;
+    let count2 = s2.count(db).await?;
     Ok(count1 > 0 || count2 > 0)
 }
 
@@ -84,14 +81,12 @@ pub async fn eidt_check_data_is_exist(
         .filter(sys_post::Column::PostCode.eq(post_code))
         .filter(sys_post::Column::PostId.ne(post_id.clone()))
         .count(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     let count2 = SysPost::find()
         .filter(sys_post::Column::PostName.eq(post_name))
         .filter(sys_post::Column::PostId.ne(post_id))
         .count(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     Ok(count1 > 0 || count2 > 0)
 }
 
@@ -100,7 +95,7 @@ pub async fn eidt_check_data_is_exist(
 pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
     if check_data_is_exist(req.clone().post_code, req.clone().post_name, db).await? {
-        return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
+        return Err(anyhow!("数据已存在"));
     }
 
     let uid = scru128::scru128().to_string();
@@ -116,10 +111,10 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Resul
         created_at: Set(Some(now)),
         ..Default::default()
     };
-    let txn = db.begin().await.map_err(BadRequest)?;
+    let txn = db.begin().await?;
     //  let re =   user.insert(db).await?; 这个多查询一次结果
-    let _ = SysPost::insert(user).exec(&txn).await.map_err(BadRequest)?;
-    txn.commit().await.map_err(BadRequest)?;
+    let _ = SysPost::insert(user).exec(&txn).await?;
+    txn.commit().await?;
     Ok("添加成功".to_string())
 }
 
@@ -130,13 +125,10 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     s = s.filter(sys_post::Column::PostId.is_in(delete_req.post_ids));
 
     // 开始删除
-    let d = s.exec(db).await.map_err(BadRequest)?;
+    let d = s.exec(db).await?;
 
     match d.rows_affected {
-        0 => Err(Error::from_string(
-            "删除失败,数据不存在",
-            StatusCode::BAD_REQUEST,
-        )),
+        0 => Err(anyhow!("删除失败,数据不存在")),
         i => Ok(format!("成功删除{}条数据", i)),
     }
 }
@@ -152,13 +144,10 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
     )
     .await?
     {
-        return Err(Error::from_string("数据已存在", StatusCode::BAD_REQUEST));
+        return Err(anyhow!("数据已存在"));
     }
     let uid = edit_req.post_id;
-    let s_s = SysPost::find_by_id(uid.clone())
-        .one(db)
-        .await
-        .map_err(BadRequest)?;
+    let s_s = SysPost::find_by_id(uid.clone()).one(db).await?;
     let s_r: sys_post::ActiveModel = s_s.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
     let act = sys_post::ActiveModel {
@@ -172,7 +161,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
         ..s_r
     };
     // 更新
-    let _aa = act.update(db).await.map_err(BadRequest)?; // 这个两种方式一样 都要多查询一次
+    let _aa = act.update(db).await?; // 这个两种方式一样 都要多查询一次
     Ok(format!("用户<{}>数据更新成功", uid))
 }
 
@@ -185,16 +174,16 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
     if let Some(x) = search_req.post_id {
         s = s.filter(sys_post::Column::PostId.eq(x));
     } else {
-        return Err(Error::from_string("请求参数错误", StatusCode::BAD_REQUEST));
+        return Err(anyhow!("请求参数错误"));
     }
 
-    let res = match s.into_model::<Resp>().one(db).await.map_err(BadRequest)? {
+    let res = match s.into_model::<Resp>().one(db).await? {
         Some(m) => m,
-        None => return Err(Error::from_string("数据不存在", StatusCode::BAD_REQUEST)),
+        None => return Err(anyhow!("数据不存在")),
     };
 
     // let result: Resp =
-    // serde_json::from_value(serde_json::json!(res)).map_err(BadRequest)?;
+    // serde_json::from_value(serde_json::json!(res))?;
     // //这种数据转换效率不知道怎么样
 
     Ok(res)
@@ -207,8 +196,7 @@ pub async fn get_post_ids_by_user_id(
     let s = SysUserPost::find()
         .filter(sys_user_post::Column::UserId.eq(user_id))
         .all(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
 
     let mut res = Vec::new();
 
@@ -228,8 +216,7 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
         .order_by(sys_post::Column::PostId, Order::Asc)
         .into_model::<Resp>()
         .all(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     Ok(s)
 }
 
@@ -240,8 +227,7 @@ where
     SysUserPost::delete_many()
         .filter(sys_user_post::Column::UserId.is_in(user_ids))
         .exec(db)
-        .await
-        .map_err(BadRequest)?;
+        .await?;
     Ok(())
 }
 
@@ -259,9 +245,6 @@ where
         };
         inser_data.push(act);
     }
-    SysUserPost::insert_many(inser_data)
-        .exec(db)
-        .await
-        .map_err(BadRequest)?;
+    SysUserPost::insert_many(inser_data).exec(db).await?;
     Ok(())
 }

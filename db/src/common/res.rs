@@ -1,4 +1,6 @@
-use poem::{IntoResponse, Response};
+use std::fmt::Debug;
+
+use poem::{http::StatusCode, IntoResponse, Response};
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize)]
 /// 查 数据返回
@@ -9,6 +11,7 @@ pub struct ListData<T> {
     pub page_num: usize,
 }
 
+/// 分页参数
 #[derive(Deserialize, Debug, Serialize, Default)]
 pub struct PageParams {
     pub page_num: Option<usize>,
@@ -16,22 +19,38 @@ pub struct PageParams {
 }
 
 /// 数据统一返回格式
-#[derive(Deserialize, Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default)]
 pub struct Res<T> {
     pub code: Option<i32>,
     pub data: Option<T>,
     pub msg: Option<String>,
 }
 
+/// 填入到extensions中的数据
+#[derive(Debug)]
+pub struct ResJsonString(pub String);
+
 #[allow(unconditional_recursion)]
-impl IntoResponse for Res<serde_json::Value> {
+impl<T> IntoResponse for Res<T>
+where
+    T: Serialize + Send + Sync + Debug + 'static,
+{
     fn into_response(self) -> Response {
         let data = Self {
             code: self.code,
             data: self.data,
             msg: self.msg,
         };
-        data.into_response()
+        let json_string = match serde_json::to_string(&data) {
+            Ok(v) => v,
+            Err(e) => {
+                return Response::from((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+            }
+        };
+        let res_json_string = ResJsonString(json_string.clone());
+        let mut response = json_string.into_response();
+        response.extensions_mut().insert(res_json_string);
+        response
     }
 }
 

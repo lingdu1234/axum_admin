@@ -1,1 +1,0 @@
-import{D as a,G as c,o as n,i as u}from"./vendor.dda3acc4.js";const m={setup(p){const e=a(),t=c(),{params:o,query:r}=e,{path:s}=o;return t.replace({path:"/"+s,query:r}),(_,d)=>(n(),u("div"))}};export{m as default};
