@@ -1,3 +1,18 @@
+/*
+SQLyog Ultimate
+MySQL - 10.6.5-MariaDB-1:10.6.5+maria~focal : Database - wk3
+*********************************************************************
+*/
+
+/*!40101 SET NAMES utf8 */;
+
+/*!40101 SET SQL_MODE=''*/;
+
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+/*Data for the table `sys_dict_data` */
+
 insert  into `sys_dict_data`(`dict_data_id`,`dict_sort`,`dict_label`,`dict_value`,`dict_type`,`css_class`,`list_class`,`is_default`,`status`,`create_by`,`update_by`,`remark`,`created_at`,`updated_at`,`deleted_at`) values 
 ('00UHHJ382TB2QOU57B29D5FVOG',1,'男','0','sys_user_sex',NULL,'default','N','1','00TV87DDOBJPU75J4TGUOC3NNG',NULL,'性别男','2022-01-29 14:51:03',NULL,NULL),
 ('00UHHJOP5RGERMMUL436N8VPMM',2,'女','1','sys_user_sex',NULL,'default','N','1','00TV87DDOBJPU75J4TGUOC3NNG',NULL,'性别女','2022-01-29 14:51:47',NULL,NULL),
@@ -30,4 +45,9 @@ insert  into `sys_dict_data`(`dict_data_id`,`dict_sort`,`dict_label`,`dict_value
 ('00UTFGGHRIEB0VV1D6IAATD0RI',3,'PUT','PUT','sys_api_method',NULL,'warning','N','1','00TV87DDOBJPU75J4TGUOC3NNG',NULL,'POST','2022-02-07 21:20:06',NULL,NULL),
 ('00UTFGP9C53I78KSF071AKN2JL',4,'DELETE','DELETE','sys_api_method',NULL,'danger','N','1','00TV87DDOBJPU75J4TGUOC3NNG',NULL,'DELETE','2022-02-07 21:20:24',NULL,NULL),
 ('00UTFH5BQHI5AACR1G76R3RPMN',6,'ALL','ALL','sys_api_method',NULL,'info','N','1','00TV87DDOBJPU75J4TGUOC3NNG',NULL,'ALL','2022-02-07 21:20:48',NULL,NULL),
-('00V6F1AMK8JJOSRLQQPCUV0MTT',0,'OTHER','0','sys_api_method',NULL,'info','N','1','00TV87DDOBJPU75J4TGUOC3NNG','00TV87DDOBJPU75J4TGUOC3NNG','其他方法','2022-02-14 20:49:51','2022-02-14 20:50:03',NULL);
+('00V6F1AMK8JJOSRLQQPCUV0MTT',0,'OTHER','0','sys_api_method',NULL,'info','N','1','00TV87DDOBJPU75J4TGUOC3NNG','00TV87DDOBJPU75J4TGUOC3NNG','其他方法','2022-02-14 20:49:51','2022-02-14 20:50:03',NULL),
+('00VLTEPRM8QUD05IGDOP2LI1US',99,'按钮','button','sys_api_method',NULL,'info','N','1','00TV87DDOBJPU75J4TGUOC3NNG',NULL,'按钮','2022-02-26 20:51:07',NULL,NULL);
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;

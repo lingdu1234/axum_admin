@@ -111,7 +111,7 @@ pub async fn add(req: ClientInfo, u_id: String, token_id: String, token_exp: i64
     let user = super::sys_user::get_by_id(db, &u_id)
         .await
         .expect("获取用户信息失败");
-    let dept = super::sys_dept::get_by_id(db, user.clone().dept_id)
+    let dept = super::sys_dept::get_by_id(db, &user.clone().dept_id)
         .await
         .expect("获取部门信息失败");
     let active_model = sys_user_online::ActiveModel {

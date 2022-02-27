@@ -72,7 +72,7 @@ pub async fn get_sort_list(
     let users = paginator.fetch_page(page_num - 1).await?;
     let mut list: Vec<UserWithDept> = Vec::new();
     for user in users {
-        let dept = super::sys_dept::get_by_id(db, user.clone().dept_id).await?;
+        let dept = super::sys_dept::get_by_id(db, &user.clone().dept_id).await?;
         list.push(UserWithDept { user, dept });
     }
     let res = ListData {
@@ -130,7 +130,7 @@ pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserRes
     s = s.filter(sys_user::Column::DeletedAt.is_null());
     //
 
-    s = s.filter(sys_user::Column::Id.eq(user_id));
+    s = s.filter(sys_user::Column::Id.eq(user_id.trim()));
 
     let result = match s.into_model::<UserResp>().one(db).await? {
         Some(m) => m,

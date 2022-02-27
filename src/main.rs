@@ -13,7 +13,7 @@ use poem_admin::{
     apps, my_env, tasks,
     utils::{self, cert::CERT_KEY},
 };
-// use tracing_log::LogTracer;
+use tracing_log::{log, LogTracer};
 use tracing_subscriber::{fmt, fmt::time::LocalTime, subscribe::CollectExt, EnvFilter};
 
 // use crate::utils::cert::CERT_KEY;
@@ -33,11 +33,19 @@ async fn main() -> Result<(), std::io::Error> {
         std::env::set_var("RUST_LOG", &CFG.log.log_level);
     }
     my_env::setup();
+    // tracing_subscriber::fmt()
+    //     .with_max_level(tracing::Level::DEBUG)
+    //     .with_test_writer()
+    //     .init();
 
     // 设置日志输出
 
-    // 日志追踪 将log转换到Tracing统一输出
+    // // 日志追踪 将log转换到Tracing统一输出
     // LogTracer::init().unwrap();
+    LogTracer::builder()
+        .with_max_level(log::LevelFilter::Debug)
+        .init()
+        .unwrap();
 
     // 系统变量设置
     let log_env = match CFG.log.log_level.as_str() {

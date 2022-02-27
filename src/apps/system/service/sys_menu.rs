@@ -110,10 +110,12 @@ pub async fn check_router_is_exist_update(db: &DatabaseConnection, req: EditReq)
     let s1 = SysMenu::find()
         .filter(sys_menu::Column::Path.eq(req.clone().path))
         .filter(sys_menu::Column::Pid.eq(req.clone().pid))
+        .filter(sys_menu::Column::MenuType.ne("F"))
         .filter(sys_menu::Column::Id.ne(req.id.clone()));
     let count1 = s1.count(db).await?;
     let s2 = SysMenu::find()
         .filter(sys_menu::Column::MenuName.eq(req.menu_name.clone()))
+        .filter(sys_menu::Column::MenuType.ne("F"))
         .filter(sys_menu::Column::Id.ne(req.id.clone()));
     let count2 = s2.count(db).await?;
     Ok(count1 > 0 || count2 > 0)
