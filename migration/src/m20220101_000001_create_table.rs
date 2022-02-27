@@ -1,8 +1,13 @@
-use std::fs::{self};
-
+use anyhow::{anyhow, Result};
 use db::system::entities::*;
 pub use sea_orm::{ConnectionTrait, DatabaseConnection, DatabaseTransaction, Schema};
 use sea_schema::migration::{
+    async_std::{
+        fs::{self, File},
+        io::{prelude::BufReadExt, BufReader},
+        path::PathBuf,
+        prelude::StreamExt,
+    },
     sea_orm::{DatabaseBackend, EntityTrait, Statement},
     sea_query::*,
     *,
@@ -71,6 +76,7 @@ async fn drop_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
     drop_one_table(manager, sys_role_api::Entity).await?;
     drop_one_table(manager, sys_role_dept::Entity).await?;
     drop_one_table(manager, sys_role::Entity).await?;
+    drop_one_table(manager, sys_user_post::Entity).await?;
     drop_one_table(manager, sys_user_role::Entity).await?;
     drop_one_table(manager, sys_user::Entity).await?;
 
@@ -87,33 +93,68 @@ async fn init_data(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
     let db = manager.get_connection();
     let builder = manager.get_database_backend();
     let dir = DATA_DIR.to_owned() + Migration.name();
-    let rd = match fs::read_dir(&dir) {
+    let mut entries = match fs::read_dir(&dir).await {
         Ok(x) => x,
         Err(_) => {
             println!("{}", "数据文件不存在，请先确认迁移文件是否存在");
             return Ok(());
         }
     };
-    for dir_entry in rd {
-        let entry = dir_entry.expect("读取文件失败");
-        // let fname = entry.file_name();
-        let ori_str = fs::read_to_string(entry.path());
-        let sql_string = match ori_str {
-            Err(_) => {
-                println!("{}", "读取文件失败");
+    while let Some(res) = entries.next().await {
+        let entry = match res {
+            Ok(v) => v,
+            Err(e) => {
+                println!("{}", e.to_string());
                 return Ok(());
             }
-            Ok(x) => match builder {
-                DatabaseBackend::Postgres => x.replace("`", ""),
-                _ => x,
-            },
         };
-
-        let stmt = Statement::from_string(builder, sql_string).to_owned();
-        db.execute(stmt).await?;
+        let path = entry.path();
+        let sql_vec = match get_insert_sql_string(path).await {
+            Ok(v) => v,
+            Err(e) => {
+                println!("{:?}", e.to_string());
+                return Ok(());
+            }
+        };
+        for sql in sql_vec {
+            let stmt = Statement::from_string(builder, sql).to_owned();
+            db.execute(stmt).await?;
+        }
     }
 
     Ok(())
+}
+
+async fn get_insert_sql_string(path: PathBuf) -> Result<Vec<String>> {
+    let mut sql: Vec<String> = Vec::new();
+    let mut sql_string = String::new();
+    let file = match File::open(path).await {
+        Ok(x) => x,
+        Err(e) => return Err(anyhow!("读取文件失败:{:?}", e.to_string())),
+    };
+    let mut buf_reader = BufReader::new(file).lines();
+    while let Some(line) = buf_reader.next().await {
+        match line {
+            Err(e) => return Err(anyhow!("读取行数据失败:{:?}", e.to_string())),
+            Ok(v) => {
+                if v.starts_with("/*!") || v.starts_with("--") {
+                    continue;
+                }
+                let vv = if v.starts_with("INSERT") || v.starts_with("insert") {
+                    v.replace("`", "")
+                } else {
+                    v
+                };
+                sql_string.push_str(&vv);
+                if vv.ends_with(";") {
+                    sql.push(sql_string.clone());
+                    sql_string.clear();
+                }
+            }
+        }
+    }
+
+    Ok(sql)
 }
 
 // 创建一张表

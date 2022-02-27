@@ -149,11 +149,11 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
 
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, id: String) -> Result<DeptResp> {
+pub async fn get_by_id(db: &DatabaseConnection, id: &str) -> Result<DeptResp> {
     let mut s = SysDept::find();
     s = s.filter(sys_dept::Column::DeletedAt.is_null());
     //
-    s = s.filter(sys_dept::Column::DeptId.eq(id));
+    s = s.filter(sys_dept::Column::DeptId.eq(id.trim()));
 
     let res = match s.into_model::<DeptResp>().one(db).await? {
         Some(m) => m,

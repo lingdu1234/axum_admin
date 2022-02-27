@@ -25,7 +25,7 @@ pub async fn init() {
     tracing::info!("cache data init");
     let d = CFG.server.cache_time * 1000;
     loop {
-        tokio::time::sleep(Duration::from_millis(30 * 1000)).await;
+        tokio::time::sleep(Duration::from_millis(d)).await;
 
         let mut res_data = RES_DATA.lock().await;
 
@@ -104,3 +104,5 @@ impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
         }
     }
 }
+
+// 感觉没有什么鸟用

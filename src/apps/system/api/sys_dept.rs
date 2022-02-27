@@ -90,7 +90,7 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<DeptResp> {
     };
     let db = DB.get_or_init(db_conn).await;
     if let Some(x) = req.dept_id {
-        let res = service::sys_dept::get_by_id(db, x).await;
+        let res = service::sys_dept::get_by_id(db, &x).await;
         match res {
             Ok(x) => Res::with_data(x),
             Err(e) => Res::with_err(&e.to_string()),
