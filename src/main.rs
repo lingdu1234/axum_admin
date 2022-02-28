@@ -13,10 +13,7 @@ use poem_admin::{
     apps, my_env, tasks,
     utils::{self, cert::CERT_KEY},
 };
-use tracing_log::{log, LogTracer};
-use tracing_subscriber::{fmt, fmt::time::LocalTime, subscribe::CollectExt, EnvFilter};
-
-// use crate::utils::cert::CERT_KEY;
+use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
 // 路由日志追踪
 // use std::sync::Arc;
@@ -33,66 +30,42 @@ async fn main() -> Result<(), std::io::Error> {
         std::env::set_var("RUST_LOG", &CFG.log.log_level);
     }
     my_env::setup();
-    // tracing_subscriber::fmt()
-    //     .with_max_level(tracing::Level::DEBUG)
-    //     .with_test_writer()
-    //     .init();
 
-    // 设置日志输出
-
-    // // 日志追踪 将log转换到Tracing统一输出
-    // LogTracer::init().unwrap();
-    LogTracer::builder()
-        .with_max_level(log::LevelFilter::Debug)
-        .init()
-        .unwrap();
+    //  设置日志追踪
+    // if &CFG.log.log_level == "TRACE" {
+    //     LogTracer::builder()
+    //         .with_max_level(log::LevelFilter::Trace)
+    //         .init()
+    //         .unwrap();
+    // }
 
     // 系统变量设置
-    let log_env = match CFG.log.log_level.as_str() {
-        "TRACE" => tracing::Level::TRACE,
-        "DEBUG" => tracing::Level::DEBUG,
-        "INFO" => tracing::Level::INFO,
-        "WARN" => tracing::Level::WARN,
-        "ERROR" => tracing::Level::ERROR,
-        _ => tracing::Level::INFO,
-    };
+    let log_env = my_env::get_log_level();
 
     //  日志设置
-    // let timer = LocalTime::new(time::format_description::well_known::Rfc3339);
-    let format = fmt::format()
-        .with_level(true) // don't include levels in formatted output
-        .with_target(true) // don't include targets
-        .with_thread_ids(true) // include the thread ID of the current thread
-        .with_thread_names(true)
-        // .with_file(true)
-        // .with_ansi(true)
-        // .with_line_number(true) // include the name of the current thread
-        .with_timer(LocalTime::rfc_3339()) // use RFC 3339 timestamps
-        .compact();
-    let file_appender = tracing_appender::rolling::hourly(&CFG.log.dir, &CFG.log.file); // 文件输出设置
-                                                                                        // 文件输出
+    let format = my_env::get_log_format();
+
+    // 文件输出
+    let file_appender = tracing_appender::rolling::hourly(&CFG.log.dir, &CFG.log.file);
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
     // 标准控制台输出
     let (std_non_blocking, _guard) = tracing_appender::non_blocking(std::io::stdout());
-    let collector = tracing_subscriber::registry()
+    let logger = Registry::default()
         .with(EnvFilter::from_default_env().add_directive(log_env.into()))
         .with(
-            fmt::Subscriber::new()
-                .event_format(format.clone())
+            fmt::Layer::default()
                 .with_writer(std_non_blocking)
+                .event_format(format.clone())
                 .pretty(),
         )
         .with(
-            fmt::Subscriber::new()
-                .event_format(format)
-                .with_writer(non_blocking), // .pretty(),
+            fmt::Layer::default()
+                .with_writer(non_blocking)
+                .event_format(format),
         );
-    tracing::collect::set_global_default(collector).expect("Unable to set a global collector");
+    tracing::subscriber::set_global_default(logger).unwrap();
 
-    // 数据库初始化
-    // database::migration::db_init().await;
-    //  casbin设置
-    // utils::get_enforcer(true).await;
     // apis全局初始化
     utils::ApiUtils::init_all_api().await;
     // 定时任务初始化
