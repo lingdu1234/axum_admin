@@ -1,16 +1,17 @@
+use anyhow::Result;
 use configs::CFG;
 use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
     system::models::sys_user::{
-        AddReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq,
-        UserInfo, UserInfomaion, UserLoginReq, UserWithDept,
+        AddReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq,
+        UpdateProfileReq, UpdatePwdReq, UserInfo, UserInfomaion, UserLoginReq, UserWithDept,
     },
     DB,
 };
 use poem::{
     handler,
-    web::{Json, Query},
+    web::{Json, Multipart, Query},
     Request,
 };
 use validator::Validate;
@@ -37,7 +38,7 @@ pub async fn get_sort_list(
     }
 }
 
-/// get_user_by_id 获取用户Id获取用户   
+/// get_user_by_id 获取用户Id获取用户
 
 #[handler]
 pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<UserInfomaion> {
@@ -45,27 +46,43 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<UserInfomaion> {
         Ok(_) => {}
         Err(e) => return Res::with_err(&e.to_string()),
     };
-    let db = DB.get_or_init(db_conn).await;
     match req.user_id {
-        Some(user_id) => match service::sys_user::get_by_id(db, &user_id).await {
+        Some(user_id) => match self::get_user_info_by_id(&user_id).await {
             Err(e) => Res::with_err(&e.to_string()),
-            Ok(user) => {
-                let post_ids = service::sys_post::get_post_ids_by_user_id(db, user.clone().id)
-                    .await
-                    .unwrap();
-                let role_ids = service::sys_user_role::get_role_ids_by_user_id(db, &user.id)
-                    .await
-                    .expect("角色id获取失败");
-                let res = UserInfomaion {
-                    user_info: user.clone(),
-                    dept_id: user.dept_id,
-                    post_ids,
-                    role_ids,
-                };
-                Res::with_data(res)
-            }
+            Ok(res) => Res::with_data(res),
         },
         None => Res::with_msg("用户id不能为空"),
+    }
+}
+
+#[handler]
+pub async fn get_profile(user: Claims) -> Res<UserInfomaion> {
+    match self::get_user_info_by_id(&user.id).await {
+        Err(e) => Res::with_err(&e.to_string()),
+        Ok(res) => Res::with_data(res),
+    }
+}
+
+pub async fn get_user_info_by_id(id: &str) -> Result<UserInfomaion> {
+    let db = DB.get_or_init(db_conn).await;
+
+    match service::sys_user::get_by_id(db, id).await {
+        Err(e) => Err(e),
+        Ok(user) => {
+            let post_ids = service::sys_post::get_post_ids_by_user_id(db, user.user.id.clone())
+                .await
+                .unwrap();
+            let role_ids = service::sys_user_role::get_role_ids_by_user_id(db, &user.user.id)
+                .await
+                .expect("角色id获取失败");
+            let res = UserInfomaion {
+                user_info: user.clone(),
+                dept_id: user.user.dept_id,
+                post_ids,
+                role_ids,
+            };
+            Ok(res)
+        }
     }
 }
 
@@ -104,6 +121,16 @@ pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
     }
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::edit(db, edit_req, user.id).await;
+    match res {
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
+    }
+}
+
+#[handler]
+pub async fn update_profile(Json(req): Json<UpdateProfileReq>) -> Res<String> {
+    let db = DB.get_or_init(db_conn).await;
+    let res = service::sys_user::update_profile(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -175,9 +202,19 @@ pub async fn get_info(user: Claims) -> Res<UserInfo> {
 
 // edit 修改
 #[handler]
-pub async fn reset_passwd(Json(req): Json<ResetPasswdReq>) -> Res<String> {
+pub async fn reset_passwd(Json(req): Json<ResetPwdReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::reset_passwd(db, req).await;
+    match res {
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
+    }
+}
+
+#[handler]
+pub async fn update_passwd(Json(req): Json<UpdatePwdReq>, user: Claims) -> Res<String> {
+    let db = DB.get_or_init(db_conn).await;
+    let res = service::sys_user::update_passwd(db, req, &user.id).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -210,6 +247,22 @@ pub async fn change_role(Json(req): Json<ChangeRoleReq>) -> Res<String> {
     let res = service::sys_user::change_role(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
+    }
+}
+
+#[handler]
+pub async fn update_avatar(multipart: Multipart, user: Claims) -> Res<String> {
+    let res = service::common::upload_file(multipart, None).await;
+    match res {
+        Ok(x) => {
+            let db = DB.get_or_init(db_conn).await;
+            let res = service::sys_user::update_avatar(db, &x, &user.id).await;
+            match res {
+                Ok(y) => Res::with_data_msg(x, &y),
+                Err(e) => Res::with_err(&e.to_string()),
+            }
+        }
         Err(e) => Res::with_err(&e.to_string()),
     }
 }

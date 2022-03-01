@@ -393,7 +393,7 @@ pub async fn set_data_scope(db: &DatabaseConnection, req: DataScopeReq) -> Resul
     return Ok(format!("用户<{}>数据更新成功", uid));
 }
 
-/// get_user_by_id 获取用户Id获取用户   
+/// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
 pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> {
     let mut s = SysRole::find();
@@ -412,7 +412,7 @@ pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> 
     Ok(res)
 }
 
-/// get_all 获取全部   
+/// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
     let s = SysRole::find()
@@ -441,7 +441,7 @@ pub async fn get_all_admin_role(
 
 pub async fn get_current_admin_role(db: &DatabaseConnection, user_id: &str) -> Result<String> {
     let user = super::sys_user::get_by_id(db, user_id).await?;
-    let res = match user.role_id {
+    let res = match user.user.role_id {
         Some(x) => x,
         None => "".to_string(),
     };

@@ -1724,6 +1724,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "multer"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f8f35e687561d5c1667590911e6698a8cb714a134a7505718a182e7bc9d3836"
+dependencies = [
+ "bytes 1.1.0",
+ "encoding_rs",
+ "futures-util",
+ "http",
+ "httparse",
+ "log",
+ "memchr",
+ "mime",
+ "spin 0.9.2",
+ "tokio",
+ "version_check",
+]
+
+[[package]]
 name = "native-tls"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2216,6 +2235,7 @@ dependencies = [
  "hyper",
  "mime",
  "mime_guess",
+ "multer",
  "parking_lot 0.12.0",
  "percent-encoding",
  "pin-project-lite",

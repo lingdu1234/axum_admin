@@ -1,5 +1,4 @@
-use chrono::NaiveDateTime;
-use sea_orm::FromQueryResult;
+use sea_orm::{entity::prelude::DateTime, FromQueryResult};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -49,5 +48,5 @@ pub struct Resp {
     pub post_sort: i32,
     pub status: String,
     pub remark: String,
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime,
 }

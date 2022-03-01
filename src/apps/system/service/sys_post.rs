@@ -165,7 +165,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
     Ok(format!("用户<{}>数据更新成功", uid))
 }
 
-/// get_user_by_id 获取用户Id获取用户   
+/// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
 pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<Resp> {
     let mut s = SysPost::find();
@@ -207,7 +207,7 @@ pub async fn get_post_ids_by_user_id(
     Ok(res)
 }
 
-/// get_all 获取全部   
+/// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
     let s = SysPost::find()
@@ -231,7 +231,7 @@ where
     Ok(())
 }
 
-pub async fn add_post_by_user_id<C>(db: &C, user_id: String, post: Vec<String>) -> Result<()>
+pub async fn add_post_by_user_id<C>(db: &C, user_id: &str, post: Vec<String>) -> Result<()>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -239,7 +239,7 @@ where
     for x in post {
         let now: NaiveDateTime = Local::now().naive_local();
         let act = sys_user_post::ActiveModel {
-            user_id: Set(user_id.clone()),
+            user_id: Set(user_id.to_string()),
             post_id: Set(x),
             created_at: Set(Some(now)),
         };
