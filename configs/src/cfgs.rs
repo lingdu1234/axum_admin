@@ -12,7 +12,7 @@ pub struct Configs {
     /// 系统配置
     pub system: System,
     /// Casbin配置
-    pub casbin: Casbin,
+    // pub casbin: Casbin,
     ///  数据库 配置
     pub database: Database,
     ///  JWT 配置
@@ -26,7 +26,7 @@ pub struct Configs {
 pub struct Server {
     /// 服务器名称
     pub name: String,
-    /// 服务器(IP地址:端口)     
+    /// 服务器(IP地址:端口)
     /// `0.0.0.0:3000`
     pub address: String,
     /// 服务器ssl
@@ -42,7 +42,7 @@ pub struct Server {
 pub struct Web {
     /// 静态网站根目录
     pub dir: String,
-    /// 静态网站index文件名    
+    /// 静态网站index文件名
     /// `index.html`
     pub index: String,
     /// 文件上传路径
@@ -66,13 +66,13 @@ pub struct System {
 }
 
 /// casbin 配置文件
-#[derive(Debug, Deserialize)]
-pub struct Casbin {
-    /// modelFile
-    pub model_file: String,
-    /// policyFile
-    pub policy_file: String,
-}
+// #[derive(Debug, Deserialize)]
+// pub struct Casbin {
+//     /// modelFile
+//     pub model_file: String,
+//     /// policyFile
+//     pub policy_file: String,
+// }
 
 /// jwt 配置文件
 #[derive(Debug, Deserialize)]

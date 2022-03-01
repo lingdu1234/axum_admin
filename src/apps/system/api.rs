@@ -120,7 +120,7 @@ fn sys_role_api() -> Route {
 fn sys_menu_api() -> Route {
     Route::new()
         .at("/list", get(sys_menu::get_sort_list)) // 获取筛选分页
-        .at("/auth_list", get(sys_menu::get_auth_list)) // 权限查询列表
+        .at("/get_auth_list", get(sys_menu::get_auth_list)) // 权限查询列表
         .at("/get_by_id", get(sys_menu::get_by_id)) // 按id获取
         .at("/add", post(sys_menu::add)) // 添加
         .at("/edit", put(sys_menu::edit)) // 更新
