@@ -30,6 +30,7 @@ pub async fn get_sort_list(
     page_params: PageParams,
     req: SearchReq,
 ) -> Result<ListData<UserWithDept>> {
+    let txn = db.begin().await?;
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     let mut s = SysUser::find();
@@ -62,25 +63,27 @@ pub async fn get_sort_list(
         s = s.filter(sys_user::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
-    let total = s.clone().count(db).await?;
+    let total = s.clone().count(&txn).await?;
     // 获取全部数据条数
     let paginator = s
         .order_by_asc(sys_user::Column::Id)
         .into_model::<UserResp>()
-        .paginate(db, page_per_size);
+        .paginate(&txn, page_per_size);
     let total_pages = paginator.num_pages().await?;
     let users = paginator.fetch_page(page_num - 1).await?;
     let mut list: Vec<UserWithDept> = Vec::new();
     for user in users {
-        let dept = super::sys_dept::get_by_id(db, &user.clone().dept_id).await?;
+        let dept = super::sys_dept::get_by_id(&txn, &user.dept_id).await?;
         list.push(UserWithDept { user, dept });
     }
+    txn.commit().await?;
     let res = ListData {
         total,
         list,
         total_pages,
         page_num,
     };
+
     Ok(res)
 }
 
@@ -127,10 +130,9 @@ pub async fn get_un_auth_user(
 pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserWithDept> {
     let mut s = SysUser::find();
     // 不查找删除数据
-    s = s.filter(sys_user::Column::DeletedAt.is_null());
-    //
-
-    s = s.filter(sys_user::Column::Id.eq(user_id.trim()));
+    s = s
+        .filter(sys_user::Column::DeletedAt.is_null())
+        .filter(sys_user::Column::Id.eq(user_id.trim()));
 
     let user = match s.into_model::<UserResp>().one(db).await? {
         Some(m) => m,
@@ -393,7 +395,25 @@ pub async fn login(
         .one(db)
         .await?
     {
-        Some(user) => user,
+        Some(user) => {
+            if &user.user_status == "0" {
+                msg = "用户已被禁用".to_string();
+                status = "0".to_string();
+                set_login_info(
+                    req,
+                    "".to_string(),
+                    login_req.user_name.clone(),
+                    msg.clone(),
+                    status.clone(),
+                    None,
+                    None,
+                )
+                .await;
+                return Err(anyhow!("用户已被禁用"));
+            } else {
+                user
+            }
+        }
         None => {
             msg = "用户不存在".to_string();
             status = "0".to_string();

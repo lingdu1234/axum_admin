@@ -28,21 +28,44 @@ fn get_file_type(content_type: &str) -> String {
 }
 
 /// 上传相关
-pub async fn upload_file(mut multipart: Multipart, old_path: Option<&str>) -> Result<String> {
+pub async fn upload_file(mut multipart: Multipart) -> Result<String> {
     if let Some(field) = multipart.next_field().await? {
-        let content_type = field.content_type().unwrap_or("");
-        let file_type = get_file_type(content_type);
+        let content_type = field
+            .content_type()
+            .map(ToString::to_string)
+            .unwrap_or("".to_string());
+        let old_url = field
+            .file_name()
+            .map(ToString::to_string)
+            .unwrap_or("".to_string());
+        let file_type = get_file_type(&content_type);
         let bytes = field.bytes().await?;
         let now = chrono::Local::now();
-        let file_dir = CFG.web.upload_dir.clone() + "/" + &now.format("%Y-%m").to_string();
-        fs::create_dir_all(file_dir.clone()).await?;
+        let file_path_t = CFG.web.upload_dir.clone() + "/" + &now.format("%Y-%m").to_string();
+        let url_path_t = CFG.web.upload_url.clone() + "/" + &now.format("%Y-%m").to_string();
+        fs::create_dir_all(&file_path_t).await?;
         let file_name =
             now.format("%d").to_string() + "-" + &scru128::scru128_string() + &file_type;
-        let path = CFG.web.dir.clone() + "/" + &file_dir + "/" + &file_name;
-        let mut file = fs::File::create(&path).await?;
+        let file_path = file_path_t + "/" + &file_name;
+        let url_path = url_path_t + "/" + &file_name;
+        let mut file = fs::File::create(&file_path).await?;
         file.write_all(&bytes).await?;
-        Ok(file_dir + "/" + &file_name)
+        if !old_url.is_empty() {
+            self::delete_file(&old_url).await;
+        }
+        Ok(url_path)
     } else {
         Err(anyhow::anyhow!("上传文件失败"))
+    }
+}
+
+/// 删除文件
+pub async fn delete_file(file_path: &str) {
+    let path = file_path.replace(&CFG.web.upload_url, &CFG.web.upload_dir);
+    match fs::remove_file(&path).await {
+        Ok(_) => {}
+        Err(_) => {
+            tracing::error!("删除文件失败:{}", path);
+        }
     }
 }

@@ -83,6 +83,10 @@ async fn main() -> Result<(), std::io::Error> {
                 .show_files_listing()
                 .index_file(&CFG.web.index),
         )
+        .nest(
+            &CFG.web.upload_url,
+            StaticFilesEndpoint::new(&CFG.web.upload_dir).show_files_listing(),
+        )
         // .with(Tracing)
         .with_if(CFG.server.content_gzip, Compression::new())
         .with(cors);

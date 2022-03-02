@@ -253,7 +253,7 @@ pub async fn change_role(Json(req): Json<ChangeRoleReq>) -> Res<String> {
 
 #[handler]
 pub async fn update_avatar(multipart: Multipart, user: Claims) -> Res<String> {
-    let res = service::common::upload_file(multipart, None).await;
+    let res = service::common::upload_file(multipart).await;
     match res {
         Ok(x) => {
             let db = DB.get_or_init(db_conn).await;
