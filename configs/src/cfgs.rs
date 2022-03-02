@@ -47,6 +47,8 @@ pub struct Web {
     pub index: String,
     /// 文件上传路径
     pub upload_dir: String,
+    /// 文件上传路径
+    pub upload_url: String,
 }
 #[derive(Debug, Deserialize)]
 pub struct Cert {

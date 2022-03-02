@@ -1,6 +1,6 @@
 use once_cell::sync::Lazy;
 use regex::Regex;
-use sea_orm::FromQueryResult;
+use sea_orm::{entity::prelude::DateTime, FromQueryResult};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -55,6 +55,15 @@ pub struct EditReq {
     pub role_id: Option<String>,
 }
 
+#[derive(Deserialize, Debug)]
+pub struct UpdateProfileReq {
+    pub id: String,
+    pub user_nickname: String,
+    pub phone_num: String,
+    pub user_email: String,
+    pub sex: String,
+}
+
 #[derive(Debug, Clone, Default, Serialize, FromQueryResult)]
 pub struct UserResp {
     pub id: String,
@@ -69,6 +78,7 @@ pub struct UserResp {
     pub is_admin: String,
     pub phone_num: String,
     pub role_id: Option<String>,
+    pub created_at: Option<DateTime>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -78,9 +88,9 @@ pub struct UserWithDept {
     pub dept: DeptResp,
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize)]
 pub struct UserInfomaion {
-    pub user_info: UserResp,
+    pub user_info: UserWithDept,
     pub post_ids: Vec<String>,
     pub role_ids: Vec<String>,
     pub dept_id: String,
@@ -125,13 +135,19 @@ pub struct UserLoginReq {
 
 #[derive(Serialize, Debug)]
 pub struct UserInfo {
-    pub user: UserResp,
+    pub user: UserWithDept,
     pub roles: Vec<String>,
     pub permissions: Vec<String>,
 }
 #[derive(Deserialize)]
-pub struct ResetPasswdReq {
+pub struct ResetPwdReq {
     pub user_id: String,
+    pub new_passwd: String,
+}
+
+#[derive(Deserialize)]
+pub struct UpdatePwdReq {
+    pub old_passwd: String,
     pub new_passwd: String,
 }
 

@@ -12,7 +12,7 @@
 预览地址： 
   [poem-vue-admin.vercel.app](https://poem-vue-admin.vercel.app/)
   [预览地址](https://poem.iu314.top/)
-  [可能速度快递](https://yun.iu1314.top:40152/)
+  [可能速度快点](https://yun.iu1314.top:40152/)
 
 ## 完成的功能
 

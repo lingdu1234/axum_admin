@@ -38,14 +38,18 @@ fn sys_user_api() -> Route {
     Route::new()
         .at("/list", get(sys_user::get_sort_list)) // 获取全部用户
         .at("/get_by_id", get(sys_user::get_by_id)) // 按id获取用户
+        .at("/get_profile", get(sys_user::get_profile)) // 按当前获取用户信息
+        .at("/update_profile", put(sys_user::update_profile)) // 更新用户信息
         .at("/add", post(sys_user::add)) // 添加用户
         .at("/edit", put(sys_user::edit)) // 更新用户
         .at("/delete", delete(sys_user::delete)) // 硬删除用户
         .at("/get_info", get(sys_user::get_info)) // 获取用户信息
         .at("/reset_passwd", put(sys_user::reset_passwd)) // 重置密码
+        .at("/update_passwd", put(sys_user::update_passwd)) // 重置密码
         .at("/change_status", put(sys_user::change_status)) // 修改状态
         .at("/change_role", put(sys_user::change_role)) // 切换角色
         .at("/fresh_token", put(sys_user::fresh_token)) // 修改状态
+        .at("/update_avatar", post(sys_user::update_avatar)) // 修改头像
 }
 
 fn sys_dict_type_api() -> Route {

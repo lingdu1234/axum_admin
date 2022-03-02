@@ -77,10 +77,10 @@ impl<T: Serialize> Res<T> {
         }
     }
     #[allow(dead_code)]
-    pub fn with_data_msg(data: Option<T>, msg: &str) -> Self {
+    pub fn with_data_msg(data: T, msg: &str) -> Self {
         Self {
             code: Some(200),
-            data,
+            data: Some(data),
             msg: Some(msg.to_string()),
         }
     }

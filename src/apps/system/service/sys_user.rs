@@ -5,8 +5,8 @@ use db::{
     system::{
         entities::{prelude::SysUser, sys_user},
         models::sys_user::{
-            AddReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPasswdReq, SearchReq,
-            UserLoginReq, UserResp, UserWithDept,
+            AddReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq,
+            UpdateProfileReq, UpdatePwdReq, UserLoginReq, UserResp, UserWithDept,
         },
     },
 };
@@ -30,6 +30,7 @@ pub async fn get_sort_list(
     page_params: PageParams,
     req: SearchReq,
 ) -> Result<ListData<UserWithDept>> {
+    let txn = db.begin().await?;
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     let mut s = SysUser::find();
@@ -62,25 +63,27 @@ pub async fn get_sort_list(
         s = s.filter(sys_user::Column::CreatedAt.lte(x));
     }
     // 获取全部数据条数
-    let total = s.clone().count(db).await?;
+    let total = s.clone().count(&txn).await?;
     // 获取全部数据条数
     let paginator = s
         .order_by_asc(sys_user::Column::Id)
         .into_model::<UserResp>()
-        .paginate(db, page_per_size);
+        .paginate(&txn, page_per_size);
     let total_pages = paginator.num_pages().await?;
     let users = paginator.fetch_page(page_num - 1).await?;
     let mut list: Vec<UserWithDept> = Vec::new();
     for user in users {
-        let dept = super::sys_dept::get_by_id(db, &user.clone().dept_id).await?;
+        let dept = super::sys_dept::get_by_id(&txn, &user.dept_id).await?;
         list.push(UserWithDept { user, dept });
     }
+    txn.commit().await?;
     let res = ListData {
         total,
         list,
         total_pages,
         page_num,
     };
+
     Ok(res)
 }
 
@@ -122,21 +125,21 @@ pub async fn get_un_auth_user(
     Ok(res)
 }
 
-/// get_user_by_id 获取用户Id获取用户   
+/// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserResp> {
+pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserWithDept> {
     let mut s = SysUser::find();
     // 不查找删除数据
-    s = s.filter(sys_user::Column::DeletedAt.is_null());
-    //
+    s = s
+        .filter(sys_user::Column::DeletedAt.is_null())
+        .filter(sys_user::Column::Id.eq(user_id.trim()));
 
-    s = s.filter(sys_user::Column::Id.eq(user_id.trim()));
-
-    let result = match s.into_model::<UserResp>().one(db).await? {
+    let user = match s.into_model::<UserResp>().one(db).await? {
         Some(m) => m,
         None => return Err(anyhow!("用户不存在")),
     };
-    Ok(result)
+    let dept = super::sys_dept::get_by_id(db, &user.dept_id).await?;
+    Ok(UserWithDept { user, dept })
 }
 
 /// add 添加
@@ -167,7 +170,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, c_user_id: String) -> Res
     SysUser::insert(user).exec(&txn).await?;
     // 添加职位信息
     if let Some(x) = req.post_ids {
-        super::sys_post::add_post_by_user_id(&txn, uid.clone(), x).await?;
+        super::sys_post::add_post_by_user_id(&txn, &uid, x).await?;
     }
     // 添加角色信息
     // 先删除原有的角色信息，再添加新的角色信息
@@ -181,7 +184,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, c_user_id: String) -> Res
     Ok("用户添加成功".to_string())
 }
 
-pub async fn reset_passwd(db: &DatabaseConnection, req: ResetPasswdReq) -> Result<String> {
+pub async fn reset_passwd(db: &DatabaseConnection, req: ResetPwdReq) -> Result<String> {
     let salt = utils::rand_s(10);
     let passwd = utils::encrypt_password(&req.new_passwd, &salt);
     let now: NaiveDateTime = Local::now().naive_local();
@@ -201,30 +204,67 @@ pub async fn reset_passwd(db: &DatabaseConnection, req: ResetPasswdReq) -> Resul
     Ok(res)
 }
 
+pub async fn update_passwd(
+    db: &DatabaseConnection,
+    req: UpdatePwdReq,
+    user_id: &str,
+) -> Result<String> {
+    match SysUser::find()
+        .filter(sys_user::Column::Id.eq(user_id))
+        .one(db)
+        .await?
+    {
+        None => return Err(anyhow!("用户不存在")),
+        Some(x) => {
+            let pwd = utils::encrypt_password(&req.old_passwd, &x.user_salt);
+            match pwd == x.user_password {
+                false => return Err(anyhow!("旧密码错误,请检查重新输入")),
+                true => {}
+            }
+        }
+    };
+    self::reset_passwd(
+        db,
+        ResetPwdReq {
+            user_id: user_id.to_string(),
+            new_passwd: req.new_passwd,
+        },
+    )
+    .await
+}
+
 pub async fn change_status(db: &DatabaseConnection, req: ChangeStatusReq) -> Result<String> {
     let now: NaiveDateTime = Local::now().naive_local();
-    // let uid = req.user_id;
-    // let s_u = SysUser::find_by_id(uid.clone())
-    //     .one(db)
-    //     .await
-    //     ?;
-    // let s_user: sys_user::ActiveModel = s_u.unwrap().into();
-    // let now: NaiveDateTime = Local::now().naive_local();
-    // let user = sys_user::ActiveModel {
-    //     user_status: Set(req.status),
-    //     updated_at: Set(Some(now)),
-    //     ..s_user
-    // };
     // 更新
     let txn = db.begin().await?;
     // 更新用户信息
     SysUser::update_many()
-        .col_expr(
-            sys_user::Column::UserStatus,
-            Expr::value(req.clone().status),
-        )
+        .col_expr(sys_user::Column::UserStatus, Expr::value(req.status))
         .col_expr(sys_user::Column::UpdatedAt, Expr::value(now))
         .filter(sys_user::Column::Id.eq(req.user_id))
+        .exec(&txn)
+        .await?;
+    // user.update(&txn).await?;
+    txn.commit().await?;
+    let res = "用户状态更新成功".to_string();
+
+    Ok(res)
+}
+
+pub async fn update_profile(db: &DatabaseConnection, req: UpdateProfileReq) -> Result<String> {
+    let now: NaiveDateTime = Local::now().naive_local();
+    let txn = db.begin().await?;
+    // 更新用户信息
+    SysUser::update_many()
+        .col_expr(
+            sys_user::Column::UserNickname,
+            Expr::value(req.user_nickname),
+        )
+        .col_expr(sys_user::Column::PhoneNum, Expr::value(req.phone_num))
+        .col_expr(sys_user::Column::UserEmail, Expr::value(req.user_email))
+        .col_expr(sys_user::Column::Sex, Expr::value(req.sex))
+        .col_expr(sys_user::Column::UpdatedAt, Expr::value(now))
+        .filter(sys_user::Column::Id.eq(req.id))
         .exec(&txn)
         .await?;
     // user.update(&txn).await?;
@@ -245,6 +285,20 @@ pub async fn change_role(db: &DatabaseConnection, req: ChangeRoleReq) -> Result<
     // user.update(&txn).await?;
     txn.commit().await?;
     let res = "用户角色切换成功".to_string();
+
+    Ok(res)
+}
+pub async fn update_avatar(db: &DatabaseConnection, img: &str, user_id: &str) -> Result<String> {
+    let txn = db.begin().await?;
+    // 更新用户信息
+    SysUser::update_many()
+        .col_expr(sys_user::Column::Avatar, Expr::value(img))
+        .filter(sys_user::Column::Id.eq(user_id))
+        .exec(&txn)
+        .await?;
+    // user.update(&txn).await?;
+    txn.commit().await?;
+    let res = "用户头像更新成功".to_string();
 
     Ok(res)
 }
@@ -299,7 +353,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, c_user_id: String) -> R
     // 1.先删除用户岗位关系
     super::sys_post::delete_post_by_user_id(&txn, vec![uid.clone()]).await?;
     // 2.插入用户岗位关系
-    super::sys_post::add_post_by_user_id(&txn, uid.clone(), req.post_ids).await?;
+    super::sys_post::add_post_by_user_id(&txn, &uid, req.post_ids).await?;
     // 更新用户角色信息
     // 先删除原有的角色信息，再添加新的角色信息
     super::sys_user_role::delete_user_role(&txn, &uid).await?;
@@ -341,7 +395,25 @@ pub async fn login(
         .one(db)
         .await?
     {
-        Some(user) => user,
+        Some(user) => {
+            if &user.user_status == "0" {
+                msg = "用户已被禁用".to_string();
+                status = "0".to_string();
+                set_login_info(
+                    req,
+                    "".to_string(),
+                    login_req.user_name.clone(),
+                    msg.clone(),
+                    status.clone(),
+                    None,
+                    None,
+                )
+                .await;
+                return Err(anyhow!("用户已被禁用"));
+            } else {
+                user
+            }
+        }
         None => {
             msg = "用户不存在".to_string();
             status = "0".to_string();

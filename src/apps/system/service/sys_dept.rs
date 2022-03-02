@@ -11,8 +11,8 @@ use db::{
     },
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait,
-    QueryFilter, QueryOrder, Set, TransactionTrait,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
+    PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
 /// get_list 获取列表
@@ -147,13 +147,15 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
     Ok(format!("用户<{}>数据更新成功", uid))
 }
 
-/// get_user_by_id 获取用户Id获取用户   
+/// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, id: &str) -> Result<DeptResp> {
-    let mut s = SysDept::find();
-    s = s.filter(sys_dept::Column::DeletedAt.is_null());
-    //
-    s = s.filter(sys_dept::Column::DeptId.eq(id.trim()));
+pub async fn get_by_id<C>(db: &C, id: &str) -> Result<DeptResp>
+where
+    C: ConnectionTrait + TransactionTrait,
+{
+    let s = SysDept::find()
+        .filter(sys_dept::Column::DeletedAt.is_null())
+        .filter(sys_dept::Column::DeptId.eq(id));
 
     let res = match s.into_model::<DeptResp>().one(db).await? {
         Some(m) => m,
@@ -163,7 +165,7 @@ pub async fn get_by_id(db: &DatabaseConnection, id: &str) -> Result<DeptResp> {
     Ok(res)
 }
 
-/// get_all 获取全部   
+/// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<DeptResp>> {
     let s = SysDept::find()

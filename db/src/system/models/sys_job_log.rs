@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use sea_orm::entity::prelude::DateTime;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
@@ -23,7 +23,7 @@ pub struct AddReq {
     pub job_message: Option<String>,
     pub exception_info: Option<String>,
     pub status: String,
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime,
     pub elapsed_time: i64,
     pub lot_id: i64,
     pub lot_order: i64,

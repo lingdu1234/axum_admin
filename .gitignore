@@ -1,6 +1,7 @@
 /target
 /data/log
 /data/_web
+/data/_upload
 .idea
 *.http
 .git

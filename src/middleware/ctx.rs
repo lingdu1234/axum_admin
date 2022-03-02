@@ -68,12 +68,11 @@ async fn get_body_data(body: Body) -> Result<(Bytes, String)> {
         Ok(v) => v,
         Err(e) => return Err(Error::from_string(e.to_string(), StatusCode::BAD_REQUEST)),
     };
-
     match std::str::from_utf8(&bytes) {
         Ok(x) => {
             let res_data = x.to_string();
             Ok((bytes, res_data))
         }
-        Err(e) => Err(Error::from_string(e.to_string(), StatusCode::BAD_REQUEST)),
+        Err(_) => Ok((bytes, "该数据无法转输出，可能为blob，binary".to_string())),
     }
 }
