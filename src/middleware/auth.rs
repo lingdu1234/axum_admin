@@ -38,7 +38,7 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
                 return self.ep.call(req).await;
             } else {
                 return Err(Error::from_string(
-                    "你没有权限访问该页面",
+                    "你没有权限访问该页面/API",
                     StatusCode::FORBIDDEN,
                 ));
             }

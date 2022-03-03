@@ -76,7 +76,7 @@ async fn main() -> Result<(), std::io::Error> {
     // 顺序不对可能会导致数据丢失，无法在某些位置获取数据
 
     let app = Route::new()
-        .nest("/api", apps::api())
+        .nest(&CFG.server.api_prefix, apps::api())
         .nest(
             "/",
             StaticFilesEndpoint::new(&CFG.web.dir)

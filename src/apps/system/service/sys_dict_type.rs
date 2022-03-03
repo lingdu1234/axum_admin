@@ -3,13 +3,13 @@ use chrono::{Local, NaiveDateTime};
 use db::{
     common::res::{ListData, PageParams},
     system::{
-        entities::{prelude::SysDictType, sys_dict_type},
+        entities::{prelude::SysDictType, sys_dict_data, sys_dict_type},
         models::sys_dict_type::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
     },
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, JoinType,
+    Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait,
 };
 
 /// get_list 获取列表
@@ -96,12 +96,31 @@ where
 
 /// delete 完全删除
 pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
+    let count = SysDictType::find()
+        .select_only()
+        .column(sys_dict_type::Column::DictTypeId)
+        .column(sys_dict_data::Column::DictType)
+        .join_rev(
+            JoinType::InnerJoin,
+            sys_dict_data::Entity::belongs_to(sys_dict_type::Entity)
+                .from(sys_dict_data::Column::DictType)
+                .to(sys_dict_type::Column::DictType)
+                .into(),
+        )
+        .filter(sys_dict_type::Column::DictTypeId.is_in(delete_req.dict_type_ids.clone()))
+        .count(db)
+        .await?;
+    if count > 0 {
+        return Err(anyhow!("存在关联数据，不能删除,请先删除关联字典数据"));
+    }
+    let txn = db.begin().await?;
     let mut s = SysDictType::delete_many();
 
     s = s.filter(sys_dict_type::Column::DictTypeId.is_in(delete_req.dict_type_ids));
 
     // 开始删除
     let d = s.exec(db).await?;
+    txn.commit().await?;
 
     match d.rows_affected {
         // 0 => return Err("你要删除的字典类型不存在".into()),
@@ -132,7 +151,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
     Ok(format!("用户<{}>数据更新成功", uid))
 }
 
-/// get_user_by_id 获取用户Id获取用户   
+/// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
 pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> {
     let mut s = SysDictType::find();
@@ -154,7 +173,7 @@ pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> 
     Ok(res)
 }
 
-/// get_all 获取全部   
+/// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
     let s = SysDictType::find()

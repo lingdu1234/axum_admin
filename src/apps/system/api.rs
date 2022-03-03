@@ -158,7 +158,7 @@ fn sys_job_api() -> Route {
 fn sys_job_log_api() -> Route {
     Route::new()
         .at("/list", get(sys_job_log::get_sort_list)) // 获取筛选分页
-        .at("/get_by_id", get(sys_job_log::get_by_id)) // 按id获取
+        // .at("/get_by_id", get(sys_job_log::get_by_id)) // 按id获取
         .at("/clean", delete(sys_job_log::clean)) // 清空
         .at("/delete", delete(sys_job_log::delete)) // 硬删除
 }

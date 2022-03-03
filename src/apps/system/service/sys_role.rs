@@ -269,59 +269,6 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, created_by: &str) -> Re
     Ok("角色数据更新成功".to_string())
 }
 
-// edit 修改
-// pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
-//     //  检查字典类型是否存在
-//     if eidt_check_data_is_exist(
-//         db,
-//         req.clone().role_id,
-//         req.clone().role_name,
-//         req.clone().role_key,
-//     )
-//     .await?
-//     {
-//         return Err(anyhow!("数据已存在",
-// StatusCode::BAD_REQUEST));     }
-//     // 开启事务
-//     let txn = db.begin().await?;
-//     // 修改数据
-//     let uid = req.role_id;
-//     let s_s = SysRole::find_by_id(uid.clone())
-//         .one(&txn)
-//         .await
-//         ?;
-//     let s_r: sys_role::ActiveModel = s_s.unwrap().into();
-//     let now: NaiveDateTime = Local::now().naive_local();
-//     let act = sys_role::ActiveModel {
-//         role_name: Set(req.role_name),
-//         role_key: Set(req.role_key),
-//         data_scope: Set(req.data_scope),
-//         list_order: Set(req.list_order),
-//         status: Set(req.status),
-//         remark: Set(req.remark),
-//         updated_at: Set(Some(now)),
-//         ..s_r
-//     };
-//     // 更新 //这个两种方式一样 都要多查询一次
-//     act.update(&txn).await?;
-
-//     // 获取组合角色权限数据
-//     let permissions = self::get_permissions_data(&txn, uid.clone(),
-// req.menu_ids.clone()).await?;     let mut e = get_enforcer(false).await;
-
-//     // 删除全部权限 按角色id删除
-//     e.remove_filtered_policy(0, vec![uid.clone()])
-//         .await
-//         ?;
-//     // 添加角色权限数据
-//     e.add_policies(permissions).await?;
-
-//     // 提交事务
-//     txn.commit().await?;
-
-//     Ok(format!("用户<{}>数据更新成功", uid))
-// }
-
 // set_status 状态修改
 pub async fn set_status(db: &DatabaseConnection, status_req: StatusReq) -> Result<String> {
     // 开启事务
