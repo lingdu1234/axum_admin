@@ -12,6 +12,7 @@ use sea_orm::{
     Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
+use super::super::service;
 use crate::utils;
 
 /// get_list 获取列表
@@ -28,14 +29,25 @@ pub async fn get_sort_list(
     let mut s = SysMenu::find();
 
     if let Some(x) = search_req.menu_name {
-        s = s.filter(sys_menu::Column::MenuName.contains(&x));
+        if !x.is_empty() {
+            s = s.filter(sys_menu::Column::MenuName.contains(&x));
+        }
+    }
+    if let Some(x) = search_req.method {
+        if !x.is_empty() {
+            s = s.filter(sys_menu::Column::Method.eq(x));
+        }
     }
 
     if let Some(x) = search_req.status {
-        s = s.filter(sys_menu::Column::Status.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_menu::Column::Status.eq(x));
+        }
     }
     if let Some(x) = search_req.menu_type {
-        s = s.filter(sys_menu::Column::MenuType.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_menu::Column::MenuType.eq(x));
+        }
     }
     if let Some(x) = search_req.begin_time {
         s = s.filter(sys_menu::Column::CreatedAt.gte(x));
@@ -72,14 +84,20 @@ pub async fn get_auth_list(
     let mut s = SysMenu::find().filter(sys_menu::Column::MenuType.eq("F"));
 
     if let Some(x) = search_req.menu_name {
-        s = s.filter(sys_menu::Column::MenuName.contains(&x));
+        if !x.is_empty() {
+            s = s.filter(sys_menu::Column::MenuName.contains(&x));
+        }
+    }
+    if let Some(x) = search_req.method {
+        if !x.is_empty() {
+            s = s.filter(sys_menu::Column::Method.eq(x));
+        }
     }
 
     if let Some(x) = search_req.status {
-        s = s.filter(sys_menu::Column::Status.eq(x));
-    }
-    if let Some(x) = search_req.menu_type {
-        s = s.filter(sys_menu::Column::MenuType.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_menu::Column::Status.eq(x));
+        }
     }
     if let Some(x) = search_req.begin_time {
         s = s.filter(sys_menu::Column::CreatedAt.gte(x));
@@ -200,10 +218,13 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
     if check_router_is_exist_update(db, req.clone()).await? {
         return Err(anyhow!("路径或者名称重复"));
     }
-    let reqq = req.clone();
     let uid = req.id;
-    let s_s = SysMenu::find_by_id(uid.clone()).one(db).await?;
-    let s_r: sys_menu::ActiveModel = s_s.clone().unwrap().into();
+    let s_s = match SysMenu::find_by_id(uid.clone()).one(db).await? {
+        Some(s) => s,
+        None => return Err(anyhow!("菜单不存在")),
+    };
+    let s_y = s_s.clone();
+    let s_r: sys_menu::ActiveModel = s_s.into();
     let now: NaiveDateTime = Local::now().naive_local();
     let act = sys_menu::ActiveModel {
         id: Set(uid.clone()),
@@ -227,14 +248,20 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
         ..s_r
     };
     // 更新
-    let _aa = act.update(db).await?; // 这个两种方式一样 都要多查询一次
-    match reqq.clone().api == s_s.clone().unwrap().api {
+    let up_model = act.update(db).await?; // 这个两种方式一样 都要多查询一次
+    match &up_model.api == &s_y.api {
         true => {
             // 不更新api
         }
         false => {
-            utils::ApiUtils::remove_api(s_s.unwrap().api.as_str()).await;
-            utils::ApiUtils::add_api(reqq.api.as_str(), reqq.menu_name.as_str()).await;
+            utils::ApiUtils::remove_api(&s_y.api).await;
+            utils::ApiUtils::add_api(&up_model.api, &up_model.menu_name).await;
+            service::sys_role_api::update_api(
+                db,
+                (&s_y.api, &s_y.method),
+                (&up_model.api, &up_model.method),
+            )
+            .await?;
         }
     }
 
@@ -242,7 +269,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
     Ok(res)
 }
 
-/// get_user_by_id 获取用户Id获取用户   
+/// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
 pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<MenuResp> {
     let mut s = SysMenu::find();
@@ -262,7 +289,7 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
     Ok(res)
 }
 
-/// get_all 获取全部   
+/// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all<C>(db: &C) -> Result<Vec<MenuResp>>
 where
@@ -293,7 +320,7 @@ where
 //         ?;
 //     Ok(s)
 // }
-/// get_all 获取全部   
+/// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all_router(db: &DatabaseConnection) -> Result<Vec<MenuResp>> {
     let s = SysMenu::find()
@@ -306,7 +333,7 @@ pub async fn get_all_router(db: &DatabaseConnection) -> Result<Vec<MenuResp>> {
         .await?;
     Ok(s)
 }
-/// get_all 获取全部   
+/// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all_router_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTree>> {
     let menus = get_all_router(db).await?;
@@ -316,7 +343,7 @@ pub async fn get_all_router_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuT
     Ok(menu_tree)
 }
 
-/// get_all 获取全部   
+/// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all_menu_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTree>> {
     let menus = get_all(db).await?;
@@ -348,7 +375,7 @@ pub async fn get_permissions(
 //     menu_apis
 // }
 
-/// get_all 获取全部   
+/// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_admin_menu_by_role_ids(
     db: &DatabaseConnection,

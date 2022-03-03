@@ -8,25 +8,29 @@ pub struct Entity;
 
 impl EntityName for Entity {
     fn table_name(&self) -> &str {
-        "seaql_migrations"
+        "test_data_scope"
     }
 }
 
 #[derive(Clone, Debug, PartialEq, DeriveModel, DeriveActiveModel, Serialize, Deserialize)]
 pub struct Model {
-    pub version: String,
-    pub applied_at: i64,
+    pub id: String,
+    pub data_a: Option<String>,
+    pub data_b: Option<String>,
+    pub created_by: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveColumn)]
 pub enum Column {
-    Version,
-    AppliedAt,
+    Id,
+    DataA,
+    DataB,
+    CreatedBy,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DerivePrimaryKey)]
 pub enum PrimaryKey {
-    Version,
+    Id,
 }
 
 impl PrimaryKeyTrait for PrimaryKey {
@@ -43,8 +47,10 @@ impl ColumnTrait for Column {
     type EntityName = Entity;
     fn def(&self) -> ColumnDef {
         match self {
-            Self::Version => ColumnType::String(Some(255u32)).def(),
-            Self::AppliedAt => ColumnType::BigInteger.def(),
+            Self::Id => ColumnType::String(Some(32u32)).def(),
+            Self::DataA => ColumnType::String(Some(10u32)).def().null(),
+            Self::DataB => ColumnType::String(Some(10u32)).def().null(),
+            Self::CreatedBy => ColumnType::String(Some(32u32)).def().null(),
         }
     }
 }

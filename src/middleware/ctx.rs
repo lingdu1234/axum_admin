@@ -1,4 +1,5 @@
 use bytes::Bytes;
+use configs::CFG;
 use db::common::ctx::{ReqCtx, UserInfo};
 use poem::{http::StatusCode, Body, Endpoint, Error, FromRequest, Middleware, Request, Result};
 
@@ -38,7 +39,10 @@ impl<E: Endpoint> Endpoint for ContextEndpoint<E> {
 
         let ori_uri = req.original_uri().to_string();
         let method = req.method().to_string();
-        let path = req.uri().path().replacen("/", "", 1);
+        let path =
+            req.original_uri()
+                .path()
+                .replacen(&(CFG.server.api_prefix.clone() + "/"), "", 1);
         let path_params = req.uri().query().unwrap_or("").to_string();
         let (req_parts, req_body) = req.into_parts();
         let (bytes, body_data) = match get_body_data(req_body).await {

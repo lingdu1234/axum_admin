@@ -9,6 +9,7 @@ pub struct SearchReq {
     #[validate(length(min = 1))]
     pub menu_name: Option<String>,
     pub menu_type: Option<String>,
+    pub method: Option<String>,
     pub status: Option<String>,
     pub begin_time: Option<String>,
     pub end_time: Option<String>,

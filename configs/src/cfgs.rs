@@ -35,6 +35,8 @@ pub struct Server {
     pub content_gzip: bool,
     /// 缓存时间
     pub cache_time: u64,
+    /// api 前缀
+    pub api_prefix: String,
 }
 
 /// server 配置文件

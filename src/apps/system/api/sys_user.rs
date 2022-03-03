@@ -177,11 +177,16 @@ pub async fn get_info(user: Claims) -> Res<UserInfo> {
         role_ids.push(role.role_id);
     }
 
+    let role_id = match user_info.user.role_id.clone() {
+        Some(x) => x,
+        None => "".to_string(),
+    };
+
     // 检查是否超管用户
     let permissions = if CFG.system.super_user.contains(&user.id) {
         vec!["*:*:*".to_string()]
     } else {
-        match service::sys_menu::get_permissions(db, role_ids.clone()).await {
+        match service::sys_menu::get_permissions(db, vec![role_id]).await {
             Ok(x) => x,
             Err(e) => return Res::with_err(&e.to_string()),
         }

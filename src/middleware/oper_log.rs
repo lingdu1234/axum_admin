@@ -129,9 +129,9 @@ pub async fn oper_log_add(
         _ => "0",        // 其他
     };
     let all_apis = ALL_APIS.lock().await;
-    let req_path = req.path.as_str().replacen('/', "", 1);
+
     let api_name = all_apis
-        .get(&req_path)
+        .get(&req.path)
         .unwrap_or(&("".to_string()))
         .to_string();
 
