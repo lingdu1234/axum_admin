@@ -15,7 +15,7 @@ pub static ALL_APIS: Lazy<Arc<Mutex<HashMap<String, String>>>> = Lazy::new(|| {
 
 pub async fn init_all_api() {
     let db = DB.get_or_init(db_conn).await;
-    let res = system::get_all_sys_menu(db).await;
+    let res = system::get_all_sys_menu(db, false).await;
     let mut apis = ALL_APIS.lock().await;
     match res {
         Ok(menus) => {
@@ -59,14 +59,3 @@ pub async fn check_api_permission(api: &str, method: &str) -> bool {
         }
     }
 }
-
-// pub async fn check_api_permission(api: &str, method: &str) -> bool {
-//     let e = super::get_enforcer(false).await;
-//     match e.enforce((api, method)) {
-//         Ok(_) => true,
-//         Err(err) => {
-//             info!("检查权限失败:{:#?}", err);
-//             false
-//         }
-//     }
-// }

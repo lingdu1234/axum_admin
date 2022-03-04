@@ -40,20 +40,6 @@ where
     Ok(())
 }
 
-pub async fn get_api_by_role_ids<C>(
-    db: &C,
-    role_ids: Vec<String>,
-) -> Result<Vec<sys_role_api::Model>>
-where
-    C: TransactionTrait + ConnectionTrait,
-{
-    let res = sys_role_api::Entity::find()
-        .filter(sys_role_api::Column::RoleId.is_in(role_ids))
-        .all(db)
-        .await?;
-    Ok(res)
-}
-
 // api 格式 （api，method）
 pub async fn update_api<C>(
     db: &C,

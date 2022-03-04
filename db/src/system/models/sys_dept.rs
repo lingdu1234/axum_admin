@@ -40,7 +40,7 @@ pub struct EditReq {
     pub status: String,
 }
 
-#[derive(Debug, Clone, Serialize, FromQueryResult, Default)]
+#[derive(Debug, Clone, Serialize, FromQueryResult, Default, Deserialize)]
 pub struct DeptResp {
     pub dept_id: String,
     pub parent_id: String,

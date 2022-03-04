@@ -114,7 +114,7 @@ pub async fn set_data_scope(Json(req): Json<DataScopeReq>) -> Res<String> {
     }
 }
 
-/// get_user_by_id 获取用户Id获取用户   
+/// get_user_by_id 获取用户Id获取用户
 #[handler]
 pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<Resp> {
     match req.validate() {
@@ -129,7 +129,7 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<Resp> {
     }
 }
 
-/// get_all 获取全部   
+/// get_all 获取全部
 #[handler]
 pub async fn get_all() -> Res<Vec<Resp>> {
     let db = DB.get_or_init(db_conn).await;
@@ -140,7 +140,7 @@ pub async fn get_all() -> Res<Vec<Resp>> {
     }
 }
 
-/// get_role_menu 获取角色授权菜单id数组   
+/// get_role_menu 获取角色授权菜单id数组
 #[handler]
 pub async fn get_role_menu(Query(req): Query<SearchReq>) -> Res<Vec<String>> {
     match req.validate() {
@@ -151,29 +151,16 @@ pub async fn get_role_menu(Query(req): Query<SearchReq>) -> Res<Vec<String>> {
     match req.role_id {
         None => Res::with_msg("role_id不能为空"),
         Some(id) => {
-            let mut menu_ids: Vec<String> = Vec::new();
-            let res = match service::sys_menu::get_permissions(db, vec![id]).await {
-                Ok(x) => x,
+            let api_ids = match service::sys_menu::get_role_permissions(db, vec![id]).await {
+                Ok((_, x)) => x,
                 Err(e) => return Res::with_err(&e.to_string()),
             };
-            let menus = service::sys_menu::get_all(db).await;
-            match menus {
-                Ok(x) => {
-                    for menu in x {
-                        if res.contains(&menu.api) {
-                            menu_ids.push(menu.id.to_string());
-                        }
-                    }
-                }
-                Err(e) => return Res::with_err(&e.to_string()),
-            };
-
-            Res::with_data(menu_ids)
+            Res::with_data(api_ids)
         }
     }
 }
 
-/// get_role_dept 获取角色授权部门id数组   
+/// get_role_dept 获取角色授权部门id数组
 #[handler]
 pub async fn get_role_dept(Query(req): Query<SearchReq>) -> Res<Vec<String>> {
     match req.validate() {

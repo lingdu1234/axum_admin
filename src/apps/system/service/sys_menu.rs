@@ -3,13 +3,16 @@ use chrono::{Local, NaiveDateTime};
 use db::{
     common::res::{ListData, PageParams},
     system::{
-        entities::{prelude::*, sys_menu},
+        entities::{
+            prelude::{SysMenu, SysRoleApi},
+            sys_menu, sys_role_api,
+        },
         models::sys_menu::{AddReq, EditReq, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu},
     },
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, ModelTrait,
-    Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, JoinType,
+    ModelTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait,
 };
 
 use super::super::service;
@@ -289,54 +292,30 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
     Ok(res)
 }
 
-/// get_all 获取全部
-/// db 数据库连接 使用db.0
-pub async fn get_all<C>(db: &C) -> Result<Vec<MenuResp>>
+// 获取全部菜单 或者 除开按键api级别的外的路由
+pub async fn get_menus<C>(db: &C, is_router: bool) -> Result<Vec<MenuResp>>
 where
     C: TransactionTrait + ConnectionTrait,
 {
-    let s = SysMenu::find()
+    let mut s = SysMenu::find()
         .filter(sys_menu::Column::DeletedAt.is_null())
-        .filter(sys_menu::Column::Status.eq("1"))
+        .filter(sys_menu::Column::Status.eq("1"));
+    if is_router {
+        s = s.filter(sys_menu::Column::MenuType.ne("F"));
+    };
+
+    let res = s
         .order_by(sys_menu::Column::OrderSort, Order::Asc)
         .into_model::<MenuResp>()
         .all(db)
         .await?;
-    Ok(s)
+    Ok(res)
 }
-// pub async fn get_all_api<C>(db: &C) -> Result<Vec<MenuResp>>
-// where
-//     C: TransactionTrait + ConnectionTrait,
-// {
-//     let menu_type = vec!["C", "F"];
-//     let s = SysMenu::find()
-//         .filter(sys_menu::Column::DeletedAt.is_null())
-//         .filter(sys_menu::Column::Status.eq(1))
-//         .filter(sys_menu::Column::MenuType.is_in(menu_type))
-//         .order_by(sys_menu::Column::OrderSort, Order::Asc)
-//         .into_model::<MenuResp>()
-//         .all(db)
-//         .await
-//         ?;
-//     Ok(s)
-// }
-/// get_all 获取全部
-/// db 数据库连接 使用db.0
-pub async fn get_all_router(db: &DatabaseConnection) -> Result<Vec<MenuResp>> {
-    let s = SysMenu::find()
-        .filter(sys_menu::Column::DeletedAt.is_null())
-        .filter(sys_menu::Column::Status.eq("1"))
-        .filter(sys_menu::Column::MenuType.ne("F"))
-        .order_by(sys_menu::Column::OrderSort, Order::Asc)
-        .into_model::<MenuResp>()
-        .all(db)
-        .await?;
-    Ok(s)
-}
+
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all_router_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTree>> {
-    let menus = get_all_router(db).await?;
+    let menus = get_menus(db, true).await?;
     let menu_data = self::get_menu_data(menus);
     let menu_tree = self::get_menu_tree(menu_data, "0".to_string());
 
@@ -346,34 +325,39 @@ pub async fn get_all_router_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuT
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all_menu_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTree>> {
-    let menus = get_all(db).await?;
+    let menus = get_menus(db, false).await?;
     let menu_data = self::get_menu_data(menus);
     let menu_tree = self::get_menu_tree(menu_data, "0".to_string());
 
     Ok(menu_tree)
 }
 
-/// 获取授权菜单信息
-pub async fn get_permissions(
+//  获取角色对应的api 和 api id
+// 返回结果(Vec<String>, Vec<String>) 为（apis,api_ids）
+pub async fn get_role_permissions(
     db: &DatabaseConnection,
     role_ids: Vec<String>,
-) -> Result<Vec<String>> {
-    let menus = super::sys_role_api::get_api_by_role_ids(db, role_ids).await?;
-    let res = menus.iter().map(|x| x.api.clone()).collect::<Vec<String>>();
-    Ok(res)
-}
+) -> Result<(Vec<String>, Vec<String>)> {
+    let s = SysMenu::find()
+        .join_rev(
+            JoinType::InnerJoin,
+            SysRoleApi::belongs_to(SysMenu)
+                .from(sys_role_api::Column::Api)
+                .to(sys_menu::Column::Api)
+                .into(),
+        )
+        .filter(sys_role_api::Column::RoleId.is_in(role_ids))
+        .all(db)
+        .await?;
 
-// pub async fn get_permissions(role_ids: Vec<String>) -> Vec<String> {
-//     let mut menu_apis: Vec<String> = Vec::new();
-//     let e = utils::get_enforcer(false).await;
-//     for role_id in role_ids {
-//         let policies = e.get_filtered_policy(0, vec![role_id]);
-//         for policy in policies {
-//             menu_apis.push(policy[1].clone());
-//         }
-//     }
-//     menu_apis
-// }
+    let mut apis: Vec<String> = Vec::new();
+    let mut api_ids: Vec<String> = Vec::new();
+    for x in s {
+        apis.push(x.api.clone());
+        api_ids.push(x.id.clone());
+    }
+    Ok((apis, api_ids))
+}
 
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
@@ -381,12 +365,12 @@ pub async fn get_admin_menu_by_role_ids(
     db: &DatabaseConnection,
     role_ids: Vec<String>,
 ) -> Result<Vec<SysMenuTree>> {
-    let menu_apis = self::get_permissions(db, role_ids).await?;
+    let (menu_apis, _) = self::get_role_permissions(db, role_ids).await?;
     //  todo 可能以后加条件判断
-    let menu_all = get_all_router(db).await?;
+    let router_all = get_menus(db, true).await?;
     //  生成menus
     let mut menus: Vec<MenuResp> = Vec::new();
-    for ele in menu_all {
+    for ele in router_all {
         if menu_apis.contains(&ele.api) {
             menus.push(ele);
         }

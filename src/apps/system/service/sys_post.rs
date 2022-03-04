@@ -191,7 +191,7 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
 
 pub async fn get_post_ids_by_user_id(
     db: &DatabaseConnection,
-    user_id: String,
+    user_id: &str,
 ) -> Result<Vec<String>> {
     let s = SysUserPost::find()
         .filter(sys_user_post::Column::UserId.eq(user_id))

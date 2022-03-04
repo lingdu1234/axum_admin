@@ -3,18 +3,21 @@ use chrono::{Local, NaiveDateTime};
 use db::{
     common::res::{ListData, PageParams},
     system::{
-        entities::{prelude::SysUser, sys_user},
-        models::sys_user::{
-            AddReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq,
-            UpdateProfileReq, UpdatePwdReq, UserLoginReq, UserResp, UserWithDept,
+        entities::{prelude::SysUser, sys_dept, sys_user},
+        models::{
+            sys_dept::DeptResp,
+            sys_user::{
+                AddReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq,
+                UpdateProfileReq, UpdatePwdReq, UserLoginReq, UserResp, UserWithDept,
+            },
         },
     },
 };
 use poem::Request;
 use scru128::scru128_string;
 use sea_orm::{
-    sea_query::Expr, ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait,
-    PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
+    sea_query::Expr, ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, JoinType,
+    PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait,
 };
 
 use crate::utils::{
@@ -24,7 +27,7 @@ use crate::utils::{
 
 /// get_user_list 获取用户列表
 /// page_params 分页参数
-/// db 数据库连接 使用db.0
+/// db 数据库连接
 pub async fn get_sort_list(
     db: &DatabaseConnection,
     page_params: PageParams,
@@ -33,7 +36,15 @@ pub async fn get_sort_list(
     let txn = db.begin().await?;
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
-    let mut s = SysUser::find();
+    let mut s = SysUser::find()
+        .join_rev(
+            JoinType::LeftJoin,
+            sys_dept::Entity::belongs_to(sys_user::Entity)
+                .from(sys_dept::Column::DeptId)
+                .to(sys_user::Column::DeptId)
+                .into(),
+        )
+        .select_also(sys_dept::Entity);
     // 不查找删除数据
     s = s.filter(sys_user::Column::DeletedAt.is_null());
     // 查询条件
@@ -67,14 +78,44 @@ pub async fn get_sort_list(
     // 获取全部数据条数
     let paginator = s
         .order_by_asc(sys_user::Column::Id)
-        .into_model::<UserResp>()
+        // .into_model::<UserResp>()
         .paginate(&txn, page_per_size);
     let total_pages = paginator.num_pages().await?;
     let users = paginator.fetch_page(page_num - 1).await?;
     let mut list: Vec<UserWithDept> = Vec::new();
-    for user in users {
-        let dept = super::sys_dept::get_by_id(&txn, &user.dept_id).await?;
-        list.push(UserWithDept { user, dept });
+    for m in users {
+        let user_dept = match m.1 {
+            Some(v) => UserWithDept {
+                user: UserResp {
+                    id: m.0.id.clone(),
+                    user_name: m.0.user_name.clone(),
+                    user_nickname: m.0.user_nickname.clone(),
+                    user_status: m.0.user_status.clone(),
+                    user_email: m.0.user_email.clone(),
+                    sex: m.0.sex.clone(),
+                    avatar: m.0.avatar.clone(),
+                    dept_id: m.0.dept_id.clone(),
+                    remark: m.0.remark.clone(),
+                    is_admin: m.0.is_admin.clone(),
+                    phone_num: m.0.phone_num.clone(),
+                    role_id: m.0.role_id.clone(),
+                    created_at: m.0.created_at.clone(),
+                },
+                dept: DeptResp {
+                    dept_id: v.dept_id.clone(),
+                    parent_id: v.parent_id.clone(),
+                    dept_name: v.dept_name.clone(),
+                    order_num: v.order_num.clone(),
+                    leader: v.leader.clone(),
+                    phone: v.phone.clone(),
+                    email: v.email.clone(),
+                    status: v.status.clone(),
+                },
+            },
+            None => return Err(anyhow!("{}无部门信息", m.0.user_name.clone())),
+        };
+
+        list.push(user_dept);
     }
     txn.commit().await?;
     let res = ListData {
@@ -126,20 +167,57 @@ pub async fn get_un_auth_user(
 }
 
 /// get_user_by_id 获取用户Id获取用户
-/// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserWithDept> {
-    let mut s = SysUser::find();
-    // 不查找删除数据
-    s = s
-        .filter(sys_user::Column::DeletedAt.is_null())
-        .filter(sys_user::Column::Id.eq(user_id.trim()));
+/// db 数据库连接
 
-    let user = match s.into_model::<UserResp>().one(db).await? {
-        Some(m) => m,
+pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserWithDept> {
+    let s = SysUser::find()
+        .join_rev(
+            JoinType::LeftJoin,
+            sys_dept::Entity::belongs_to(sys_user::Entity)
+                .from(sys_dept::Column::DeptId)
+                .to(sys_user::Column::DeptId)
+                .into(),
+        )
+        .select_also(sys_dept::Entity)
+        .filter(sys_user::Column::DeletedAt.is_null())
+        .filter(sys_user::Column::Id.eq(user_id))
+        .one(db)
+        .await?;
+    let user = match s {
+        Some(m) => match m.1 {
+            Some(v) => UserWithDept {
+                user: UserResp {
+                    id: m.0.id.clone(),
+                    user_name: m.0.user_name.clone(),
+                    user_nickname: m.0.user_nickname.clone(),
+                    user_status: m.0.user_status.clone(),
+                    user_email: m.0.user_email.clone(),
+                    sex: m.0.sex.clone(),
+                    avatar: m.0.avatar.clone(),
+                    dept_id: m.0.dept_id.clone(),
+                    remark: m.0.remark.clone(),
+                    is_admin: m.0.is_admin.clone(),
+                    phone_num: m.0.phone_num.clone(),
+                    role_id: m.0.role_id.clone(),
+                    created_at: m.0.created_at.clone(),
+                },
+                dept: DeptResp {
+                    dept_id: v.dept_id.clone(),
+                    parent_id: v.parent_id.clone(),
+                    dept_name: v.dept_name.clone(),
+                    order_num: v.order_num.clone(),
+                    leader: v.leader.clone(),
+                    phone: v.phone.clone(),
+                    email: v.email.clone(),
+                    status: v.status.clone(),
+                },
+            },
+            None => return Err(anyhow!("{}无部门信息", user_id)),
+        },
         None => return Err(anyhow!("用户不存在")),
     };
-    let dept = super::sys_dept::get_by_id(db, &user.dept_id).await?;
-    Ok(UserWithDept { user, dept })
+
+    Ok(user)
 }
 
 /// add 添加

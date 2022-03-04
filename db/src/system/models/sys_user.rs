@@ -64,7 +64,7 @@ pub struct UpdateProfileReq {
     pub sex: String,
 }
 
-#[derive(Debug, Clone, Default, Serialize, FromQueryResult)]
+#[derive(Debug, Clone, Default, Serialize, FromQueryResult, Deserialize)]
 pub struct UserResp {
     pub id: String,
     pub user_name: String,

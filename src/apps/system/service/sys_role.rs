@@ -6,8 +6,8 @@ use db::{
     common::res::{ListData, PageParams},
     system::{
         entities::{
-            prelude::{SysRole, SysRoleDept},
-            sys_role, sys_role_dept, sys_user,
+            prelude::{SysRole, SysRoleDept, SysUserRole},
+            sys_role, sys_role_dept, sys_user, sys_user_role,
         },
         models::{
             sys_menu::MenuResp,
@@ -21,8 +21,8 @@ use db::{
 };
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection,
-    DatabaseTransaction, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
-    TransactionTrait, Value,
+    DatabaseTransaction, EntityTrait, JoinType, PaginatorTrait, QueryFilter, QueryOrder,
+    QuerySelect, Set, TransactionTrait, Value,
 };
 // use sea_orm_casbin_adapter::casbin::MgmtApi;
 
@@ -109,7 +109,7 @@ where
     C: TransactionTrait + ConnectionTrait,
 {
     // 获取全部菜单
-    let menus = super::sys_menu::get_all(db).await?;
+    let menus = super::sys_menu::get_menus(db, false).await?;
     let menu_map = menus
         .iter()
         .map(|x| (x.id.clone(), x.clone()))
@@ -276,18 +276,6 @@ pub async fn set_status(db: &DatabaseConnection, status_req: StatusReq) -> Resul
     // 修改数据
     let uid = status_req.role_id;
     let now: NaiveDateTime = Local::now().naive_local();
-    // let s_s = SysRole::find_by_id(uid.clone())
-    //     .one(&txn)
-    //     .await
-    //     ?;
-    // let s_r: sys_role::ActiveModel = s_s.unwrap().into();
-
-    // let act = sys_role::ActiveModel {
-    //     status: Set(status_req.status),
-    //     updated_at: Set(Some(now)),
-    //     ..s_r
-    // };
-    // act.update(&txn).await?;
     SysRole::update_many()
         .col_expr(sys_role::Column::Status, Expr::value(status_req.status))
         .col_expr(sys_role::Column::UpdatedAt, Expr::value(now))
@@ -372,18 +360,21 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
 }
 
 //  获取用户角色
-pub async fn get_all_admin_role(
-    db: &DatabaseConnection,
-    user_id: &str,
-    all_roles: Vec<Resp>,
-) -> Result<Vec<Resp>> {
-    let user_id = user_id.trim();
-    let role_ids = super::sys_user_role::get_role_ids_by_user_id(db, user_id).await?;
-    let roles = all_roles
-        .into_iter()
-        .filter(|x| role_ids.contains(&x.role_id))
-        .collect::<Vec<Resp>>();
-    Ok(roles)
+pub async fn get_all_admin_role(db: &DatabaseConnection, user_id: &str) -> Result<Vec<String>> {
+    let s = SysUserRole::find()
+        .join_rev(
+            JoinType::LeftJoin,
+            sys_user::Entity::belongs_to(sys_user_role::Entity)
+                .from(sys_user::Column::Id)
+                .to(sys_user_role::Column::UserId)
+                .into(),
+        )
+        // .select_with(sys_user_role::Entity)
+        .filter(sys_user::Column::Id.eq(user_id))
+        .all(db)
+        .await?;
+    let res = s.iter().map(|x| x.role_id.clone()).collect::<Vec<String>>();
+    Ok(res)
 }
 
 pub async fn get_current_admin_role(db: &DatabaseConnection, user_id: &str) -> Result<String> {
@@ -394,49 +385,6 @@ pub async fn get_current_admin_role(db: &DatabaseConnection, user_id: &str) -> R
     };
     Ok(res)
 }
-
-//  获取用户角色ids
-// pub async fn get_role_ids_by_user_id(user_id: &str) -> Vec<String> {
-//     let user_id = user_id.trim();
-//     // 查询角色关联规则
-
-//     let e = get_enforcer(false).await;
-//     let group_policy = e.get_filtered_grouping_policy(0,
-// vec![user_id.to_string()]);     let mut role_ids = vec![];
-//     if !group_policy.is_empty() {
-//         for p in group_policy {
-//             role_ids.push(p[1].clone());
-//         }
-//     }
-//     role_ids
-// }
-
-//  获取角色的所有用户
-// pub async fn get_auth_users_by_role_id(role_id: &str) -> Vec<String> {
-//     let role_id = role_id.trim();
-//     // 查询角色关联规则
-//     let e = get_enforcer(false).await;
-//     let group_policy = e.get_filtered_grouping_policy(1,
-// vec![role_id.to_string()]);     let mut user_ids = vec![];
-//     if !group_policy.is_empty() {
-//         for p in group_policy {
-//             user_ids.push(p[0].clone());
-//         }
-//     }
-//     user_ids
-// }
-
-// pub async fn delete_role_by_user_id(user_id: &str) -> Result<()> {
-//     let user_id = user_id.trim();
-//     let mut e = get_enforcer(false).await;
-//     // 1. 先删除用户角色关联
-//     e.remove_filtered_named_policy("g", 0, vec![user_id.to_string()])
-//         .await
-//         ?;
-//     Ok(())
-// }
-
-// ---------------------
 
 pub async fn get_auth_users_by_role_id(
     db: &DatabaseConnection,
@@ -488,48 +436,3 @@ pub async fn cancel_auth_user(db: &DatabaseConnection, req: AddOrCancelAuthRoleR
     txn.commit().await?;
     Ok(())
 }
-
-//  添加多个用户到一个角色
-// pub async fn add_role_with_user_ids(user_ids: Vec<String>, role_id: String)
-// -> Result<()> {     let mut e = get_enforcer(false).await;
-//     //  添加用户角色关联
-//     let mut policies: Vec<Vec<String>> = Vec::new();
-//     for user_id in user_ids {
-//         policies.push(vec![user_id.to_string(), role_id.clone()]);
-//     }
-//     e.add_grouping_policies(policies)
-//         .await
-//         ?;
-//     Ok(())
-// }
-
-// pub async fn cancel_auth_user(req: AddOrCancelAuthRoleReq) -> Result<()> {
-//     let mut e = get_enforcer(false).await;
-//     // 1. 先删除用户角色关联
-//     for user_id in req.clone().user_ids {
-//         e.remove_filtered_named_policy("g", 0, vec![user_id,
-// req.clone().role_id])             .await
-//             ?;
-//     }
-
-//     Ok(())
-// }
-
-//  为用户授权角色 先删除 再添加
-// pub async fn add_role_by_user_id(user_id: &str, role_ids: Vec<String>) ->
-// Result<()> {     let user_id = user_id.trim();
-//     let mut e = get_enforcer(false).await;
-//     // 1. 先删除用户角色关联
-//     e.remove_filtered_named_policy("g", 0, vec![user_id.to_string()])
-//         .await
-//         ?;
-//     // 2. 添加用户角色关联
-//     let mut policies: Vec<Vec<String>> = Vec::new();
-//     for p in role_ids {
-//         policies.push(vec![user_id.to_string(), p.clone()]);
-//     }
-//     e.add_grouping_policies(policies)
-//         .await
-//         ?;
-//     Ok(())
-// }

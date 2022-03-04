@@ -69,7 +69,7 @@ pub async fn get_user_info_by_id(id: &str) -> Result<UserInfomaion> {
     match service::sys_user::get_by_id(db, id).await {
         Err(e) => Err(e),
         Ok(user) => {
-            let post_ids = service::sys_post::get_post_ids_by_user_id(db, user.user.id.clone())
+            let post_ids = service::sys_post::get_post_ids_by_user_id(db, &user.user.id)
                 .await
                 .unwrap();
             let role_ids = service::sys_user_role::get_role_ids_by_user_id(db, &user.user.id)
@@ -159,46 +159,30 @@ pub async fn get_info(user: Claims) -> Res<UserInfo> {
         Ok(x) => x,
         Err(e) => return Res::with_err(&e.to_string()),
     };
-    //    获取角色列表
-    let all_roles = match service::sys_role::get_all(db).await {
-        Ok(x) => x,
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
-    //  获取 用户角色
-    let roles = match service::sys_role::get_all_admin_role(db, &user.id, all_roles).await {
-        Ok(x) => x,
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
-    // let mut role_names: Vec<String> = Vec::new();
-    let mut role_ids: Vec<String> = Vec::new();
-
-    for role in roles {
-        // role_names.push(role.name);
-        role_ids.push(role.role_id);
-    }
 
     let role_id = match user_info.user.role_id.clone() {
         Some(x) => x,
         None => "".to_string(),
     };
 
+    let role_ids = match service::sys_role::get_all_admin_role(db, &user.id).await {
+        Ok(x) => x,
+        Err(e) => return Res::with_err(&e.to_string()),
+    };
+
     // 检查是否超管用户
     let permissions = if CFG.system.super_user.contains(&user.id) {
         vec!["*:*:*".to_string()]
     } else {
-        match service::sys_menu::get_permissions(db, vec![role_id]).await {
-            Ok(x) => x,
+        match service::sys_menu::get_role_permissions(db, vec![role_id]).await {
+            Ok((x, _)) => x,
             Err(e) => return Res::with_err(&e.to_string()),
         }
     };
     // 获取用户菜单信息
     let res = UserInfo {
         user: user_info,
-        roles: if role_ids.is_empty() {
-            vec!["".to_string()]
-        } else {
-            role_ids
-        },
+        roles: role_ids,
         permissions,
     };
 
