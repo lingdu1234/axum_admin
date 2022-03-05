@@ -39,7 +39,7 @@ async fn init_loop() {
     let mut res_bmap = RES_BMAP.lock().await;
     for (k, v) in res_bmap.clone().iter() {
         if Instant::now().duration_since(*v).as_millis() as u64 > d {
-            let key = k.split("★").collect::<Vec<&str>>();
+            let key = k.split('★').collect::<Vec<&str>>();
             remove_cache_data(key[0], Some(key[1])).await;
             res_bmap.remove(k);
         } else {
@@ -53,7 +53,7 @@ pub async fn add_cache_data(token_id: &str, api: &str, data: String) {
     let mut res_bmap = RES_BMAP.lock().await;
     let key = format!("{}★{}", token_id, api);
 
-    res_bmap.insert(key.clone(), Instant::now());
+    res_bmap.insert(key, Instant::now());
     let hmap: HashMap<String, String> = HashMap::new();
     let v = res_data.entry(token_id.to_string()).or_insert(hmap);
     v.insert(api.to_string(), data);
@@ -69,10 +69,7 @@ pub async fn get_cache_data(token_id: &str, api: &str) -> Option<String> {
             return None;
         }
     };
-    match h.get(api) {
-        Some(v) => Some(v.to_string()),
-        None => None,
-    }
+    h.get(api).map(|v| v.to_string())
 }
 
 pub async fn remove_cache_data(token_id: &str, api: Option<&str>) {

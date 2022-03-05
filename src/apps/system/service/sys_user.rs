@@ -99,20 +99,20 @@ pub async fn get_sort_list(
                     is_admin: m.0.is_admin.clone(),
                     phone_num: m.0.phone_num.clone(),
                     role_id: m.0.role_id.clone(),
-                    created_at: m.0.created_at.clone(),
+                    created_at: m.0.created_at,
                 },
                 dept: DeptResp {
                     dept_id: v.dept_id.clone(),
                     parent_id: v.parent_id.clone(),
                     dept_name: v.dept_name.clone(),
-                    order_num: v.order_num.clone(),
+                    order_num: v.order_num,
                     leader: v.leader.clone(),
                     phone: v.phone.clone(),
                     email: v.email.clone(),
                     status: v.status.clone(),
                 },
             },
-            None => return Err(anyhow!("{}无部门信息", m.0.user_name.clone())),
+            None => return Err(anyhow!("{}无部门信息", m.0.user_name)),
         };
 
         list.push(user_dept);
@@ -199,17 +199,17 @@ pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserWit
                     is_admin: m.0.is_admin.clone(),
                     phone_num: m.0.phone_num.clone(),
                     role_id: m.0.role_id.clone(),
-                    created_at: m.0.created_at.clone(),
+                    created_at: m.0.created_at,
                 },
                 dept: DeptResp {
                     dept_id: v.dept_id.clone(),
                     parent_id: v.parent_id.clone(),
                     dept_name: v.dept_name.clone(),
-                    order_num: v.order_num.clone(),
+                    order_num: v.order_num,
                     leader: v.leader.clone(),
                     phone: v.phone.clone(),
                     email: v.email.clone(),
-                    status: v.status.clone(),
+                    status: v.status,
                 },
             },
             None => return Err(anyhow!("{}无部门信息", user_id)),
@@ -240,6 +240,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, c_user_id: String) -> Res
         remark: Set(req.remark.unwrap_or_else(|| "".to_string())),
         is_admin: Set(req.is_admin.unwrap_or_else(|| "1".to_string())),
         phone_num: Set(req.phone_num.unwrap_or_else(|| "".to_string())),
+        avatar: Set(req.avatar.unwrap_or_else(|| "".to_string())),
         created_at: Set(Some(now)),
         ..Default::default()
     };

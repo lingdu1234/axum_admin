@@ -252,7 +252,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
     };
     // 更新
     let up_model = act.update(db).await?; // 这个两种方式一样 都要多查询一次
-    match &up_model.api == &s_y.api {
+    match up_model.api == s_y.api {
         true => {
             // 不更新api
         }

@@ -33,11 +33,11 @@ pub async fn upload_file(mut multipart: Multipart) -> Result<String> {
         let content_type = field
             .content_type()
             .map(ToString::to_string)
-            .unwrap_or("".to_string());
+            .unwrap_or_else(|| "".to_string());
         let old_url = field
             .file_name()
             .map(ToString::to_string)
-            .unwrap_or("".to_string());
+            .unwrap_or_else(|| "".to_string());
         let file_type = get_file_type(&content_type);
         let bytes = field.bytes().await?;
         let now = chrono::Local::now();

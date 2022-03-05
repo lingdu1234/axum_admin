@@ -1,5 +1,6 @@
 pub mod api_utils;
 pub mod cert;
+pub mod data_scope;
 pub mod jwt;
 pub mod rand_utils;
 pub mod web_utils;

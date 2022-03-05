@@ -6,3 +6,5 @@ pub mod client;
 pub mod ctx;
 /// 统一数据返回
 pub mod res;
+
+pub mod data_scope;

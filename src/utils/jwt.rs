@@ -90,7 +90,7 @@ impl<'a> FromRequest<'a> for Claims {
     }
 }
 
-pub async fn get_bear_token<'a>(req: &'a Request) -> Result<(String, String)> {
+pub async fn get_bear_token(req: &Request) -> Result<(String, String)> {
     let TypedHeader(Authorization(bearer)) =
         TypedHeader::<Authorization<Bearer>>::from_request_without_body(req)
             .await

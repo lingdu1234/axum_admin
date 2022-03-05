@@ -29,7 +29,7 @@ pub fn test_b(params: Option<String>) -> Result<String> {
         }
     };
     println!("-----------test_b-----------参数为: {}", param);
-    let b_string: String = param.into();
+    let b_string: String = param;
     println!("简单参数函数测试，参数为：{}", b_string);
     println!("{}", b_string);
     Ok("test_b函数运行成功".to_string())
