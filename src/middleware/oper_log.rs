@@ -101,6 +101,15 @@ pub async fn oper_log_add(req: ReqCtx, res: String, status: String, err_msg: Str
     if req.path.clone().contains("oper_log") && req.method.clone() == "GET" {
         return Ok(());
     }
+    let apis = ALL_APIS.lock().await;
+    let (api_name, is_log) = match apis.get(&req.path) {
+        Some(x) => (x.name.clone(), x.is_log),
+        None => ("".to_string(), true),
+    };
+    if !is_log {
+        return Ok(());
+    }
+
     let d = duration.as_micros() as i64;
 
     let db = DB.get_or_init(db_conn).await;
@@ -119,9 +128,6 @@ pub async fn oper_log_add(req: ReqCtx, res: String, status: String, err_msg: Str
         "DELETE" => "4", // 删除
         _ => "0",        // 其他
     };
-    let all_apis = ALL_APIS.lock().await;
-
-    let api_name = all_apis.get(&req.path).unwrap_or(&("".to_string())).to_string();
 
     let add_data = sys_oper_log::ActiveModel {
         oper_id: Set(scru128::scru128_string()),

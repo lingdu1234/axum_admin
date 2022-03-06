@@ -22,3 +22,11 @@ pub struct ResInfo {
     pub data: String,
     pub err_msg: String,
 }
+
+#[derive(Clone, Debug)]
+pub struct ApiInfo {
+    pub name: String,
+    pub is_db_cache: bool,
+    pub is_log: bool,
+    pub related_api: Option<Vec<String>>,
+}

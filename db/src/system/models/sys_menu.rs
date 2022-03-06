@@ -33,6 +33,8 @@ pub struct MenuResp {
     pub is_frame: String,
     pub is_cache: String,
     pub is_data_scope: String,
+    pub is_log: String,
+    pub is_db_cache: String,
     pub remark: String,
 }
 
@@ -84,6 +86,8 @@ pub struct AddReq {
     pub is_frame: String,
     pub is_cache: String,
     pub is_data_scope: String,
+    pub is_log: String,
+    pub is_db_cache: String,
     pub remark: String,
 }
 
@@ -110,5 +114,7 @@ pub struct EditReq {
     pub is_frame: String,
     pub is_cache: String,
     pub is_data_scope: String,
+    pub is_log: String,
+    pub is_db_cache: String,
     pub remark: String,
 }
