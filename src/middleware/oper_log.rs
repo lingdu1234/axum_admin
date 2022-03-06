@@ -101,6 +101,12 @@ pub async fn oper_log_add(req: ReqCtx, res: String, status: String, err_msg: Str
     if req.path.clone().contains("oper_log") && req.method.clone() == "GET" {
         return Ok(());
     }
+    let apis = ALL_APIS.lock().await;
+    if let Some(api_info) = apis.get(&req.path) {
+        if !api_info.is_log {
+            return Ok(());
+        }
+    };
     let d = duration.as_micros() as i64;
 
     let db = DB.get_or_init(db_conn).await;
@@ -121,7 +127,10 @@ pub async fn oper_log_add(req: ReqCtx, res: String, status: String, err_msg: Str
     };
     let all_apis = ALL_APIS.lock().await;
 
-    let api_name = all_apis.get(&req.path).unwrap_or(&("".to_string())).to_string();
+    let api_name = match all_apis.get(&req.path) {
+        Some(x) => x.name.clone(),
+        None => "".to_string(),
+    };
 
     let add_data = sys_oper_log::ActiveModel {
         oper_id: Set(scru128::scru128_string()),

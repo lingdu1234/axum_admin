@@ -16,7 +16,8 @@ pub fn api() -> Route {
             system::system_api()
                 .with(middleware::ApiAuth)
                 .with_if(CFG.log.enable_oper_log, middleware::OperLog)
-                .with(middleware::Ctx), // .with_if(CFG.server.cache_time > 0, middleware::Cache),
+                .with_if(CFG.server.cache_time > 0, middleware::Cache)
+                .with(middleware::Ctx),
         )
         //  测试模块
         .nest(

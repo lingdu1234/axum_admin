@@ -1,5 +1,6 @@
 use poem::{delete, get, post, put, Route};
 mod common;
+mod sys_api_db;
 mod sys_dept;
 mod sys_dict_data;
 mod sys_dict_type;
@@ -32,6 +33,7 @@ pub fn system_api() -> Route {
         .nest("/job", sys_job_api()) // 定时任务
         .nest("/job_log", sys_job_log_api()) // 定时任务日志
         .nest("/oper_log", sys_oper_log_api()) // 操作日志
+        .nest("/api_db", sys_api_db_api()) // 操作日志
 }
 
 fn sys_user_api() -> Route {
@@ -163,4 +165,9 @@ fn sys_oper_log_api() -> Route {
         .at("/get_by_id", get(sys_oper_log::get_by_id)) // 按id获取
         .at("/clean", delete(sys_oper_log::clean)) // 清空
         .at("/delete", delete(sys_oper_log::delete)) // 硬删除
+}
+fn sys_api_db_api() -> Route {
+    Route::new()
+        .at("/get_by_id", get(sys_api_db::get_by_id)) // 按id获取
+        .at("/add", post(sys_api_db::add)) // 添加
 }

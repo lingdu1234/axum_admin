@@ -5,14 +5,14 @@ use db::{
     system::{
         entities::{
             prelude::{SysMenu, SysRoleApi},
-            sys_menu, sys_role_api,
+            sys_api_db, sys_menu, sys_role_api,
         },
         models::sys_menu::{AddReq, EditReq, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu},
     },
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, JoinType, ModelTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set,
-    TransactionTrait,
+    sea_query::Query, ActiveModelTrait, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, EntityTrait, JoinType, ModelTrait, Order, PaginatorTrait, QueryFilter,
+    QueryOrder, QuerySelect, Set, TransactionTrait,
 };
 
 use super::super::service;
@@ -172,6 +172,8 @@ where
         path: Set(req.path.unwrap_or_else(|| "".to_string())),
         component: Set(req.component.unwrap_or_else(|| "".to_string())),
         is_data_scope: Set(req.is_data_scope),
+        is_db_cache: Set(req.is_db_cache),
+        is_log: Set(req.is_log),
         is_frame: Set(req.is_frame),
         is_cache: Set(req.is_cache),
         created_at: Set(Some(now)),
@@ -181,9 +183,9 @@ where
     //  let re =   user.insert(db).await?; 这个多查询一次结果
     let _ = SysMenu::insert(active_model).exec(&txn).await?;
     txn.commit().await?;
-    let res = format!("{} 添加成功", uid);
+    let res = format!("{} 添加成功", &uid);
     // 添加api到全局
-    utils::ApiUtils::add_api(reqq.api.as_str(), reqq.menu_name.as_str()).await;
+    utils::ApiUtils::add_api(db, &uid, &reqq.api, &reqq.menu_name, &reqq.is_db_cache, &reqq.is_log).await;
     Ok(res)
 }
 
@@ -232,6 +234,8 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
         is_data_scope: Set(req.is_data_scope),
         is_frame: Set(req.is_frame),
         is_cache: Set(req.is_cache),
+        is_log: Set(req.is_log),
+        is_db_cache: Set(req.is_db_cache),
         updated_at: Set(Some(now)),
         ..s_r
     };
@@ -243,7 +247,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
         }
         false => {
             utils::ApiUtils::remove_api(&s_y.api).await;
-            utils::ApiUtils::add_api(&up_model.api, &up_model.menu_name).await;
+            utils::ApiUtils::add_api(db, &up_model.id, &up_model.api, &up_model.menu_name, &up_model.is_db_cache, &up_model.is_log).await;
             service::sys_role_api::update_api(db, (&s_y.api, &s_y.method), (&up_model.api, &up_model.method)).await?;
         }
     }
@@ -388,4 +392,34 @@ pub fn get_menu_data(menus: Vec<MenuResp>) -> Vec<SysMenuTree> {
         menu_res.push(menu_tree);
     }
     menu_res
+}
+
+/// 获取一个菜单通过数据库相关联的api
+pub async fn get_related_api_by_db_name<C>(db: &C, api_id: &str) -> Result<Vec<String>>
+where
+    C: TransactionTrait + ConnectionTrait,
+{
+    let s = sys_menu::Entity::find()
+        .join_rev(
+            JoinType::LeftJoin,
+            sys_api_db::Entity::belongs_to(sys_menu::Entity)
+                .from(sys_api_db::Column::ApiId)
+                .to(sys_menu::Column::Id)
+                .into(),
+        )
+        .filter(
+            Condition::any().add(
+                sys_api_db::Column::Db.in_subquery(
+                    Query::select()
+                        .column(sys_api_db::Column::Db)
+                        .from(sys_api_db::Entity)
+                        .and_where(sys_api_db::Column::ApiId.eq(api_id))
+                        .to_owned(),
+                ),
+            ),
+        )
+        .all(db)
+        .await?;
+    let res = s.iter().map(|x| x.api.clone()).collect::<Vec<String>>();
+    Ok(res)
 }
