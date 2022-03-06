@@ -65,12 +65,10 @@ pub enum Column {
 #[derive(Copy, Clone, Debug, EnumIter, DerivePrimaryKey)]
 pub enum PrimaryKey {
     JobId,
-    JobName,
-    JobGroup,
 }
 
 impl PrimaryKeyTrait for PrimaryKey {
-    type ValueType = (String, String, String);
+    type ValueType = String;
     fn auto_increment() -> bool {
         false
     }

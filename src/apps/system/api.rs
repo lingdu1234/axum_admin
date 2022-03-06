@@ -111,14 +111,9 @@ fn sys_role_api() -> Route {
         .at("/get_role_dept", get(sys_role::get_role_dept)) // 获取角色部门
         .at("/cancel_auth_user", put(sys_role::cancel_auth_user)) // 批量用户取消角色授权
         .at("/add_auth_user", put(sys_role::add_auth_user)) // 批量用户角色授权
-        .at(
-            "/get_auth_users_by_role_id",
-            get(sys_role::get_auth_users_by_role_id),
-        ) // 获取角色对应用户
-        .at(
-            "/get_un_auth_users_by_role_id",
-            get(sys_role::get_un_auth_users_by_role_id),
-        ) // 获取角色对应未授权用户
+        .at("/get_auth_users_by_role_id", get(sys_role::get_auth_users_by_role_id)) // 获取角色对应用户
+        .at("/get_un_auth_users_by_role_id", get(sys_role::get_un_auth_users_by_role_id))
+    // 获取角色对应未授权用户
 }
 
 fn sys_menu_api() -> Route {

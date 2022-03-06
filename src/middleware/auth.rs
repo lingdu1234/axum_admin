@@ -37,10 +37,7 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
             if ApiUtils::check_api_permission(&ctx.path, &ctx.method).await {
                 return self.ep.call(req).await;
             } else {
-                return Err(Error::from_string(
-                    "你没有权限访问该页面/API",
-                    StatusCode::FORBIDDEN,
-                ));
+                return Err(Error::from_string("你没有权限访问该页面/API", StatusCode::FORBIDDEN));
             }
         } else {
             return self.ep.call(req).await;

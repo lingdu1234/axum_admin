@@ -23,22 +23,10 @@ pub static TASK_TIMER: Lazy<Arc<RwLock<DelayTimer>>> = Lazy::new(|| {
         .build();
     Arc::new(RwLock::new(t_timeer))
 });
-pub fn build_task(
-    job_id: &str,
-    cron_str: &str,
-    task_name: &str,
-    task_count: u64,
-    task_id: u64,
-) -> Result<Task> {
+pub fn build_task(job_id: &str, cron_str: &str, task_name: &str, task_count: u64, task_id: u64) -> Result<Task> {
     build_task_async_task(job_id, cron_str, task_name, task_count, task_id)
 }
-fn build_task_async_task(
-    job_id: &str,
-    cron_str: &str,
-    job_name: &str,
-    task_count: u64,
-    task_id: u64,
-) -> Result<Task> {
+fn build_task_async_task(job_id: &str, cron_str: &str, job_name: &str, task_count: u64, task_id: u64) -> Result<Task> {
     let mut task_builder = TaskBuilder::default();
     task_builder.set_schedule_iterator_time_zone(Utc);
     // .set_maximum_parallel_runnable_num(5);
@@ -54,10 +42,7 @@ fn build_task_async_task(
     //     .set_task_id(task_id)
     //     .spawn_async_routine(body)?;
     let task = match task_count {
-        0 => task_builder
-            .set_frequency_repeated_by_cron_str(cron_str)
-            .set_task_id(task_id)
-            .spawn_async_routine(body)?,
+        0 => task_builder.set_frequency_repeated_by_cron_str(cron_str).set_task_id(task_id).spawn_async_routine(body)?,
         x => task_builder
             .set_frequency_repeated_by_cron_str(cron_str)
             .set_task_id(task_id)

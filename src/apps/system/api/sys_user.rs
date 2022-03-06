@@ -4,8 +4,7 @@ use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
     system::models::sys_user::{
-        AddReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq,
-        UpdateProfileReq, UpdatePwdReq, UserInfo, UserInfomaion, UserLoginReq, UserWithDept,
+        AddReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq, UpdateProfileReq, UpdatePwdReq, UserInfo, UserInfomaion, UserLoginReq, UserWithDept,
     },
     DB,
 };
@@ -22,10 +21,7 @@ use crate::utils::jwt::{AuthBody, Claims};
 /// get_user_list 获取用户列表
 /// page_params 分页参数
 #[handler]
-pub async fn get_sort_list(
-    Query(page_params): Query<PageParams>,
-    Query(req): Query<SearchReq>,
-) -> Res<ListData<UserWithDept>> {
+pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<UserWithDept>> {
     match req.validate() {
         Ok(_) => {}
         Err(e) => return Res::with_err(&e.to_string()),
@@ -69,12 +65,8 @@ pub async fn get_user_info_by_id(id: &str) -> Result<UserInfomaion> {
     match service::sys_user::get_by_id(db, id).await {
         Err(e) => Err(e),
         Ok(user) => {
-            let post_ids = service::sys_post::get_post_ids_by_user_id(db, &user.user.id)
-                .await
-                .unwrap();
-            let role_ids = service::sys_user_role::get_role_ids_by_user_id(db, &user.user.id)
-                .await
-                .expect("角色id获取失败");
+            let post_ids = service::sys_post::get_post_ids_by_user_id(db, &user.user.id).await.unwrap();
+            let role_ids = service::sys_user_role::get_role_ids_by_user_id(db, &user.user.id).await.expect("角色id获取失败");
             let res = UserInfomaion {
                 user_info: user.clone(),
                 dept_id: user.user.dept_id,

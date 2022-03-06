@@ -12,19 +12,12 @@ use db::{
     },
     DB,
 };
-use sea_orm::{
-    sea_query::Expr, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
-    QueryOrder, Set, TransactionTrait,
-};
+use sea_orm::{sea_query::Expr, ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
 
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(
-    db: &DatabaseConnection,
-    page_params: PageParams,
-    req: SearchReq,
-) -> Result<ListData<sys_user_online::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_user_online::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -50,9 +43,7 @@ pub async fn get_sort_list(
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
     // 分页获取数据
-    let paginator = s
-        .order_by_desc(sys_user_online::Column::LoginTime)
-        .paginate(db, page_per_size);
+    let paginator = s.order_by_desc(sys_user_online::Column::LoginTime).paginate(db, page_per_size);
 
     let total_pages = paginator.num_pages().await?;
     let list = paginator.fetch_page(page_num - 1).await?;
@@ -80,20 +71,13 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     }
 }
 
-pub async fn check_online(
-    db: Option<&DatabaseConnection>,
-    id: String,
-) -> (bool, Option<sys_user_online::Model>) {
+pub async fn check_online(db: Option<&DatabaseConnection>, id: String) -> (bool, Option<sys_user_online::Model>) {
     let db = match db {
         Some(x) => x,
         None => DB.get_or_init(db_conn).await,
     };
 
-    let model = SysUserOnline::find()
-        .filter(sys_user_online::Column::TokenId.eq(id))
-        .one(db)
-        .await
-        .expect("查询失败");
+    let model = SysUserOnline::find().filter(sys_user_online::Column::TokenId.eq(id)).one(db).await.expect("查询失败");
 
     (model.is_some(), model)
 }
@@ -108,12 +92,8 @@ pub async fn add(req: ClientInfo, u_id: String, token_id: String, token_exp: i64
     let db = DB.get_or_init(db_conn).await;
     let uid = scru128::scru128().to_string();
     let now = Local::now().naive_local();
-    let user = super::sys_user::get_by_id(db, &u_id)
-        .await
-        .expect("获取用户信息失败");
-    let dept = super::sys_dept::get_by_id(db, &user.clone().user.dept_id)
-        .await
-        .expect("获取部门信息失败");
+    let user = super::sys_user::get_by_id(db, &u_id).await.expect("获取用户信息失败");
+    let dept = super::sys_dept::get_by_id(db, &user.clone().user.dept_id).await.expect("获取部门信息失败");
     let active_model = sys_user_online::ActiveModel {
         id: Set(uid.clone()),
         u_id: Set(u_id),
@@ -131,10 +111,7 @@ pub async fn add(req: ClientInfo, u_id: String, token_id: String, token_exp: i64
     };
     let txn = db.begin().await.expect("begin txn error");
     //  let re =   user.insert(db).await?; 这个多查询一次结果
-    let _ = SysUserOnline::insert(active_model)
-        .exec(&txn)
-        .await
-        .expect("insert error");
+    let _ = SysUserOnline::insert(active_model).exec(&txn).await.expect("insert error");
     txn.commit().await.expect("commit txn error");
 }
 

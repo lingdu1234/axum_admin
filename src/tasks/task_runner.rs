@@ -19,9 +19,7 @@ pub async fn run_once_task(job_id: String, task_id: i64, is_once: bool) {
     let job = match is_once {
         true => {
             let db = DB.get_or_init(db_conn).await;
-            let jm = get_job_by_id(db, job_id.clone())
-                .await
-                .expect("job not found");
+            let jm = get_job_by_id(db, job_id.clone()).await.expect("job not found");
             TaskModel {
                 run_lot: 0_i64,
                 count: 0_i64,
@@ -35,19 +33,9 @@ pub async fn run_once_task(job_id: String, task_id: i64, is_once: bool) {
     };
     let cron_str = job.model.cron_expression.clone();
     let next_time = get_next_task_run_time(cron_str).unwrap();
-    let res = task::go_run_task(
-        job.model.job_params.clone(),
-        job.model.invoke_target.clone(),
-    )
-    .await;
+    let res = task::go_run_task(job.model.job_params.clone(), job.model.invoke_target.clone()).await;
     let task_end_time = Local::now().naive_local(); // 获取结束时间
-    let elapsed_time: i64 = task_end_time
-        .signed_duration_since(begin_time)
-        .to_std()
-        .unwrap()
-        .as_millis()
-        .try_into()
-        .unwrap_or(i64::MAX); // 获取结束时间和开始时间的时间差，单位为毫秒
+    let elapsed_time: i64 = task_end_time.signed_duration_since(begin_time).to_std().unwrap().as_millis().try_into().unwrap_or(i64::MAX); // 获取结束时间和开始时间的时间差，单位为毫秒
     tokio::spawn(async move {
         match is_once {
             true => write_once_job_log(res, job, begin_time, elapsed_time).await,
@@ -67,13 +55,7 @@ pub async fn add_circles_task(t: SysJobModel) -> Result<()> {
     let task_count = t.task_count;
     // let t_builder = task_builder::TASK_TIMER.lock().await;
     let t_builder = task_builder::TASK_TIMER.write().await;
-    let task = task_builder::build_task(
-        &t.job_id,
-        &t.cron_expression,
-        &t.job_name,
-        task_count as u64,
-        t.task_id.try_into().unwrap_or(0),
-    );
+    let task = task_builder::build_task(&t.job_id, &t.cron_expression, &t.job_name, task_count as u64, t.task_id.try_into().unwrap_or(0));
     match task {
         Ok(x) => {
             init_task_model(t, task_count).await;
@@ -152,8 +134,7 @@ pub async fn add_circles_task(t: SysJobModel) -> Result<()> {
 async fn init_task_model(m: SysJobModel, task_count: i64) {
     let now = Local::now().naive_local();
     let run_lot = now.timestamp();
-    let job_end_time =
-        get_task_end_time(m.cron_expression.clone(), m.task_count.try_into().unwrap()).unwrap();
+    let job_end_time = get_task_end_time(m.cron_expression.clone(), m.task_count.try_into().unwrap()).unwrap();
     let next_time = get_next_task_run_time(m.cron_expression.clone()).unwrap();
     let mut task_models = TASK_MODELS.lock().await;
     let mut task_model = TaskModel {
@@ -164,11 +145,7 @@ async fn init_task_model(m: SysJobModel, task_count: i64) {
         lot_end_time: job_end_time,
         model: m.clone(),
     };
-    let remark = format!(
-        "任务id:{}    开始时间:{}\n",
-        run_lot,
-        now.format("%Y-%m-%d %H:%M:%S"),
-    );
+    let remark = format!("任务id:{}    开始时间:{}\n", run_lot, now.format("%Y-%m-%d %H:%M:%S"),);
     task_model.model.remark = Some(remark.clone());
     task_models.insert(m.task_id, task_model);
     tokio::spawn(async move {
@@ -185,13 +162,7 @@ async fn init_task_model(m: SysJobModel, task_count: i64) {
     });
 }
 
-async fn write_circle_job_log(
-    res: Result<String>,
-    job: TaskModel,
-    begin_time: NaiveDateTime,
-    next_time: NaiveDateTime,
-    elapsed_time: i64,
-) {
+async fn write_circle_job_log(res: Result<String>, job: TaskModel, begin_time: NaiveDateTime, next_time: NaiveDateTime, elapsed_time: i64) {
     let (job_message, exception_info, status) = match res {
         Ok(x) => (Some(x), None, "1".to_string()),
         Err(e) => (None, Some(format!("{:#?}", e)), "0".to_string()),
@@ -202,15 +173,8 @@ async fn write_circle_job_log(
     let (job_remark, job_status) = match job.count != 0 && job.count <= job.lot_count {
         false => (job_remark_t, "1".to_string()),
         true => {
-            delete_job(job.model.task_id, false)
-                .await
-                .expect("delete job failed");
-            let job_remark = job_remark_t
-                + format!(
-                    "任务完毕:--------    完成时间:{}\n最终运行次数:{}",
-                    begin_time, job.lot_count
-                )
-                .as_str();
+            delete_job(job.model.task_id, false).await.expect("delete job failed");
+            let job_remark = job_remark_t + format!("任务完毕:--------    完成时间:{}\n最终运行次数:{}", begin_time, job.lot_count).as_str();
             (job_remark, "0".to_string())
         }
     };
@@ -231,9 +195,7 @@ async fn write_circle_job_log(
     };
     let db = DB.get_or_init(db_conn).await;
     let txn = db.begin().await.expect("事务开启失败");
-    sys_job_log_add(&txn, job_log)
-        .await
-        .expect("write job log failed");
+    sys_job_log_add(&txn, job_log).await.expect("write job log failed");
 
     SysJobEntity::update_many()
         .col_expr(SysJobColumn::Status, Expr::value(job_status))
@@ -248,12 +210,7 @@ async fn write_circle_job_log(
     txn.commit().await.expect("事务提交失败");
 }
 
-async fn write_once_job_log(
-    res: Result<String>,
-    job: TaskModel,
-    begin_time: NaiveDateTime,
-    elapsed_time: i64,
-) {
+async fn write_once_job_log(res: Result<String>, job: TaskModel, begin_time: NaiveDateTime, elapsed_time: i64) {
     let (job_message, exception_info, status) = match res {
         Ok(x) => (Some(x), None, "1".to_string()),
         Err(e) => (None, Some(format!("{:#?}", e)), "0".to_string()),
@@ -276,9 +233,7 @@ async fn write_once_job_log(
     };
     let db = DB.get_or_init(db_conn).await;
     let txn = db.begin().await.expect("事务开启失败");
-    sys_job_log_add(&txn, job_log)
-        .await
-        .expect("write job log failed");
+    sys_job_log_add(&txn, job_log).await.expect("write job log failed");
     txn.commit().await.expect("事务提交失败");
 }
 
@@ -293,11 +248,7 @@ pub fn get_task_end_time(cron_str: String, task_count: u64) -> Option<NaiveDateT
         0 => Some(Local::now().naive_local()),
         v => {
             let schedule = cron_clock::Schedule::from_str(&cron_str).unwrap();
-            let end_time = schedule
-                .upcoming(Local)
-                .take(v.try_into().unwrap())
-                .last()
-                .map(|x| x.naive_local());
+            let end_time = schedule.upcoming(Local).take(v.try_into().unwrap()).last().map(|x| x.naive_local());
             end_time
         }
     }
@@ -315,12 +266,7 @@ pub async fn delete_job(task_id: i64, is_manual: bool) -> Result<()> {
                 let job = task_models.get(&task_id).cloned().expect("task not found");
                 let db = DB.get_or_init(db_conn).await;
                 let remark = job.clone().model.remark.unwrap_or_else(|| "".to_string())
-                    + format!(
-                        "任务删除:--------    删除时间:{}\n最终运行次数:{}",
-                        Local::now().naive_local(),
-                        job.lot_count,
-                    )
-                    .as_str();
+                    + format!("任务删除:--------    删除时间:{}\n最终运行次数:{}", Local::now().naive_local(), job.lot_count,).as_str();
                 SysJobEntity::update_many()
                     .col_expr(SysJobColumn::Status, Expr::value("0".to_string()))
                     .col_expr(SysJobColumn::Remark, Expr::value(remark))

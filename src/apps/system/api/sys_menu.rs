@@ -19,10 +19,7 @@ use crate::utils::jwt::Claims;
 
 /// get_all_menu_tree 获取全部菜单
 #[handler]
-pub async fn get_sort_list(
-    Query(page_params): Query<PageParams>,
-    Query(search_req): Query<SearchReq>,
-) -> Res<ListData<sys_menu::Model>> {
+pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(search_req): Query<SearchReq>) -> Res<ListData<sys_menu::Model>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_sort_list(db, page_params, search_req).await;
     match res {
@@ -32,10 +29,7 @@ pub async fn get_sort_list(
 }
 
 #[handler]
-pub async fn get_auth_list(
-    Query(page_params): Query<PageParams>,
-    Query(search_req): Query<SearchReq>,
-) -> Res<ListData<sys_menu::Model>> {
+pub async fn get_auth_list(Query(page_params): Query<PageParams>, Query(search_req): Query<SearchReq>) -> Res<ListData<sys_menu::Model>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_auth_list(db, page_params, search_req).await;
     match res {

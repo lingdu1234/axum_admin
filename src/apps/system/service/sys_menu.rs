@@ -11,8 +11,8 @@ use db::{
     },
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, JoinType,
-    ModelTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, JoinType, ModelTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set,
+    TransactionTrait,
 };
 
 use super::super::service;
@@ -21,11 +21,7 @@ use crate::utils;
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(
-    db: &DatabaseConnection,
-    page_params: PageParams,
-    search_req: SearchReq,
-) -> Result<ListData<sys_menu::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, search_req: SearchReq) -> Result<ListData<sys_menu::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(u32::MAX as usize);
     //  生成查询条件
@@ -61,9 +57,7 @@ pub async fn get_sort_list(
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
     // 分页获取数据
-    let paginator = s
-        .order_by_asc(sys_menu::Column::OrderSort)
-        .paginate(db, page_per_size);
+    let paginator = s.order_by_asc(sys_menu::Column::OrderSort).paginate(db, page_per_size);
     let total_pages = paginator.num_pages().await?;
     let list = paginator.fetch_page(page_num - 1).await?;
 
@@ -76,11 +70,7 @@ pub async fn get_sort_list(
     Ok(res)
 }
 
-pub async fn get_auth_list(
-    db: &DatabaseConnection,
-    page_params: PageParams,
-    search_req: SearchReq,
-) -> Result<ListData<sys_menu::Model>> {
+pub async fn get_auth_list(db: &DatabaseConnection, page_params: PageParams, search_req: SearchReq) -> Result<ListData<sys_menu::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(u32::MAX as usize);
     //  生成查询条件
@@ -112,9 +102,7 @@ pub async fn get_auth_list(
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
     // 分页获取数据
-    let paginator = s
-        .order_by_asc(sys_menu::Column::OrderSort)
-        .paginate(db, page_per_size);
+    let paginator = s.order_by_asc(sys_menu::Column::OrderSort).paginate(db, page_per_size);
     let total_pages = paginator.num_pages().await?;
     let list = paginator.fetch_page(page_num - 1).await?;
 
@@ -201,10 +189,7 @@ where
 
 /// delete 完全删除
 pub async fn delete(db: &DatabaseConnection, id: String) -> Result<String> {
-    let s = SysMenu::find()
-        .filter(sys_menu::Column::Id.eq(id))
-        .one(db)
-        .await?;
+    let s = SysMenu::find().filter(sys_menu::Column::Id.eq(id)).one(db).await?;
     let txn = db.begin().await?;
     if let Some(m) = s {
         let api = m.clone().api;
@@ -259,12 +244,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
         false => {
             utils::ApiUtils::remove_api(&s_y.api).await;
             utils::ApiUtils::add_api(&up_model.api, &up_model.menu_name).await;
-            service::sys_role_api::update_api(
-                db,
-                (&s_y.api, &s_y.method),
-                (&up_model.api, &up_model.method),
-            )
-            .await?;
+            service::sys_role_api::update_api(db, (&s_y.api, &s_y.method), (&up_model.api, &up_model.method)).await?;
         }
     }
 
@@ -297,18 +277,12 @@ pub async fn get_menus<C>(db: &C, is_router: bool) -> Result<Vec<MenuResp>>
 where
     C: TransactionTrait + ConnectionTrait,
 {
-    let mut s = SysMenu::find()
-        .filter(sys_menu::Column::DeletedAt.is_null())
-        .filter(sys_menu::Column::Status.eq("1"));
+    let mut s = SysMenu::find().filter(sys_menu::Column::DeletedAt.is_null()).filter(sys_menu::Column::Status.eq("1"));
     if is_router {
         s = s.filter(sys_menu::Column::MenuType.ne("F"));
     };
 
-    let res = s
-        .order_by(sys_menu::Column::OrderSort, Order::Asc)
-        .into_model::<MenuResp>()
-        .all(db)
-        .await?;
+    let res = s.order_by(sys_menu::Column::OrderSort, Order::Asc).into_model::<MenuResp>().all(db).await?;
     Ok(res)
 }
 
@@ -334,17 +308,11 @@ pub async fn get_all_menu_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTre
 
 //  获取角色对应的api 和 api id
 // 返回结果(Vec<String>, Vec<String>) 为（apis,api_ids）
-pub async fn get_role_permissions(
-    db: &DatabaseConnection,
-    role_ids: Vec<String>,
-) -> Result<(Vec<String>, Vec<String>)> {
+pub async fn get_role_permissions(db: &DatabaseConnection, role_ids: Vec<String>) -> Result<(Vec<String>, Vec<String>)> {
     let s = SysMenu::find()
         .join_rev(
             JoinType::InnerJoin,
-            SysRoleApi::belongs_to(SysMenu)
-                .from(sys_role_api::Column::Api)
-                .to(sys_menu::Column::Api)
-                .into(),
+            SysRoleApi::belongs_to(SysMenu).from(sys_role_api::Column::Api).to(sys_menu::Column::Api).into(),
         )
         .filter(sys_role_api::Column::RoleId.is_in(role_ids))
         .all(db)
@@ -361,10 +329,7 @@ pub async fn get_role_permissions(
 
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
-pub async fn get_admin_menu_by_role_ids(
-    db: &DatabaseConnection,
-    role_ids: Vec<String>,
-) -> Result<Vec<SysMenuTree>> {
+pub async fn get_admin_menu_by_role_ids(db: &DatabaseConnection, role_ids: Vec<String>) -> Result<Vec<SysMenuTree>> {
     let (menu_apis, _) = self::get_role_permissions(db, role_ids).await?;
     //  todo 可能以后加条件判断
     let router_all = get_menus(db, true).await?;
@@ -384,10 +349,7 @@ pub fn get_menu_tree(user_menus: Vec<SysMenuTree>, pid: String) -> Vec<SysMenuTr
     let mut menu_tree: Vec<SysMenuTree> = Vec::new();
     for mut user_menu in user_menus.clone() {
         if user_menu.user_menu.pid == pid {
-            user_menu.children = Some(get_menu_tree(
-                user_menus.clone(),
-                user_menu.user_menu.id.clone(),
-            ));
+            user_menu.children = Some(get_menu_tree(user_menus.clone(), user_menu.user_menu.id.clone()));
             menu_tree.push(user_menu.clone());
         }
     }
@@ -403,11 +365,7 @@ pub fn get_menu_data(menus: Vec<MenuResp>) -> Vec<SysMenuTree> {
             icon: menu.icon.clone(),
             title: menu.menu_name.clone(),
             hidden: menu.visible.clone() != "1",
-            link: if menu.path.clone().starts_with("http") {
-                Some(menu.path.clone())
-            } else {
-                None
-            },
+            link: if menu.path.clone().starts_with("http") { Some(menu.path.clone()) } else { None },
             no_cache: menu.is_cache.clone() != "1",
         };
         let user_menu = UserMenu {
@@ -422,18 +380,11 @@ pub fn get_menu_data(menus: Vec<MenuResp>) -> Vec<SysMenuTree> {
             name: menu.path.clone(),
             menu_name: menu.menu_name.clone(),
             menu_type: menu.menu_type.clone(),
-            always_show: if menu.is_cache.clone() == "1" && menu.pid.clone() == "0" {
-                Some(true)
-            } else {
-                None
-            },
+            always_show: if menu.is_cache.clone() == "1" && menu.pid.clone() == "0" { Some(true) } else { None },
             component: menu.component.clone(),
             hidden: menu.visible.clone() == "0",
         };
-        let menu_tree = SysMenuTree {
-            user_menu,
-            ..Default::default()
-        };
+        let menu_tree = SysMenuTree { user_menu, ..Default::default() };
         menu_res.push(menu_tree);
     }
     menu_res

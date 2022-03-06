@@ -3,16 +3,10 @@ use db::{
     common::data_scope::DataScopeInfo,
     system::entities::{sys_dept, sys_role, sys_role_dept, sys_user},
 };
-use sea_orm::{
-    sea_query::Query, ColumnTrait, Condition, DatabaseConnection, EntityTrait, JoinType,
-    QueryFilter, QuerySelect,
-};
+use sea_orm::{sea_query::Query, ColumnTrait, Condition, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QuerySelect};
 
 ///  获取数据所对应的id，需要在数据库中添加created_by字段
-pub async fn get_data_scope_user_ids(
-    db: &DatabaseConnection,
-    uid: &str,
-) -> Result<Option<Vec<String>>> {
+pub async fn get_data_scope_user_ids(db: &DatabaseConnection, uid: &str) -> Result<Option<Vec<String>>> {
     let s = sys_user::Entity::find()
         .select_only()
         .column(sys_user::Column::Id)
@@ -73,26 +67,19 @@ pub async fn get_data_scope_user_ids(
             Some(s.into_iter().map(|x| x.id).collect::<Vec<String>>())
         }
         "3" => {
-            let s = sys_user::Entity::find()
-                .filter(sys_user::Column::DeptId.eq(dept_id.clone()))
-                .all(db)
-                .await?;
+            let s = sys_user::Entity::find().filter(sys_user::Column::DeptId.eq(dept_id.clone())).all(db).await?;
             Some(s.into_iter().map(|x| x.id).collect::<Vec<String>>())
         }
         "4" => {
             let s = sys_dept::Entity::find().all(db).await?;
             let mut ids: Vec<(String, String)> = Vec::new();
-            s.iter()
-                .for_each(|x| ids.push((x.parent_id.clone(), x.dept_id.clone())));
+            s.iter().for_each(|x| ids.push((x.parent_id.clone(), x.dept_id.clone())));
 
             let mut dept_ids = find_sid_by_pid::<String>(ids, dept_id.clone());
             // 这里只获取了子id，需要将自己的id也加入
             dept_ids.push(dept_id.clone());
 
-            let s = sys_user::Entity::find()
-                .filter(sys_user::Column::DeptId.is_in(dept_ids))
-                .all(db)
-                .await?;
+            let s = sys_user::Entity::find().filter(sys_user::Column::DeptId.is_in(dept_ids)).all(db).await?;
             Some(s.into_iter().map(|x| x.id).collect::<Vec<String>>())
         }
         _ => Some(vec![user_id]),

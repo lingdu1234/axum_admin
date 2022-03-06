@@ -53,17 +53,8 @@ async fn main() -> Result<(), std::io::Error> {
     let (std_non_blocking, _guard) = tracing_appender::non_blocking(std::io::stdout());
     let logger = Registry::default()
         .with(EnvFilter::from_default_env().add_directive(log_env.into()))
-        .with(
-            fmt::Layer::default()
-                .with_writer(std_non_blocking)
-                .event_format(format.clone())
-                .pretty(),
-        )
-        .with(
-            fmt::Layer::default()
-                .with_writer(non_blocking)
-                .event_format(format),
-        );
+        .with(fmt::Layer::default().with_writer(std_non_blocking).event_format(format.clone()).pretty())
+        .with(fmt::Layer::default().with_writer(non_blocking).event_format(format));
     tracing::subscriber::set_global_default(logger).unwrap();
 
     // apis全局初始化
@@ -77,27 +68,15 @@ async fn main() -> Result<(), std::io::Error> {
 
     let app = Route::new()
         .nest(&CFG.server.api_prefix, apps::api())
-        .nest(
-            "/",
-            StaticFilesEndpoint::new(&CFG.web.dir)
-                .show_files_listing()
-                .index_file(&CFG.web.index),
-        )
-        .nest(
-            &CFG.web.upload_url,
-            StaticFilesEndpoint::new(&CFG.web.upload_dir).show_files_listing(),
-        )
+        .nest("/", StaticFilesEndpoint::new(&CFG.web.dir).show_files_listing().index_file(&CFG.web.index))
+        .nest(&CFG.web.upload_url, StaticFilesEndpoint::new(&CFG.web.upload_dir).show_files_listing())
         // .with(Tracing)
         .with_if(CFG.server.content_gzip, Compression::new())
         .with(cors);
 
     match CFG.server.ssl {
         true => {
-            let listener = TcpListener::bind(&CFG.server.address).rustls(
-                RustlsConfig::new()
-                    .key(&*CERT_KEY.key)
-                    .cert(&*CERT_KEY.cert),
-            );
+            let listener = TcpListener::bind(&CFG.server.address).rustls(RustlsConfig::new().key(&*CERT_KEY.key).cert(&*CERT_KEY.cert));
             let server = Server::new(listener).name(&CFG.server.name);
             server
                 .run_with_graceful_shutdown(

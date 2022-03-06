@@ -58,9 +58,5 @@ pub fn get_log_format() -> Format<Compact, LocalTime<Rfc3339>> {
 
 #[cfg(not(target_os = "windows"))]
 pub fn get_log_format() -> Format<Compact> {
-    fmt::format()
-        .with_level(true)
-        .with_target(true)
-        .with_thread_ids(true)
-        .compact()
+    fmt::format().with_level(true).with_target(true).with_thread_ids(true).compact()
 }

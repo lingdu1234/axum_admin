@@ -4,10 +4,7 @@ use db::{
     system::{
         entities::sys_role,
         models::{
-            sys_role::{
-                AddOrCancelAuthRoleReq, AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq,
-                StatusReq, UpdateAuthRoleReq,
-            },
+            sys_role::{AddOrCancelAuthRoleReq, AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq, UpdateAuthRoleReq},
             sys_user::{SearchReq as UserSearchReq, UserResp, UserWithDept},
         },
     },
@@ -25,10 +22,7 @@ use crate::utils::jwt::Claims;
 /// get_list 获取列表
 /// page_params 分页参数
 #[handler]
-pub async fn get_sort_list(
-    Query(page_params): Query<PageParams>,
-    Query(req): Query<SearchReq>,
-) -> Res<ListData<sys_role::Model>> {
+pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<sys_role::Model>> {
     match req.validate() {
         Ok(_) => {}
         Err(e) => return Res::with_err(&e.to_string()),
@@ -181,10 +175,7 @@ pub async fn get_role_dept(Query(req): Query<SearchReq>) -> Res<Vec<String>> {
 }
 
 #[handler]
-pub async fn get_auth_users_by_role_id(
-    Query(mut req): Query<UserSearchReq>,
-    Query(page_params): Query<PageParams>,
-) -> Res<ListData<UserWithDept>> {
+pub async fn get_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, Query(page_params): Query<PageParams>) -> Res<ListData<UserWithDept>> {
     let db = DB.get_or_init(db_conn).await;
     let role_id = match req.role_id.clone() {
         None => return Res::with_err("角色Id不能为空"),
@@ -203,10 +194,7 @@ pub async fn get_auth_users_by_role_id(
 }
 
 #[handler]
-pub async fn get_un_auth_users_by_role_id(
-    Query(mut req): Query<UserSearchReq>,
-    Query(page_params): Query<PageParams>,
-) -> Res<ListData<UserResp>> {
+pub async fn get_un_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, Query(page_params): Query<PageParams>) -> Res<ListData<UserResp>> {
     let db = DB.get_or_init(db_conn).await;
     let role_id = match req.role_id.clone() {
         None => return Res::with_err("角色Id不能为空"),
@@ -237,9 +225,7 @@ pub async fn update_auth_role(Json(req): Json<UpdateAuthRoleReq>, user: Claims) 
 #[handler]
 pub async fn add_auth_user(Json(req): Json<AddOrCancelAuthRoleReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res =
-        service::sys_role::add_role_with_user_ids(db, req.clone().user_ids, req.role_id, user.id)
-            .await;
+    let res = service::sys_role::add_role_with_user_ids(db, req.clone().user_ids, req.role_id, user.id).await;
     match res {
         Ok(_) => Res::with_msg("授权成功"),
         Err(e) => Res::with_err(&e.to_string()),

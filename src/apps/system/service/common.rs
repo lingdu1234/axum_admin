@@ -30,22 +30,15 @@ fn get_file_type(content_type: &str) -> String {
 /// 上传相关
 pub async fn upload_file(mut multipart: Multipart) -> Result<String> {
     if let Some(field) = multipart.next_field().await? {
-        let content_type = field
-            .content_type()
-            .map(ToString::to_string)
-            .unwrap_or_else(|| "".to_string());
-        let old_url = field
-            .file_name()
-            .map(ToString::to_string)
-            .unwrap_or_else(|| "".to_string());
+        let content_type = field.content_type().map(ToString::to_string).unwrap_or_else(|| "".to_string());
+        let old_url = field.file_name().map(ToString::to_string).unwrap_or_else(|| "".to_string());
         let file_type = get_file_type(&content_type);
         let bytes = field.bytes().await?;
         let now = chrono::Local::now();
         let file_path_t = CFG.web.upload_dir.clone() + "/" + &now.format("%Y-%m").to_string();
         let url_path_t = CFG.web.upload_url.clone() + "/" + &now.format("%Y-%m").to_string();
         fs::create_dir_all(&file_path_t).await?;
-        let file_name =
-            now.format("%d").to_string() + "-" + &scru128::scru128_string() + &file_type;
+        let file_name = now.format("%d").to_string() + "-" + &scru128::scru128_string() + &file_type;
         let file_path = file_path_t + "/" + &file_name;
         let url_path = url_path_t + "/" + &file_name;
         let mut file = fs::File::create(&file_path).await?;

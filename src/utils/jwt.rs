@@ -1,8 +1,6 @@
 use chrono::{Duration, Local};
 use headers::{authorization::Bearer, Authorization};
-use jsonwebtoken::{
-    decode, encode, errors::ErrorKind, DecodingKey, EncodingKey, Header, Validation,
-};
+use jsonwebtoken::{decode, encode, errors::ErrorKind, DecodingKey, EncodingKey, Header, Validation};
 use once_cell::sync::Lazy;
 use poem::{http::StatusCode, web::TypedHeader, Error, FromRequest, Request, RequestBody, Result};
 use serde::{Deserialize, Serialize};
@@ -56,30 +54,18 @@ impl<'a> FromRequest<'a> for Claims {
                 if x {
                     token
                 } else {
-                    return Err(Error::from_string(
-                        "该账户已经退出",
-                        StatusCode::UNAUTHORIZED,
-                    ));
+                    return Err(Error::from_string("该账户已经退出", StatusCode::UNAUTHORIZED));
                 }
             }
             Err(err) => match *err.kind() {
                 ErrorKind::InvalidToken => {
-                    return Err(Error::from_string(
-                        "你的登录已失效，请重新登录",
-                        StatusCode::UNAUTHORIZED,
-                    ));
+                    return Err(Error::from_string("你的登录已失效，请重新登录", StatusCode::UNAUTHORIZED));
                 }
                 ErrorKind::ExpiredSignature => {
-                    return Err(Error::from_string(
-                        "你的登录已经过期，请重新登录",
-                        StatusCode::UNAUTHORIZED,
-                    ));
+                    return Err(Error::from_string("你的登录已经过期，请重新登录", StatusCode::UNAUTHORIZED));
                 }
                 _ => {
-                    return Err(Error::from_string(
-                        err.to_string(),
-                        StatusCode::UNAUTHORIZED,
-                    ));
+                    return Err(Error::from_string(err.to_string(), StatusCode::UNAUTHORIZED));
                 }
             },
         };
@@ -91,25 +77,18 @@ impl<'a> FromRequest<'a> for Claims {
 }
 
 pub async fn get_bear_token(req: &Request) -> Result<(String, String)> {
-    let TypedHeader(Authorization(bearer)) =
-        TypedHeader::<Authorization<Bearer>>::from_request_without_body(req)
-            .await
-            .map_err(|_| Error::from_string("InvalidToken", StatusCode::BAD_REQUEST))?;
+    let TypedHeader(Authorization(bearer)) = TypedHeader::<Authorization<Bearer>>::from_request_without_body(req)
+        .await
+        .map_err(|_| Error::from_string("InvalidToken", StatusCode::BAD_REQUEST))?;
     // Decode the user data
     let bearer_data = bearer.token();
     let cut = bearer_data.len() - scru128::scru128_string().len();
-    Ok((
-        bearer_data[cut..].to_string(),
-        bearer_data[0..cut].to_string(),
-    ))
+    Ok((bearer_data[cut..].to_string(), bearer_data[0..cut].to_string()))
 }
 
 pub async fn authorize(payload: AuthPayload, token_id: String) -> Result<AuthBody> {
     if payload.id.is_empty() || payload.name.is_empty() {
-        return Err(Error::from_string(
-            "Missing credentials",
-            StatusCode::BAD_REQUEST,
-        ));
+        return Err(Error::from_string("Missing credentials", StatusCode::BAD_REQUEST));
     }
     let iat = Local::now();
     let exp = iat + Duration::minutes(CFG.jwt.jwt_exp);
@@ -120,9 +99,7 @@ pub async fn authorize(payload: AuthPayload, token_id: String) -> Result<AuthBod
         exp: exp.timestamp(),
     };
     // Create the authorization token
-    let token = encode(&Header::default(), &claims, &KEYS.encoding).map_err(|_| {
-        Error::from_string("Token creation error", StatusCode::INTERNAL_SERVER_ERROR)
-    })?;
+    let token = encode(&Header::default(), &claims, &KEYS.encoding).map_err(|_| Error::from_string("Token creation error", StatusCode::INTERNAL_SERVER_ERROR))?;
 
     // Send the authorized token
     Ok(AuthBody::new(token, claims.exp, CFG.jwt.jwt_exp, token_id))

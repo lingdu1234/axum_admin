@@ -19,10 +19,7 @@ use crate::utils::jwt::Claims;
 /// get_list 获取列表
 /// page_params 分页参数
 #[handler]
-pub async fn get_sort_list(
-    Query(page_params): Query<PageParams>,
-    Query(req): Query<SearchReq>,
-) -> Res<ListData<sys_user_online::Model>> {
+pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<sys_user_online::Model>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user_online::get_sort_list(db, page_params, req).await;
     match res {

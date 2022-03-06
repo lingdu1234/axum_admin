@@ -86,7 +86,7 @@ impl ColumnTrait for Column {
             Self::Icon => ColumnType::String(Some(50u32)).def(),
             Self::MenuType => ColumnType::Char(Some(1u32)).def(),
             Self::Query => ColumnType::String(Some(255u32)).def().null(),
-            Self::OrderSort => ColumnType::Integer.def().unique(),
+            Self::OrderSort => ColumnType::Integer.def(),
             Self::Status => ColumnType::Char(Some(1u32)).def(),
             Self::Api => ColumnType::String(Some(155u32)).def().unique(),
             Self::Method => ColumnType::String(Some(10u32)).def(),

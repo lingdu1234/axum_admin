@@ -8,8 +8,7 @@ use db::{
     },
 };
 use sea_orm::{
-    sea_query::Expr, ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, ConnectionTrait,
-    DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set,
+    sea_query::Expr, ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set,
     TransactionTrait,
 };
 
@@ -18,11 +17,7 @@ use crate::tasks;
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(
-    db: &DatabaseConnection,
-    page_params: PageParams,
-    search_req: SearchReq,
-) -> Result<ListData<sys_job::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, search_req: SearchReq) -> Result<ListData<sys_job::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -41,9 +36,7 @@ pub async fn get_sort_list(
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
     // 分页获取数据
-    let paginator = s
-        .order_by_asc(sys_job::Column::JobId)
-        .paginate(db, page_per_size);
+    let paginator = s.order_by_asc(sys_job::Column::JobId).paginate(db, page_per_size);
     let total_pages = paginator.num_pages().await?;
     let list = paginator.fetch_page(page_num - 1).await?;
 
@@ -60,23 +53,12 @@ pub async fn check_job_add_is_exist<C>(db: &C, job_name: &str, task_id: i64) -> 
 where
     C: TransactionTrait + ConnectionTrait,
 {
-    let c1 = SysJob::find()
-        .filter(sys_job::Column::JobName.eq(job_name))
-        .count(db)
-        .await?;
-    let c2 = SysJob::find()
-        .filter(sys_job::Column::TaskId.eq(task_id))
-        .count(db)
-        .await?;
+    let c1 = SysJob::find().filter(sys_job::Column::JobName.eq(job_name)).count(db).await?;
+    let c2 = SysJob::find().filter(sys_job::Column::TaskId.eq(task_id)).count(db).await?;
     Ok(c1 > 0 || c2 > 0)
 }
 
-pub async fn check_job_edit_is_exist<C>(
-    db: &C,
-    job_name: &str,
-    task_id: i64,
-    job_id: &str,
-) -> Result<bool>
+pub async fn check_job_edit_is_exist<C>(db: &C, job_name: &str, task_id: i64, job_id: &str) -> Result<bool>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -112,20 +94,12 @@ where
         task_count: Set(req.task_count),
         run_count: Set(0),
         job_name: Set(req.job_name),
-        job_params: if let Some(x) = req.job_params {
-            Set(Some(x))
-        } else {
-            NotSet
-        },
+        job_params: if let Some(x) = req.job_params { Set(Some(x)) } else { NotSet },
         job_group: Set(req.job_group),
         invoke_target: Set(req.invoke_target),
         cron_expression: Set(req.cron_expression),
         misfire_policy: Set(req.misfire_policy),
-        concurrent: if let Some(x) = req.concurrent {
-            Set(Some(x))
-        } else {
-            NotSet
-        },
+        concurrent: if let Some(x) = req.concurrent { Set(Some(x)) } else { NotSet },
         status: Set(status.clone()),
         remark: Set(Some(req.remark.unwrap_or_else(|| "".to_string()))),
         next_time: Set(next_time),
@@ -135,9 +109,7 @@ where
     };
     SysJob::insert(add_data.clone()).exec(db).await?;
     if status.as_str() == "1" {
-        tasks::run_circles_task(uid.clone())
-            .await
-            .expect("任务添加失败");
+        tasks::run_circles_task(uid.clone()).await.expect("任务添加失败");
     };
 
     let res = format!("{}添加成功", uid);
@@ -150,15 +122,9 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     let job_ids = delete_req.job_ids.clone();
     // 删除任务
     for job_id in job_ids.clone() {
-        match SysJob::find()
-            .filter(sys_job::Column::JobId.eq(job_id))
-            .one(db)
-            .await?
-        {
+        match SysJob::find().filter(sys_job::Column::JobId.eq(job_id)).one(db).await? {
             Some(m) => {
-                tasks::delete_job(m.task_id, true)
-                    .await
-                    .expect("任务删除失败");
+                tasks::delete_job(m.task_id, true).await.expect("任务删除失败");
             }
             None => {}
         };
@@ -195,20 +161,12 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
         task_id: Set(req.task_id),
         task_count: Set(req.task_count),
         job_name: Set(req.job_name),
-        job_params: if let Some(x) = req.job_params {
-            Set(Some(x))
-        } else {
-            NotSet
-        },
+        job_params: if let Some(x) = req.job_params { Set(Some(x)) } else { NotSet },
         job_group: Set(req.job_group),
         invoke_target: Set(req.invoke_target),
         cron_expression: Set(req.cron_expression),
         misfire_policy: Set(req.misfire_policy),
-        concurrent: if let Some(x) = req.concurrent {
-            Set(Some(x))
-        } else {
-            NotSet
-        },
+        concurrent: if let Some(x) = req.concurrent { Set(Some(x)) } else { NotSet },
         next_time: Set(next_time),
         status: Set(status.clone()),
         remark: Set(Some(req.remark.unwrap_or_else(|| "".to_string()))),
@@ -220,22 +178,14 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
     act.update(db).await?;
     match (s_s.status.as_str(), status.clone().as_str()) {
         ("0", "1") => {
-            tasks::run_circles_task(uid.clone())
-                .await
-                .expect("任务执行失败");
+            tasks::run_circles_task(uid.clone()).await.expect("任务执行失败");
         }
         ("1", "0") => {
-            tasks::delete_job(s_s.clone().task_id, true)
-                .await
-                .expect("任务删除失败");
+            tasks::delete_job(s_s.clone().task_id, true).await.expect("任务删除失败");
         }
         ("1", "1") => {
-            tasks::delete_job(s_s.clone().task_id, true)
-                .await
-                .expect("任务删除失败");
-            tasks::run_circles_task(uid.clone())
-                .await
-                .expect("任务添加失败");
+            tasks::delete_job(s_s.clone().task_id, true).await.expect("任务删除失败");
+            tasks::run_circles_task(uid.clone()).await.expect("任务添加失败");
         }
         (_, _) => {}
     };
@@ -248,10 +198,7 @@ pub async fn get_by_id<C>(db: &C, job_id: String) -> Result<sys_job::Model>
 where
     C: TransactionTrait + ConnectionTrait,
 {
-    let s = SysJob::find()
-        .filter(sys_job::Column::JobId.eq(job_id))
-        .one(db)
-        .await?;
+    let s = SysJob::find().filter(sys_job::Column::JobId.eq(job_id)).one(db).await?;
 
     let res = match s {
         Some(m) => m,
@@ -282,14 +229,10 @@ pub async fn set_status(db: &DatabaseConnection, req: StatusReq) -> Result<Strin
         .await?;
     match req.status.clone().as_str() {
         "1" => {
-            tasks::run_circles_task(job.clone().job_id)
-                .await
-                .expect("任务执行失败");
+            tasks::run_circles_task(job.clone().job_id).await.expect("任务执行失败");
         }
         "0" => {
-            tasks::delete_job(job.clone().task_id, true)
-                .await
-                .expect("任务删除失败");
+            tasks::delete_job(job.clone().task_id, true).await.expect("任务删除失败");
         }
         _ => return Err(anyhow!("状态值错误",)),
     };

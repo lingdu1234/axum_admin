@@ -7,19 +7,12 @@ use db::{
         models::sys_post::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
     },
 };
-use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order,
-    PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
-};
+use sea_orm::{ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
 
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(
-    db: &DatabaseConnection,
-    page_params: PageParams,
-    req: SearchReq,
-) -> Result<ListData<sys_post::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_post::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -44,9 +37,7 @@ pub async fn get_sort_list(
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
     // 分页获取数据
-    let paginator = s
-        .order_by_asc(sys_post::Column::PostId)
-        .paginate(db, page_per_size);
+    let paginator = s.order_by_asc(sys_post::Column::PostId).paginate(db, page_per_size);
     let total_pages = paginator.num_pages().await?;
     let list = paginator.fetch_page(page_num - 1).await?;
 
@@ -59,11 +50,7 @@ pub async fn get_sort_list(
     Ok(res)
 }
 
-pub async fn check_data_is_exist(
-    post_code: String,
-    post_name: String,
-    db: &DatabaseConnection,
-) -> Result<bool> {
+pub async fn check_data_is_exist(post_code: String, post_name: String, db: &DatabaseConnection) -> Result<bool> {
     let s1 = SysPost::find().filter(sys_post::Column::PostCode.eq(post_code));
     let s2 = SysPost::find().filter(sys_post::Column::PostName.eq(post_name));
     let count1 = s1.count(db).await?;
@@ -71,12 +58,7 @@ pub async fn check_data_is_exist(
     Ok(count1 > 0 || count2 > 0)
 }
 
-pub async fn eidt_check_data_is_exist(
-    post_id: String,
-    post_code: String,
-    post_name: String,
-    db: &DatabaseConnection,
-) -> Result<bool> {
+pub async fn eidt_check_data_is_exist(post_id: String, post_code: String, post_name: String, db: &DatabaseConnection) -> Result<bool> {
     let count1 = SysPost::find()
         .filter(sys_post::Column::PostCode.eq(post_code))
         .filter(sys_post::Column::PostId.ne(post_id.clone()))
@@ -136,14 +118,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 // edit 修改
 pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
-    if eidt_check_data_is_exist(
-        edit_req.clone().post_id,
-        edit_req.clone().post_code,
-        edit_req.clone().post_name,
-        db,
-    )
-    .await?
-    {
+    if eidt_check_data_is_exist(edit_req.clone().post_id, edit_req.clone().post_code, edit_req.clone().post_name, db).await? {
         return Err(anyhow!("数据已存在"));
     }
     let uid = edit_req.post_id;
@@ -189,14 +164,8 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
     Ok(res)
 }
 
-pub async fn get_post_ids_by_user_id(
-    db: &DatabaseConnection,
-    user_id: &str,
-) -> Result<Vec<String>> {
-    let s = SysUserPost::find()
-        .filter(sys_user_post::Column::UserId.eq(user_id))
-        .all(db)
-        .await?;
+pub async fn get_post_ids_by_user_id(db: &DatabaseConnection, user_id: &str) -> Result<Vec<String>> {
+    let s = SysUserPost::find().filter(sys_user_post::Column::UserId.eq(user_id)).all(db).await?;
 
     let mut res = Vec::new();
 
@@ -224,10 +193,7 @@ pub async fn delete_post_by_user_id<C>(db: &C, user_ids: Vec<String>) -> Result<
 where
     C: TransactionTrait + ConnectionTrait,
 {
-    SysUserPost::delete_many()
-        .filter(sys_user_post::Column::UserId.is_in(user_ids))
-        .exec(db)
-        .await?;
+    SysUserPost::delete_many().filter(sys_user_post::Column::UserId.is_in(user_ids)).exec(db).await?;
     Ok(())
 }
 

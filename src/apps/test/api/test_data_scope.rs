@@ -19,11 +19,7 @@ use crate::utils::jwt::Claims;
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_sort_list(
-    Query(page_params): Query<PageParams>,
-    Query(req): Query<SearchReq>,
-    user: Claims,
-) -> Res<ListData<test_data_scope::Model>> {
+pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>, user: Claims) -> Res<ListData<test_data_scope::Model>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::test_data_scope::get_sort_list(db, page_params, req, &user.id).await;
     match res {

@@ -1,18 +1,10 @@
 use anyhow::Result;
 use chrono::Local;
 use db::system::entities::{sys_user, sys_user_role};
-use sea_orm::{
-    sea_query::Expr, ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, Set, TransactionTrait,
-    Value,
-};
+use sea_orm::{sea_query::Expr, ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, Set, TransactionTrait, Value};
 
 // 添加修改用户角色
-pub async fn edit_user_role<C>(
-    db: &C,
-    user_id: &str,
-    role_ids: Vec<String>,
-    created_by: String,
-) -> Result<()>
+pub async fn edit_user_role<C>(db: &C, user_id: &str, role_ids: Vec<String>, created_by: String) -> Result<()>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -42,12 +34,7 @@ where
     Ok(())
 }
 // 给角色批量添加用户
-pub async fn add_role_by_lot_user_ids<C>(
-    db: &C,
-    user_ids: Vec<String>,
-    role_id: String,
-    created_by: String,
-) -> Result<()>
+pub async fn add_role_by_lot_user_ids<C>(db: &C, user_ids: Vec<String>, role_id: String, created_by: String) -> Result<()>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -74,10 +61,7 @@ where
     C: TransactionTrait + ConnectionTrait,
 {
     // 先删除用户角色
-    sys_user_role::Entity::delete_many()
-        .filter(sys_user_role::Column::UserId.eq(user_id))
-        .exec(db)
-        .await?;
+    sys_user_role::Entity::delete_many().filter(sys_user_role::Column::UserId.eq(user_id)).exec(db).await?;
     Ok(())
 }
 
@@ -86,10 +70,7 @@ pub async fn get_role_ids_by_user_id<C>(db: &C, user_id: &str) -> Result<Vec<Str
 where
     C: TransactionTrait + ConnectionTrait,
 {
-    let s = sys_user_role::Entity::find()
-        .filter(sys_user_role::Column::UserId.eq(user_id))
-        .all(db)
-        .await?;
+    let s = sys_user_role::Entity::find().filter(sys_user_role::Column::UserId.eq(user_id)).all(db).await?;
     let res = s.iter().map(|x| x.role_id.clone()).collect::<Vec<_>>();
     Ok(res)
 }
@@ -99,25 +80,17 @@ pub async fn get_user_ids_by_role_id<C>(db: &C, role_id: &str) -> Result<Vec<Str
 where
     C: TransactionTrait + ConnectionTrait,
 {
-    let s = sys_user_role::Entity::find()
-        .filter(sys_user_role::Column::RoleId.eq(role_id))
-        .all(db)
-        .await?;
+    let s = sys_user_role::Entity::find().filter(sys_user_role::Column::RoleId.eq(role_id)).all(db).await?;
     let res = s.iter().map(|x| x.user_id.clone()).collect::<Vec<_>>();
     Ok(res)
 }
 
 // 批量删除某个角色的多个用户
-pub async fn delete_user_role_by_user_ids<C>(
-    db: &C,
-    user_ids: Vec<String>,
-    role_id: Option<String>,
-) -> Result<()>
+pub async fn delete_user_role_by_user_ids<C>(db: &C, user_ids: Vec<String>, role_id: Option<String>) -> Result<()>
 where
     C: TransactionTrait + ConnectionTrait,
 {
-    let mut d =
-        sys_user_role::Entity::delete_many().filter(sys_user_role::Column::UserId.is_in(user_ids));
+    let mut d = sys_user_role::Entity::delete_many().filter(sys_user_role::Column::UserId.is_in(user_ids));
     if let Some(role_id) = role_id {
         d = d.filter(sys_user_role::Column::RoleId.eq(role_id))
     };

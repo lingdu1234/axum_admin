@@ -3,6 +3,7 @@ newline_style = "unix"
 unstable_features = true
 # comments
 format_code_in_doc_comments = true
+max_width = 180
 normalize_comments = true
 wrap_comments = true
 # imports

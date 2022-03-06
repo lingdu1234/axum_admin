@@ -9,18 +9,13 @@ use db::{
 };
 // use poem::{error::BadRequest, http::StatusCode, Error, Result};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, ConnectionTrait, DatabaseConnection,
-    EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
+    ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(
-    db: &DatabaseConnection,
-    page_params: PageParams,
-    search_req: SearchReq,
-) -> Result<ListData<sys_dict_data::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, search_req: SearchReq) -> Result<ListData<sys_dict_data::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -45,9 +40,7 @@ pub async fn get_sort_list(
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
     // 分页获取数据
-    let paginator = s
-        .order_by_asc(sys_dict_data::Column::DictDataId)
-        .paginate(db, page_per_size);
+    let paginator = s.order_by_asc(sys_dict_data::Column::DictSort).paginate(db, page_per_size);
     let total_pages = paginator.num_pages().await?;
     let list = paginator.fetch_page(page_num - 1).await?;
 
@@ -65,12 +58,8 @@ where
     C: TransactionTrait + ConnectionTrait,
 {
     let s = SysDictData::find().filter(sys_dict_data::Column::DictType.eq(req.dict_type));
-    let s1 = s
-        .clone()
-        .filter(sys_dict_data::Column::DictValue.eq(req.dict_value));
-    let s2 = s
-        .clone()
-        .filter(sys_dict_data::Column::DictLabel.eq(req.dict_label));
+    let s1 = s.clone().filter(sys_dict_data::Column::DictValue.eq(req.dict_value));
+    let s2 = s.clone().filter(sys_dict_data::Column::DictLabel.eq(req.dict_label));
     let count1 = s1.count(db).await?;
     let count2 = s2.count(db).await?;
     Ok(count1 > 0 || count2 > 0)
@@ -164,13 +153,10 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
     Ok(format!("用户<{}>数据更新成功", uid))
 }
 
-/// get_user_by_id 获取用户Id获取用户   
+/// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
 
-pub async fn get_by_id(
-    db: &DatabaseConnection,
-    search_req: SearchReq,
-) -> Result<sys_dict_data::Model> {
+pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<sys_dict_data::Model> {
     let mut s = SysDictData::find();
     if let Some(x) = search_req.dict_data_id {
         s = s.filter(sys_dict_data::Column::DictDataId.eq(x));
@@ -186,10 +172,7 @@ pub async fn get_by_id(
     Ok(res)
 }
 
-pub async fn get_by_type(
-    db: &DatabaseConnection,
-    search_req: SearchReq,
-) -> Result<Vec<sys_dict_data::Model>> {
+pub async fn get_by_type(db: &DatabaseConnection, search_req: SearchReq) -> Result<Vec<sys_dict_data::Model>> {
     let mut s = SysDictData::find();
     if let Some(x) = search_req.dict_type {
         s = s.filter(sys_dict_data::Column::DictType.eq(x));
@@ -197,11 +180,11 @@ pub async fn get_by_type(
         return Err(anyhow!("请输入字典类型",));
     }
 
-    let res = s.all(db).await?;
+    let res = s.order_by_asc(sys_dict_data::Column::DictSort).all(db).await?;
     Ok(res)
 }
 
-/// get_all 获取全部   
+/// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
     let s = SysDictData::find()

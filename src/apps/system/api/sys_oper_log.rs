@@ -17,10 +17,7 @@ use super::super::service;
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_sort_list(
-    Query(page_params): Query<PageParams>,
-    Query(req): Query<SearchReq>,
-) -> Res<ListData<sys_oper_log::Model>> {
+pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<sys_oper_log::Model>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_oper_log::get_sort_list(db, page_params, req).await;
     match res {

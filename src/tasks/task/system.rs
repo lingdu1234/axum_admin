@@ -18,10 +18,7 @@ pub async fn check_user_online() -> Result<String> {
 async fn check_online_auto_task() -> Result<String> {
     let mut n: i64 = 0;
     let db = DB.get_or_init(db_conn).await;
-    let s = SysUserOnlineEntity::Entity::find()
-        .all(db)
-        .await
-        .map_err(|e| anyhow!("{}", e.to_string()))?;
+    let s = SysUserOnlineEntity::Entity::find().all(db).await.map_err(|e| anyhow!("{}", e.to_string()))?;
     for item in s {
         let now = Local::now();
         if item.token_exp < now.timestamp() {

@@ -6,18 +6,11 @@ use db::{
         models::sys_job_log::{AddReq, DeleteReq, SearchReq},
     },
 };
-use sea_orm::{
-    ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter,
-    QueryOrder, Set, TransactionTrait,
-};
+use sea_orm::{ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(
-    db: &DatabaseConnection,
-    page_params: PageParams,
-    req: SearchReq,
-) -> Result<ListData<sys_job_log::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_job_log::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -137,10 +130,7 @@ pub async fn clean(db: &DatabaseConnection, job_id: String) -> Result<String> {
 /// get_user_by_id 获取用户Id获取用户   
 /// db 数据库连接 使用db.0
 pub async fn get_by_id(db: &DatabaseConnection, job_log_id: String) -> Result<sys_job_log::Model> {
-    let s = SysJobLog::find()
-        .filter(sys_job_log::Column::JobLogId.eq(job_log_id))
-        .one(db)
-        .await?;
+    let s = SysJobLog::find().filter(sys_job_log::Column::JobLogId.eq(job_log_id)).one(db).await?;
 
     let res = match s {
         Some(m) => m,

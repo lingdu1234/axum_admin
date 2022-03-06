@@ -20,10 +20,7 @@ use crate::utils::jwt::Claims;
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_sort_list(
-    Query(page_params): Query<PageParams>,
-    Query(req): Query<SearchReq>,
-) -> Res<ListData<sys_dict_data::Model>> {
+pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<sys_dict_data::Model>> {
     match req.validate() {
         Ok(_) => {}
         Err(e) => return Res::with_err(&e.to_string()),

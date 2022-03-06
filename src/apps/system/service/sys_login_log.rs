@@ -12,19 +12,12 @@ use db::{
     },
     DB,
 };
-use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
-    TransactionTrait,
-};
+use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
 
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(
-    db: &DatabaseConnection,
-    page_params: PageParams,
-    req: SearchReq,
-) -> Result<ListData<sys_login_log::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_login_log::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -123,9 +116,6 @@ pub async fn add(req: ClientInfo, user: String, msg: String, status: String) {
     };
     let txn = db.begin().await.expect("begin txn error");
     //  let re =   user.insert(db).await?; 这个多查询一次结果
-    let _ = SysLoginLog::insert(active_model)
-        .exec(db)
-        .await
-        .expect("insert error");
+    let _ = SysLoginLog::insert(active_model).exec(db).await.expect("insert error");
     txn.commit().await.expect("commit txn error");
 }

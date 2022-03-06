@@ -1,6 +1,9 @@
 pub use sea_schema::migration::*;
 
-mod m20220101_000001_create_table;
+pub mod db_utils;
+mod migrations;
+
+pub use migrations::*;
 
 pub struct Migrator;
 pub static DATA_DIR: &str = "migration/data/";
