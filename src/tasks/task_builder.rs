@@ -26,6 +26,7 @@ pub static TASK_TIMER: Lazy<Arc<RwLock<DelayTimer>>> = Lazy::new(|| {
 pub fn build_task(job_id: &str, cron_str: &str, task_name: &str, task_count: u64, task_id: u64) -> Result<Task> {
     build_task_async_task(job_id, cron_str, task_name, task_count, task_id)
 }
+
 fn build_task_async_task(job_id: &str, cron_str: &str, job_name: &str, task_count: u64, task_id: u64) -> Result<Task> {
     let mut task_builder = TaskBuilder::default();
     task_builder.set_schedule_iterator_time_zone(Utc);
@@ -35,7 +36,7 @@ fn build_task_async_task(job_id: &str, cron_str: &str, job_name: &str, task_coun
     let body = move || {
         let tt_name = t_name.clone();
         let jj_id = j_id.clone();
-        generate_closure_template(jj_id, task_id, tt_name)
+        async move { generate_closure_template(jj_id, task_id, tt_name).await }
     };
     // let task = task_builder
     //     .set_frequency_count_down_by_cron_str(cron_str, task_count)
@@ -55,7 +56,7 @@ fn build_task_async_task(job_id: &str, cron_str: &str, job_name: &str, task_coun
 async fn generate_closure_template(job_id: String, task_id: u64, job_name: String) {
     let t = job_name.to_string();
     let t_id: i64 = task_id as i64;
-    let future_inner = async_template(get_timestamp() as i32, t.clone());
+    let future_inner = async_template(timestamp() as i32, t.clone());
     run_once_task(job_id, t_id, false).await;
     future_inner.await.ok();
 }

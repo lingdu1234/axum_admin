@@ -106,6 +106,7 @@ pub async fn oper_log_add(req: ReqCtx, res: String, status: String, err_msg: Str
         Some(x) => (x.name.clone(), x.is_log),
         None => ("".to_string(), true),
     };
+    drop(apis);
     if !is_log {
         return Ok(());
     }

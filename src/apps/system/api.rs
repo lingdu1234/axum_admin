@@ -126,7 +126,7 @@ fn sys_menu_api() -> Route {
         .at("/add", post(sys_menu::add)) // 添加
         .at("/edit", put(sys_menu::edit)) // 更新
         .at("/delete", delete(sys_menu::delete)) // 硬删除
-        .at("/get_all_menu_tree", get(sys_menu::get_all_menu_tree)) // 获取全部路由菜单树
+        .at("/get_all_enabled_menu_tree", get(sys_menu::get_all_enabled_menu_tree)) // 获取全部正常的路由菜单树
         .at("/get_routers", get(sys_menu::get_routers)) // 获取用户菜单树
 }
 fn sys_login_log_api() -> Route {

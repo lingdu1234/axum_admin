@@ -12,7 +12,7 @@ use db::{
     },
     DB,
 };
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
+use sea_orm::{sea_query::Table, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -91,9 +91,10 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 }
 
 pub async fn clean(db: &DatabaseConnection) -> Result<String> {
-    let s = SysLoginLog::delete_many();
-    s.exec(db).await?;
-    Ok("数据已清空".to_string())
+    let stmt = Table::truncate().table(sys_login_log::Entity).to_owned();
+    let db_backend = db.get_database_backend();
+    db.execute(db_backend.build(&stmt)).await?;
+    Ok("登录日志已清空".to_string())
 }
 
 pub async fn add(req: ClientInfo, user: String, msg: String, status: String) {

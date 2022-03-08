@@ -23,7 +23,7 @@ pub struct ResInfo {
     pub err_msg: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ApiInfo {
     pub name: String,
     pub is_db_cache: bool,

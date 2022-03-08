@@ -10,6 +10,7 @@ pub async fn go_run_task(params: Option<String>, task_name: String) -> Result<St
         "test_b" => test_fn::test_b(params),
         "test_c" => test_fn::test_c(params),
         "check_user_online" => system::check_user_online().await,
+        "update_api_info" => system::update_api_info().await,
         _ => Err(anyhow!("任务 {} 未找到", task_name)),
     }
 }

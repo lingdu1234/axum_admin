@@ -32,7 +32,7 @@ pub async fn init() {
     tracing::info!("cache data init");
 
     loop {
-        tokio::time::sleep(Duration::from_secs(30)).await;
+        tokio::time::sleep(Duration::from_secs(300)).await;
         init_loop().await;
     }
 }
@@ -53,14 +53,16 @@ async fn init_loop() {
 }
 
 pub async fn add_cache_data(ori_uri: &str, api_key: &str, token_id: &str, method: &str, data: String) {
-    let mut res_data = RES_DATA.lock().await;
     let mut res_bmap = RES_BMAP.lock().await;
     let data_key = format!("{}_{}_{}", ori_uri, token_id, method);
     let index_key = format!("{}★{}", api_key, &data_key);
     res_bmap.insert(index_key.clone(), Instant::now());
+    drop(res_bmap);
     let hmap: HashMap<String, String> = HashMap::new();
+    let mut res_data = RES_DATA.lock().await;
     let v = res_data.entry(api_key.to_string()).or_insert(hmap);
     v.insert(data_key.clone(), data);
+    drop(res_data);
     tracing::info!("add cache data,api_key: {}, data_key: {},api:{}", api_key, data_key, ori_uri);
 }
 
@@ -75,6 +77,7 @@ pub async fn get_cache_data(api_key: &str, data_key: &str) -> Option<String> {
         Some(v) => Some(v.clone()),
         None => return None,
     };
+    drop(res_data);
     tracing::info!("get cache data success,api_key: {}, data_key: {},cache data: {:?}", api_key, data_key, res.clone());
     res
 }
@@ -97,6 +100,7 @@ pub async fn remove_cache_data(api_key: &str, related_api: Option<Vec<String>>, 
                     tracing::info!("remove cache data: api:{}", api_key);
                 }
             }
+            drop(res_data);
         }
         Some(d_key) => {
             match res_data.get_mut(api_key) {
@@ -109,6 +113,7 @@ pub async fn remove_cache_data(api_key: &str, related_api: Option<Vec<String>>, 
                     tracing::info!("remove cache data: api_key:{}", api_key);
                 }
             };
+            drop(res_data);
         }
     }
 }
@@ -146,6 +151,8 @@ impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
                 related_api: None,
             },
         };
+        // 释放锁
+        drop(apis);
         let (token_id, _) = jwt::get_bear_token(&req).await?;
 
         if ctx.method.as_str() != "GET" {

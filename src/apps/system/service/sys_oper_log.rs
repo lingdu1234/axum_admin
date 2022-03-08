@@ -6,7 +6,7 @@ use db::{
         models::sys_oper_log::{DeleteReq, SearchReq},
     },
 };
-use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder};
+use sea_orm::{sea_query::Table, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder};
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
@@ -78,12 +78,13 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 
 /// delete 完全删除
 pub async fn clean(db: &DatabaseConnection) -> Result<String> {
-    SysOperLog::delete_many().exec(db).await.map_err(|e| anyhow!(e.to_string()))?;
-
+    let stmt = Table::truncate().table(sys_oper_log::Entity).to_owned();
+    let db_backend = db.get_database_backend();
+    db.execute(db_backend.build(&stmt)).await?;
     Ok("日志清空成功".to_string())
 }
 
-/// get_user_by_id 获取用户Id获取用户   
+/// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
 pub async fn get_by_id(db: &DatabaseConnection, oper_id: String) -> Result<sys_oper_log::Model> {
     let s = SysOperLog::find().filter(sys_oper_log::Column::OperId.eq(oper_id)).one(db).await?;

@@ -176,23 +176,32 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
     };
     // 更新
     act.update(db).await?;
-    match (s_s.status.as_str(), status.clone().as_str()) {
-        ("0", "1") => {
-            tasks::run_circles_task(uid.clone()).await.expect("任务执行失败");
-        }
-        ("1", "0") => {
-            tasks::delete_job(s_s.clone().task_id, true).await.expect("任务删除失败");
-        }
-        ("1", "1") => {
-            tasks::delete_job(s_s.clone().task_id, true).await.expect("任务删除失败");
-            tasks::run_circles_task(uid.clone()).await.expect("任务添加失败");
-        }
-        (_, _) => {}
-    };
+    let job_id = uid.clone();
+    tokio::spawn(async move {
+        match (s_s.status.as_str(), status.clone().as_str()) {
+            ("0", "1") => {
+                tasks::run_circles_task(job_id.clone()).await.expect("任务执行失败");
+            }
+            ("1", "0") => {
+                tasks::delete_job(s_s.clone().task_id, true).await.expect("任务删除失败");
+            }
+            ("1", "1") => {
+                tracing::info!("任务状态未变化================================================");
+                tasks::update_circles_task(job_id.clone()).await.expect("任务更新失败");
+                // tasks::delete_job(s_s.clone().task_id,
+                // true).await.expect("任务删除失败");
+                // tasks::run_circles_task(uid.clone()).await.expect("
+                // 任务添加失败" );
+            }
+            (_, _) => {
+                tracing::info!("任务状态未变化+++++++++++++++++++++++++++++++++++++");
+            }
+        };
+    });
     Ok(format!("{}修改成功", uid))
 }
 
-/// get_user_by_id 获取用户Id获取用户   
+/// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
 pub async fn get_by_id<C>(db: &C, job_id: String) -> Result<sys_job::Model>
 where
@@ -207,7 +216,7 @@ where
     Ok(res)
 }
 
-/// get_all 获取全部   
+/// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_active_job(db: &DatabaseConnection) -> Result<Vec<sys_job::Model>> {
     let s = SysJob::find()

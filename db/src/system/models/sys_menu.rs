@@ -62,7 +62,7 @@ pub struct Meta {
     pub hidden: bool,
 }
 
-#[derive(Serialize, Clone, Validate, Debug, Default)]
+#[derive(Serialize, Clone, Debug, Default)]
 pub struct SysMenuTree {
     #[serde(flatten)]
     pub user_menu: UserMenu,

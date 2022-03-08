@@ -3,6 +3,8 @@ use chrono::Local;
 use db::{db_conn, system::SysUserOnlineEntity, DB};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
+use crate::utils;
+
 //  检查在线用户任
 pub async fn check_user_online() -> Result<String> {
     let s = check_online_auto_task().await;
@@ -31,4 +33,10 @@ async fn check_online_auto_task() -> Result<String> {
         }
     }
     Ok(format!("清除 {} 位在线过期用户", n))
+}
+
+/// 更新全局api信息
+pub async fn update_api_info() -> Result<String> {
+    utils::api_utils::re_init_all_api().await;
+    Ok("api信息更新成功".to_string())
 }
