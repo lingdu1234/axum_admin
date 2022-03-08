@@ -1,5 +1,6 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
+use ahash::AHashMap as HashMap;
 use db::{common::ctx::ApiInfo, db_conn, system::entities::sys_role_api, DB};
 use once_cell::sync::Lazy;
 use sea_orm::{ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, TransactionTrait};

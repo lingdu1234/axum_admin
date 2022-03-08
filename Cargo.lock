@@ -2259,6 +2259,7 @@ dependencies = [
 name = "poem-admin"
 version = "0.1.0"
 dependencies = [
+ "ahash",
  "anyhow",
  "async-stream",
  "bytes 1.1.0",

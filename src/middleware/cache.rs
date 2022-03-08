@@ -1,10 +1,7 @@
 use core::time::Duration;
-use std::{
-    collections::{BTreeMap, HashMap},
-    sync::Arc,
-    time::Instant,
-};
+use std::{collections::BTreeMap, sync::Arc, time::Instant};
 
+use ahash::AHashMap as HashMap;
 use configs::CFG;
 use db::common::{
     ctx::{ApiInfo, ReqCtx},
@@ -22,10 +19,10 @@ pub static RES_DATA: Lazy<Arc<Mutex<HashMap<String, HashMap<String, String>>>>> 
 });
 
 // 格式 token★apipath
-pub static RES_BMAP: Lazy<Arc<Mutex<BTreeMap<String, Instant>>>> = Lazy::new(|| {
-    let bmap: BTreeMap<String, Instant> = BTreeMap::new();
+pub static RES_INDEX: Lazy<Arc<Mutex<BTreeMap<String, Instant>>>> = Lazy::new(|| {
+    let inddex: BTreeMap<String, Instant> = BTreeMap::new();
     tokio::spawn(async { self::init().await });
-    Arc::new(Mutex::new(bmap))
+    Arc::new(Mutex::new(inddex))
 });
 
 pub async fn init() {
@@ -39,7 +36,7 @@ pub async fn init() {
 
 async fn init_loop() {
     let d = CFG.server.cache_time * 1000;
-    let mut res_bmap = RES_BMAP.lock().await;
+    let mut res_bmap = RES_INDEX.lock().await;
     for (k, v) in res_bmap.clone().iter() {
         if Instant::now().duration_since(*v).as_millis() as u64 > d {
             // ★ 前为api，后面为 data_key
@@ -53,7 +50,7 @@ async fn init_loop() {
 }
 
 pub async fn add_cache_data(ori_uri: &str, api_key: &str, token_id: &str, method: &str, data: String) {
-    let mut res_bmap = RES_BMAP.lock().await;
+    let mut res_bmap = RES_INDEX.lock().await;
     let data_key = format!("{}_{}_{}", ori_uri, token_id, method);
     let index_key = format!("{}★{}", api_key, &data_key);
     res_bmap.insert(index_key.clone(), Instant::now());
