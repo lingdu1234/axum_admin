@@ -170,27 +170,35 @@ impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
         }
         let data_key = ctx.ori_uri.clone() + "_" + &token_id + "_" + &ctx.method;
         // 开始请求数据
-        match get_cache_data(&ctx.path, &data_key).await {
-            Some(v) => Ok(v.into_response()),
+        match api_info.is_db_cache {
+            true => match get_cache_data(&ctx.path, &data_key).await {
+                Some(v) => Ok(v.into_response()),
 
-            None => {
-                let res_end = self.ep.call(req).await;
-                match res_end {
-                    Ok(v) => {
-                        let res = v.into_response();
-                        let res_ctx = match res.extensions().get::<ResJsonString>() {
-                            Some(x) => x.0.clone(),
-                            None => "".to_string(),
-                        };
-                        if api_info.is_db_cache {
+                None => {
+                    let res_end = self.ep.call(req).await;
+                    match res_end {
+                        Ok(v) => {
+                            let res = v.into_response();
+                            let res_ctx = match res.extensions().get::<ResJsonString>() {
+                                Some(x) => x.0.clone(),
+                                None => "".to_string(),
+                            };
+
                             tokio::spawn(async move {
                                 // 缓存数据
                                 add_cache_data(&ctx.ori_uri, &ctx.path, &token_id, &ctx.method, res_ctx).await;
                             });
-                        }
 
-                        Ok(res)
+                            Ok(res)
+                        }
+                        Err(e) => Err(e),
                     }
+                }
+            },
+            false => {
+                let res_end = self.ep.call(req).await;
+                match res_end {
+                    Ok(v) => Ok(v.into_response()),
                     Err(e) => Err(e),
                 }
             }

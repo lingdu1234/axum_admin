@@ -37,7 +37,7 @@ impl<E: Endpoint> Endpoint for ContextEndpoint<E> {
             },
         };
 
-        let ori_uri = req.original_uri().to_string();
+        let ori_uri_path = req.original_uri().path().to_string();
         let method = req.method().to_string();
         let path = req.original_uri().path().replacen(&(CFG.server.api_prefix.clone() + "/"), "", 1);
         let path_params = req.uri().query().unwrap_or("").to_string();
@@ -47,7 +47,7 @@ impl<E: Endpoint> Endpoint for ContextEndpoint<E> {
             Ok((x, y)) => (x, y),
         };
         let req_ctx = ReqCtx {
-            ori_uri,
+            ori_uri: if path_params.is_empty() { ori_uri_path } else { ori_uri_path + "?" + &path_params },
             path,
             path_params,
             method: method.clone(),

@@ -97,10 +97,7 @@ pub async fn oper_log_add(req: ReqCtx, res: String, status: String, err_msg: Str
             err_msg_data,
         );
     });
-    // 当记录日志为操作日志，而且为GET请求时，不记录日志,否则数据要爆炸
-    if req.path.clone().contains("oper_log") && req.method.clone() == "GET" {
-        return Ok(());
-    }
+    //  判断是否要记录日志
     let apis = ALL_APIS.lock().await;
     let (api_name, is_log) = match apis.get(&req.path) {
         Some(x) => (x.name.clone(), x.is_log),
