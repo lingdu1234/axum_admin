@@ -13,13 +13,14 @@ use once_cell::sync::Lazy;
 use tokio::sync::RwLock;
 
 use super::run_once_task;
+use crate::my_env::RT;
 
 pub static TASK_TIMER: Lazy<Arc<RwLock<DelayTimer>>> = Lazy::new(|| {
-    // let rt = RT.clone();
+    let rt = RT.clone();
     let t_timeer = DelayTimerBuilder::default()
         // .enable_status_report()
-        .tokio_runtime_by_default()
-        // .tokio_runtime_shared_by_custom(rt)
+        // .tokio_runtime_by_default()
+        .tokio_runtime_shared_by_custom(rt)
         .build();
     Arc::new(RwLock::new(t_timeer))
 });

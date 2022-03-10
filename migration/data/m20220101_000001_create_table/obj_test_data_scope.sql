@@ -1,6 +1,6 @@
 /*
 SQLyog Ultimate
-MySQL - 10.6.4-MariaDB : Database - poem-admin-demo
+MySQL - 10.6.5-MariaDB-1:10.6.5+maria~focal : Database - wk3
 *********************************************************************
 */
 

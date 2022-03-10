@@ -1,5 +1,6 @@
 // 公共
 pub mod common;
+pub mod server_info;
 // 用户管理
 pub mod sys_user;
 // 字典类型

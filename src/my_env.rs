@@ -1,9 +1,17 @@
+use std::sync::Arc;
+
 use configs::CFG;
+use once_cell::sync::Lazy;
 use tracing::Level;
 use tracing_subscriber::{
     fmt,
     fmt::format::{Compact, Format},
 };
+
+pub static RT: Lazy<Arc<tokio::runtime::Runtime>> = Lazy::new(|| {
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    Arc::new(rt)
+});
 
 pub fn setup() {
     //   打印logo
@@ -47,7 +55,8 @@ pub fn get_log_format() -> Format<Compact, LocalTime<Rfc3339>> {
     fmt::format()
         .with_level(true) // don't include levels in formatted output
         .with_target(true) // don't include targets
-        .with_thread_ids(true) // include the thread ID of the current thread
+        .with_thread_ids(true)
+        // include the thread ID of the current thread
         // .with_thread_names(true)
         // .with_file(true)
         // .with_ansi(true)

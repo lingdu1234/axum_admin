@@ -1,5 +1,5 @@
 use configs::CFG;
-use poem::{get, post, EndpointExt, Route};
+use poem::{endpoint::StaticFilesEndpoint, get, post, EndpointExt, Route};
 
 use crate::middleware;
 
@@ -8,6 +8,7 @@ pub mod test;
 
 pub fn api() -> Route {
     Route::new()
+        .nest(&CFG.web.upload_url, StaticFilesEndpoint::new(&CFG.web.upload_dir).show_files_listing())
         // 无需授权Api.通用模块
         .nest("/comm", no_auth_api())
         // 系统管理模块

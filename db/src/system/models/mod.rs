@@ -1,3 +1,5 @@
+pub mod server_info;
+
 pub mod sys_dept;
 pub mod sys_dict_data;
 pub mod sys_dict_type;
