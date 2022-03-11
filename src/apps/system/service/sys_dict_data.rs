@@ -189,7 +189,7 @@ pub async fn get_by_type(db: &DatabaseConnection, search_req: SearchReq) -> Resu
 pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
     let s = SysDictData::find()
         // .filter(sys_dict_data::Column::DeletedAt.is_null())
-        .filter(sys_dict_data::Column::Status.eq(1))
+        .filter(sys_dict_data::Column::Status.eq("1"))
         .order_by(sys_dict_data::Column::DictDataId, Order::Asc)
         .into_model::<Resp>()
         .all(db)

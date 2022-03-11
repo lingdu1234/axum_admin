@@ -181,7 +181,7 @@ pub async fn get_post_ids_by_user_id(db: &DatabaseConnection, user_id: &str) -> 
 pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
     let s = SysPost::find()
         .filter(sys_post::Column::DeletedAt.is_null())
-        .filter(sys_post::Column::Status.eq(1))
+        .filter(sys_post::Column::Status.eq("1"))
         .order_by(sys_post::Column::PostId, Order::Asc)
         .into_model::<Resp>()
         .all(db)
