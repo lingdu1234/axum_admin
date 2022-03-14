@@ -26,7 +26,8 @@ async fn get_server_info() {
     }
 }
 pub async fn get_oper_sys_info() -> SysInfo {
-    let sys = System::new_all();
+    let mut sys = System::new_all();
+    sys.refresh_all();
     let pid = sysinfo::get_current_pid().expect("failed to get PID");
     let server = Server {
         oper_sys_name: sys.name().unwrap_or_else(|| "unknown".to_owned()),
