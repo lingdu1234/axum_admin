@@ -1,25 +1,30 @@
 // use std::time::Duration;
 
+use std::{net::SocketAddr, str::FromStr};
+
+use axum::{
+    http::{Method, StatusCode},
+    routing::get_service,
+    Router,
+};
+use axum_server::tls_rustls::RustlsConfig;
 use configs::CFG;
 //
-use poem::{
-    endpoint::StaticFilesEndpoint,
-    listener::{Listener, RustlsConfig, TcpListener},
-    middleware::{Compression, Cors},
-    EndpointExt, Result, Route, Server,
-};
 use poem_admin::{
     apps,
     my_env::{self, RT},
     tasks,
     utils::{self, cert::CERT_KEY},
 };
+use tower_http::{
+    cors::{Any, CorsLayer},
+    services::ServeDir,
+};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
-
 // 路由日志追踪
 
 // #[tokio::main]
-fn main() -> Result<(), std::io::Error> {
+fn main() {
     RT.block_on(async {
         if std::env::var_os("RUST_LOG").is_none() {
             std::env::set_var("RUST_LOG", &CFG.log.log_level);
@@ -63,47 +68,30 @@ fn main() -> Result<(), std::io::Error> {
         utils::ApiUtils::init_all_api().await;
         // 定时任务初始化
         tasks::timer_task_init().await.expect("定时任务初始化失败");
+
+        let addr = SocketAddr::from_str(&CFG.server.address).unwrap();
         //  跨域
-        let cors = Cors::new();
+        let cors = CorsLayer::new()
+            .allow_methods(vec![Method::GET, Method::POST, Method::PUT, Method::DELETE])
+            .allow_origin(Any);
         // 启动app  注意中间件顺序 最后的先执行，尤其AddData
         // 顺序不对可能会导致数据丢失，无法在某些位置获取数据
+        let config = RustlsConfig::from_pem_file(&CFG.cert.cert, &CFG.cert.key).await.unwrap();
 
-        let app = Route::new()
+        let app = Router::new()
             .nest(&CFG.server.api_prefix, apps::api())
-            .nest("/", StaticFilesEndpoint::new(&CFG.web.dir).show_files_listing().index_file(&CFG.web.index))
+            .nest(
+                "/",
+                get_service(ServeDir::new("."))
+                    .handle_error(|error: std::io::Error| async move { (StatusCode::INTERNAL_SERVER_ERROR, format!("Unhandled internal error: {}", error)) }),
+            )
             // .with(Tracing)
-            .with_if(CFG.server.content_gzip, Compression::new())
-            .with(cors);
+            .layer(cors);
 
         match CFG.server.ssl {
-            true => {
-                let listener = TcpListener::bind(&CFG.server.address).rustls(RustlsConfig::new().key(&*CERT_KEY.key).cert(&*CERT_KEY.cert));
-                let server = Server::new(listener).name(&CFG.server.name);
-                server
-                    .run(app)
-                    // .run_with_graceful_shutdown(
-                    //     app,
-                    //     async move {
-                    //         let _ = tokio::signal::ctrl_c().await;
-                    //     },
-                    //     Some(Duration::from_secs(1)),
-                    // )
-                    .await
-            }
-            false => {
-                let listener = TcpListener::bind(&CFG.server.address);
-                let server = Server::new(listener).name(&CFG.server.name);
-                server
-                    .run(app)
-                    // .run_with_graceful_shutdown(
-                    //     app,
-                    //     async move {
-                    //         let _ = tokio::signal::ctrl_c().await;
-                    //     },
-                    //     Some(Duration::from_secs(1)),
-                    // )
-                    .await
-            }
+            true => axum_server::bind_rustls(addr, config).serve(app.into_make_service()).await.unwrap(),
+
+            false => axum::Server::bind(&addr).serve(app.into_make_service()).await.unwrap(),
         }
     })
 }

@@ -1,4 +1,9 @@
 use anyhow::Result;
+use axum::{
+    extract::{Multipart, Query},
+    http::{request::Parts, Request},
+    Json,
+};
 use configs::CFG;
 use db::{
     common::res::{ListData, PageParams, Res},
@@ -8,11 +13,6 @@ use db::{
     },
     DB,
 };
-use poem::{
-    handler,
-    web::{Json, Multipart, Query},
-    Request,
-};
 use validator::Validate;
 
 use super::super::service;
@@ -20,7 +20,7 @@ use crate::utils::jwt::{AuthBody, Claims};
 
 /// get_user_list 获取用户列表
 /// page_params 分页参数
-#[handler]
+
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<UserWithDept>> {
     match req.validate() {
         Ok(_) => {}
@@ -36,7 +36,6 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 
 /// get_user_by_id 获取用户Id获取用户
 
-#[handler]
 pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<UserInfomaion> {
     match req.validate() {
         Ok(_) => {}
@@ -51,7 +50,6 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<UserInfomaion> {
     }
 }
 
-#[handler]
 pub async fn get_profile(user: Claims) -> Res<UserInfomaion> {
     match self::get_user_info_by_id(&user.id).await {
         Err(e) => Res::with_err(&e.to_string()),
@@ -79,7 +77,7 @@ pub async fn get_user_info_by_id(id: &str) -> Result<UserInfomaion> {
 }
 
 /// add 添加
-#[handler]
+
 pub async fn add(Json(add_req): Json<AddReq>, user: Claims) -> Res<String> {
     match add_req.validate() {
         Ok(_) => {}
@@ -94,7 +92,7 @@ pub async fn add(Json(add_req): Json<AddReq>, user: Claims) -> Res<String> {
 }
 
 /// delete 完全删除
-#[handler]
+
 pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::delete(db, delete_req).await;
@@ -105,7 +103,7 @@ pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Res<String> {
 }
 
 // edit 修改
-#[handler]
+
 pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
     match edit_req.validate() {
         Ok(_) => {}
@@ -119,7 +117,6 @@ pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
     }
 }
 
-#[handler]
 pub async fn update_profile(Json(req): Json<UpdateProfileReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::update_profile(db, req).await;
@@ -130,8 +127,8 @@ pub async fn update_profile(Json(req): Json<UpdateProfileReq>) -> Res<String> {
 }
 
 /// 用户登录
-#[handler]
-pub async fn login(Json(login_req): Json<UserLoginReq>, request: &Request) -> Res<AuthBody> {
+
+pub async fn login(Json(login_req): Json<UserLoginReq>, request: &Parts) -> Res<AuthBody> {
     match login_req.validate() {
         Ok(_) => {}
         Err(e) => return Res::with_err(&e.to_string()),
@@ -143,7 +140,7 @@ pub async fn login(Json(login_req): Json<UserLoginReq>, request: &Request) -> Re
     }
 }
 /// 获取用户登录信息
-#[handler]
+
 pub async fn get_info(user: Claims) -> Res<UserInfo> {
     let db = DB.get_or_init(db_conn).await;
     //  获取用户信息
@@ -182,7 +179,7 @@ pub async fn get_info(user: Claims) -> Res<UserInfo> {
 }
 
 // edit 修改
-#[handler]
+
 pub async fn reset_passwd(Json(req): Json<ResetPwdReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::reset_passwd(db, req).await;
@@ -192,7 +189,6 @@ pub async fn reset_passwd(Json(req): Json<ResetPwdReq>) -> Res<String> {
     }
 }
 
-#[handler]
 pub async fn update_passwd(Json(req): Json<UpdatePwdReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::update_passwd(db, req, &user.id).await;
@@ -203,7 +199,7 @@ pub async fn update_passwd(Json(req): Json<UpdatePwdReq>, user: Claims) -> Res<S
 }
 
 // edit 修改
-#[handler]
+
 pub async fn change_status(Json(req): Json<ChangeStatusReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::change_status(db, req).await;
@@ -213,7 +209,7 @@ pub async fn change_status(Json(req): Json<ChangeStatusReq>) -> Res<String> {
     }
 }
 // fresh_token 刷新token
-#[handler]
+
 pub async fn fresh_token(user: Claims) -> Res<AuthBody> {
     let res = service::sys_user::fresh_token(user).await;
     match res {
@@ -222,7 +218,6 @@ pub async fn fresh_token(user: Claims) -> Res<AuthBody> {
     }
 }
 
-#[handler]
 pub async fn change_role(Json(req): Json<ChangeRoleReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::change_role(db, req).await;
@@ -232,7 +227,6 @@ pub async fn change_role(Json(req): Json<ChangeRoleReq>) -> Res<String> {
     }
 }
 
-#[handler]
 pub async fn update_avatar(multipart: Multipart, user: Claims) -> Res<String> {
     let res = service::common::upload_file(multipart).await;
     match res {

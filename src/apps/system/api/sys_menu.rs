@@ -1,3 +1,4 @@
+use axum::{extract::Query, Json};
 use configs::CFG;
 use db::{
     common::res::{ListData, PageParams, Res},
@@ -8,17 +9,13 @@ use db::{
     },
     DB,
 };
-use poem::{
-    handler,
-    web::{Json, Query},
-};
 use validator::Validate;
 
 use super::super::service;
 use crate::utils::jwt::Claims;
 
 /// get_all_menu_tree 获取全部菜单
-#[handler]
+
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(search_req): Query<SearchReq>) -> Res<ListData<sys_menu::Model>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_sort_list(db, page_params, search_req).await;
@@ -28,7 +25,6 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(search_r
     }
 }
 
-#[handler]
 pub async fn get_auth_list(Query(page_params): Query<PageParams>, Query(search_req): Query<SearchReq>) -> Res<ListData<sys_menu::Model>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_auth_list(db, page_params, search_req).await;
@@ -40,7 +36,7 @@ pub async fn get_auth_list(Query(page_params): Query<PageParams>, Query(search_r
 
 /// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
-#[handler]
+
 pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Res<MenuResp> {
     match search_req.validate() {
         Ok(_) => {}
@@ -55,7 +51,7 @@ pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Res<MenuResp> {
 }
 
 /// add 添加
-#[handler]
+
 pub async fn add(Json(req): Json<AddReq>) -> Res<String> {
     match req.validate() {
         Ok(_) => {}
@@ -70,7 +66,7 @@ pub async fn add(Json(req): Json<AddReq>) -> Res<String> {
 }
 
 /// delete 完全删除
-#[handler]
+
 pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::delete(db, req.id).await;
@@ -81,7 +77,7 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
 }
 
 // edit 修改
-#[handler]
+
 pub async fn edit(Json(edit_req): Json<EditReq>) -> Res<String> {
     match edit_req.validate() {
         Ok(_) => {}
@@ -96,7 +92,7 @@ pub async fn edit(Json(edit_req): Json<EditReq>) -> Res<String> {
 }
 
 /// get_all_menu_tree 获取全部菜单树
-#[handler]
+
 pub async fn get_all_enabled_menu_tree() -> Res<Vec<SysMenuTree>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_all_enabled_menu_tree(db).await;
@@ -106,7 +102,7 @@ pub async fn get_all_enabled_menu_tree() -> Res<Vec<SysMenuTree>> {
     }
 }
 /// 获取用户路由
-#[handler]
+
 pub async fn get_routers(user: Claims) -> Res<Vec<SysMenuTree>> {
     let db = DB.get_or_init(db_conn).await;
     //    获取角色列表

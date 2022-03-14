@@ -1,6 +1,10 @@
 use core::time::Duration;
-use std::time::Instant;
+use std::{
+    task::{Context, Poll},
+    time::Instant,
+};
 
+use axum::{body::Body, http::Request, response::Response};
 use chrono::Local;
 use configs::CFG;
 use db::{
@@ -9,33 +13,34 @@ use db::{
     system::entities::{prelude::SysOperLog, sys_oper_log},
     DB,
 };
-use poem::{Endpoint, IntoResponse, Middleware, Request, Response, Result};
+use futures::future::BoxFuture;
 use sea_orm::{EntityTrait, Set};
+use tower::Service;
 
 use crate::{apps::system::check_user_online, utils::api_utils::ALL_APIS};
 
 /// req上下文注入中间件 同时进行jwt授权验证 以及日志记录
-pub struct OperLog;
-
-impl<E: Endpoint> Middleware<E> for OperLog {
-    type Output = OperLogEndpoint<E>;
-
-    fn transform(&self, ep: E) -> Self::Output {
-        OperLogEndpoint { inner: ep }
-    }
-}
 
 /// Endpoint for `Tracing` middleware.
-pub struct OperLogEndpoint<E> {
-    inner: E,
+pub struct OperLog<E> {
+    pub inner: E,
 }
 
-#[poem::async_trait]
-impl<E: Endpoint> Endpoint for OperLogEndpoint<E> {
-    // type Output = E::Output;
-    type Output = Response;
+#[axum::async_trait]
+impl<E> Service<Request<Body>> for OperLog<E>
+where
+    E: Service<Request<Body>, Response = Response> + Clone + Send + 'static,
+    E::Future: Send + 'static,
+{
+    type Response = E::Response;
+    type Error = E::Error;
+    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-    async fn call(&self, req: Request) -> Result<Self::Output> {
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.inner.poll_ready(cx)
+    }
+
+    async fn call(&self, req: Request<Body>) -> Self::Future {
         let req_ctx = match req.extensions().get::<ReqCtx>() {
             Some(x) => x.clone(),
             None => {

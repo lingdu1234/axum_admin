@@ -1,6 +1,10 @@
 use std::fmt::Debug;
 
-use poem::{http::StatusCode, IntoResponse, Response};
+use axum::{
+    body::{self, Full},
+    http::{header, HeaderValue, StatusCode},
+    response::{IntoResponse, Response},
+};
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize)]
 /// 查 数据返回
@@ -44,7 +48,11 @@ where
         let json_string = match serde_json::to_string(&data) {
             Ok(v) => v,
             Err(e) => {
-                return Response::from((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
+                return Response::builder()
+                    .status(StatusCode::INTERNAL_SERVER_ERROR)
+                    .header(header::CONTENT_TYPE, HeaderValue::from_static(mime::TEXT_PLAIN_UTF_8.as_ref()))
+                    .body(body::boxed(Full::from(e.to_string())))
+                    .unwrap();
             }
         };
         let res_json_string = ResJsonString(json_string.clone());

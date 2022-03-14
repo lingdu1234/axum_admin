@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use axum::http::request::Parts;
 use chrono::{Local, NaiveDateTime};
 use db::{
     common::res::{ListData, PageParams},
@@ -10,7 +11,6 @@ use db::{
         },
     },
 };
-use poem::Request;
 use scru128::scru128_string;
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, JoinType, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait,
@@ -419,7 +419,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, c_user_id: String) -> R
 }
 
 /// 用户登录
-pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq, req: &Request) -> Result<AuthBody> {
+pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq, req: &Parts) -> Result<AuthBody> {
     let mut msg = "登录成功".to_string();
     let mut status = "1".to_string();
     // 验证验证码
@@ -494,10 +494,9 @@ pub async fn fresh_token(user: Claims) -> Result<AuthBody> {
     Ok(token)
 }
 
-pub async fn set_login_info(req: &Request, u_id: String, user: String, msg: String, status: String, token_id: Option<String>, token: Option<AuthBody>) {
-    let header = req.headers().to_owned();
-    let remote_addr = req.remote_addr().to_owned();
-    let u = utils::get_client_info(header, remote_addr).await;
+pub async fn set_login_info(req: &Parts, u_id: String, user: String, msg: String, status: String, token_id: Option<String>, token: Option<AuthBody>) {
+    let header = req.headers.to_owned();
+    let u = utils::get_client_info(header).await;
     // 写入登录日志
     let u2 = u.clone();
     let status2 = status.clone();

@@ -1,32 +1,39 @@
+use std::task::{Context, Poll};
+
+use axum::{
+    body::Body,
+    http::{Request, StatusCode},
+    response::Response,
+    Error,
+};
 use bytes::Bytes;
 use configs::CFG;
 use db::common::ctx::{ReqCtx, UserInfo};
-use poem::{http::StatusCode, Body, Endpoint, Error, FromRequest, Middleware, Request, Result};
+use futures::future::BoxFuture;
+use tower::Service;
 
 use crate::utils::jwt::Claims;
-
 /// req上下文注入中间件 同时进行jwt授权验证
-pub struct Context;
-
-impl<E: Endpoint> Middleware<E> for Context {
-    type Output = ContextEndpoint<E>;
-
-    fn transform(&self, ep: E) -> Self::Output {
-        ContextEndpoint { inner: ep }
-    }
-}
-
 /// Endpoint for `Tracing` middleware.
-pub struct ContextEndpoint<E> {
-    inner: E,
+pub struct Ctx<E> {
+    pub inner: E,
 }
 
-#[poem::async_trait]
-impl<E: Endpoint> Endpoint for ContextEndpoint<E> {
-    type Output = E::Output;
-    // type Output = Response;
+#[axum::async_trait]
+impl<E> Service<Request<Body>> for Ctx<E>
+where
+    E: Service<Request<Body>, Response = Response> + Clone + Send + 'static,
+    E::Future: Send + 'static,
+{
+    type Response = E::Response;
+    type Error = E::Error;
+    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-    async fn call(&self, req: Request) -> Result<Self::Output> {
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.inner.poll_ready(cx)
+    }
+
+    async fn call(&mut self, mut req: Request<Body>) -> Self::Future {
         // 请求信息ctx注入
         let user = match Claims::from_request_without_body(&req).await {
             Err(e) => return Err(e),

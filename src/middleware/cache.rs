@@ -1,15 +1,22 @@
 use core::time::Duration;
-use std::{collections::BTreeMap, sync::Arc, time::Instant};
+use std::{
+    collections::BTreeMap,
+    sync::Arc,
+    task::{Context, Poll},
+    time::Instant,
+};
 
 use ahash::AHashMap as HashMap;
+use axum::{body::Body, http::Request, response::Response};
 use configs::CFG;
 use db::common::{
     ctx::{ApiInfo, ReqCtx},
     res::ResJsonString,
 };
+use futures::future::BoxFuture;
 use once_cell::sync::Lazy;
-use poem::{Endpoint, IntoResponse, Middleware, Request, Response, Result};
 use tokio::sync::Mutex;
+use tower::Service;
 
 use crate::utils::{api_utils::ALL_APIS, jwt};
 
@@ -115,27 +122,25 @@ pub async fn remove_cache_data(api_key: &str, related_api: Option<Vec<String>>, 
     }
 }
 
-pub struct Cache;
-
-impl<E: Endpoint> Middleware<E> for Cache {
-    type Output = CacheEndpoint<E>;
-
-    fn transform(&self, ep: E) -> Self::Output {
-        CacheEndpoint { ep }
-    }
-}
-
 /// Endpoint for `Tracing` middleware.
-pub struct CacheEndpoint<E> {
-    ep: E,
+pub struct Cache<E> {
+    pub inner: E,
 }
 
-#[poem::async_trait]
-impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
-    // type Output = E::Output;
-    type Output = Response;
+#[axum::async_trait]
+impl<E> Service<Request<Body>> for Cache<E>
+where
+    E: Service<Request<Body>, Response = Response> + Clone + Send + 'static,
+    E::Future: Send + 'static,
+{
+    type Response = E::Response;
+    type Error = E::Error;
+    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
 
-    async fn call(&self, req: Request) -> Result<Self::Output> {
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.inner.poll_ready(cx)
+    }
+    async fn call(&self, req: Request<Body>) -> Self::Future {
         let apis = ALL_APIS.lock().await;
         let ctx = req.extensions().get::<ReqCtx>().expect("ReqCtx not found").clone();
 
@@ -153,7 +158,7 @@ impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
         let (token_id, _) = jwt::get_bear_token(&req).await?;
 
         if ctx.method.as_str() != "GET" {
-            let res_end = self.ep.call(req).await;
+            let res_end = self.inner.call(req).await;
             return match res_end {
                 Ok(v) => {
                     let related_api = api_info.related_api.clone();
@@ -172,7 +177,7 @@ impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
                 Some(v) => Ok(v.into_response()),
 
                 None => {
-                    let res_end = self.ep.call(req).await;
+                    let res_end = self.inner.call(req).await;
                     match res_end {
                         Ok(v) => {
                             let res = v.into_response();
@@ -193,7 +198,7 @@ impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
                 }
             },
             false => {
-                let res_end = self.ep.call(req).await;
+                let res_end = self.inner.call(req).await;
                 match res_end {
                     Ok(v) => Ok(v.into_response()),
                     Err(e) => Err(e),

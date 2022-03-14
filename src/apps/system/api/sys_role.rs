@@ -1,3 +1,4 @@
+use axum::{extract::Query, Json};
 use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
@@ -10,10 +11,6 @@ use db::{
     },
     DB,
 };
-use poem::{
-    handler,
-    web::{Json, Query},
-};
 use validator::Validate;
 
 use super::super::service;
@@ -21,7 +18,7 @@ use crate::utils::jwt::Claims;
 
 /// get_list 获取列表
 /// page_params 分页参数
-#[handler]
+
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<sys_role::Model>> {
     match req.validate() {
         Ok(_) => {}
@@ -36,7 +33,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 }
 
 /// add 添加
-#[handler]
+
 pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Res<String> {
     match req.validate() {
         Ok(_) => {}
@@ -51,7 +48,7 @@ pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Res<String> {
 }
 
 /// delete 完全删除
-#[handler]
+
 pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Res<String> {
     match delete_req.validate() {
         Ok(_) => {}
@@ -66,7 +63,7 @@ pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Res<String> {
 }
 
 // edit 修改
-#[handler]
+
 pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
     //  数据验证
     match edit_req.validate() {
@@ -82,7 +79,7 @@ pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
 }
 
 // set_status 修改状态
-#[handler]
+
 pub async fn change_status(Json(req): Json<StatusReq>) -> Res<String> {
     //  数据验证
     let db = DB.get_or_init(db_conn).await;
@@ -93,7 +90,7 @@ pub async fn change_status(Json(req): Json<StatusReq>) -> Res<String> {
     }
 }
 // set_data_scope 修改数据权限范围
-#[handler]
+
 pub async fn set_data_scope(Json(req): Json<DataScopeReq>) -> Res<String> {
     //  数据验证
     match req.validate() {
@@ -109,7 +106,7 @@ pub async fn set_data_scope(Json(req): Json<DataScopeReq>) -> Res<String> {
 }
 
 /// get_user_by_id 获取用户Id获取用户
-#[handler]
+
 pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<Resp> {
     match req.validate() {
         Ok(_) => {}
@@ -124,7 +121,7 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<Resp> {
 }
 
 /// get_all 获取全部
-#[handler]
+
 pub async fn get_all() -> Res<Vec<Resp>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::get_all(db).await;
@@ -135,7 +132,7 @@ pub async fn get_all() -> Res<Vec<Resp>> {
 }
 
 /// get_role_menu 获取角色授权菜单id数组
-#[handler]
+
 pub async fn get_role_menu(Query(req): Query<SearchReq>) -> Res<Vec<String>> {
     match req.validate() {
         Ok(_) => {}
@@ -155,7 +152,7 @@ pub async fn get_role_menu(Query(req): Query<SearchReq>) -> Res<Vec<String>> {
 }
 
 /// get_role_dept 获取角色授权部门id数组
-#[handler]
+
 pub async fn get_role_dept(Query(req): Query<SearchReq>) -> Res<Vec<String>> {
     match req.validate() {
         Ok(_) => {}
@@ -174,7 +171,6 @@ pub async fn get_role_dept(Query(req): Query<SearchReq>) -> Res<Vec<String>> {
     }
 }
 
-#[handler]
 pub async fn get_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, Query(page_params): Query<PageParams>) -> Res<ListData<UserWithDept>> {
     let db = DB.get_or_init(db_conn).await;
     let role_id = match req.role_id.clone() {
@@ -193,7 +189,6 @@ pub async fn get_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, Que
     }
 }
 
-#[handler]
 pub async fn get_un_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, Query(page_params): Query<PageParams>) -> Res<ListData<UserResp>> {
     let db = DB.get_or_init(db_conn).await;
     let role_id = match req.role_id.clone() {
@@ -213,7 +208,7 @@ pub async fn get_un_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, 
 }
 
 // edit 修改
-#[handler]
+
 pub async fn update_auth_role(Json(req): Json<UpdateAuthRoleReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     match service::sys_role::add_role_by_user_id(db, &req.user_id, req.role_ids, user.id).await {
@@ -222,7 +217,6 @@ pub async fn update_auth_role(Json(req): Json<UpdateAuthRoleReq>, user: Claims) 
     }
 }
 
-#[handler]
 pub async fn add_auth_user(Json(req): Json<AddOrCancelAuthRoleReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::add_role_with_user_ids(db, req.clone().user_ids, req.role_id, user.id).await;
@@ -232,7 +226,6 @@ pub async fn add_auth_user(Json(req): Json<AddOrCancelAuthRoleReq>, user: Claims
     }
 }
 
-#[handler]
 pub async fn cancel_auth_user(Json(req): Json<AddOrCancelAuthRoleReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::cancel_auth_user(db, req).await;
