@@ -1,10 +1,7 @@
-[package]
-edition = "2021"
-name = "poem-admin"
-version = "0.1.0"
+
 
 [workspace]
-members = [".", "configs", "db", "migration"]
+members = ["app", "bin", "configs", "db", "migration"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [profile.release]
 codegen-units = 1
@@ -13,75 +10,3 @@ lto = true
 opt-level = "z" # Optimize for size.
 panic = 'abort'
 # strip = "symbols" # none(false) debuginfo symbols(true).
-
-[dependencies]
-#
-configs = {path = "./configs"}
-db = {path = "./db"}
-#
-anyhow = "1.0"
-bytes = "1.1.0"
-# futures = "0.3.19"
-# env_logger = "0.9"
-async-stream = "0.3.2"
-chrono = {version = "0.4", features = ["serde"]}
-headers = "0.3.5"
-jsonwebtoken = "8.0.1"
-once_cell = "1.9.0"
-poem = {version = "1.2", features = ["static-files", "rustls", "compression", "multipart"]}
-# poem = "=1.1.1"
-# poem-derive = "=1.1.1"
-# poem-openapi = "1.1.1"
-# 用于生成可排序的唯一id
-# lazy_static = "1.4.0"
-scru128 = "1.0.0"
-serde = {version = "1.0", features = ["derive"]}
-serde_json = "1"
-tokio = {version = "1", features = ["rt-multi-thread", "macros", "parking_lot", "signal", "time"]}
-#  "tracing"
-# tokio = {version = "1", features = ["full"]}
-toml = "0.5.8"
-# tracing
-time = "0.3"
-tracing = "0.1"
-tracing-appender = "0.2"
-# tracing-log = "0.1"
-tracing-subscriber = {version = "0.3", features = ["json", "env-filter", "local-time", "registry"]}
-
-# 计划任务
-# delay_timer = {version = "0.11.0", features = ["status-report"]}
-delay_timer = {version = "0.11.0"}
-reqwest = {version = "0.11", features = ["json"]}
-# sea_orm_casbin_adapter = {version = "0.3", features = ["postgres", "mysql", "sqlite", "runtime-tokio-native-tls"]}
-# sea_orm_casbin_adapter = {git = "https://github.com/lingdu1234/sea_orm_casbin_adapter.git", features = ["mysql", "runtime-tokio-native-tls"]}
-user-agent-parser = "0.3.0"
-
-#  随机数
-md5 = "0.7.0"
-rand = "0.8.4"
-#  验证器
-regex = "1.5.4"
-validator = {version = "0.14.0", features = ["derive", "phone"]}
-# 系统信息
-sysinfo = "0.23.1"
-# 验证码
-captcha_rust = "0.1.3"
-# aHashMap
-ahash = "0.7.6"
-# sea-orm = {version = "0.6.0", default-features = false, features = ["sqlx-mysql", "macros", "runtime-tokio-native-tls"]}
-# console-subscriber = "0.1.0"
-# sea-orm
-[dependencies.sea-orm]
-default-features = false
-# features = ["macros", "runtime-tokio-native-tls"]
-features = ["macros", "runtime-tokio-native-tls", "debug-print"]
-version = "0.6.0"
-
-[features]
-# default = ["postgres", "mysql"]
-default = ["postgres", "mysql", "sqlite"]
-mysql = ["sea-orm/sqlx-mysql"]
-postgres = ["sea-orm/sqlx-postgres"]
-sqlite = ["sea-orm/sqlx-sqlite"]
-
-[dev-dependencies]

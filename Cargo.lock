@@ -83,6 +83,42 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4361135be9122e0870de935d7c439aef945b9f9ddd4199a553b5270b49c82a27"
 
 [[package]]
+name = "app"
+version = "0.1.0"
+dependencies = [
+ "ahash",
+ "anyhow",
+ "async-stream",
+ "bytes 1.1.0",
+ "captcha_rust",
+ "chrono",
+ "configs",
+ "db",
+ "delay_timer",
+ "headers",
+ "jsonwebtoken",
+ "md5",
+ "once_cell",
+ "poem",
+ "rand 0.8.5",
+ "regex",
+ "reqwest",
+ "scru128",
+ "sea-orm",
+ "serde",
+ "serde_json",
+ "sysinfo",
+ "time 0.3.7",
+ "tokio",
+ "toml",
+ "tracing 0.1.31",
+ "tracing-appender",
+ "tracing-subscriber",
+ "user-agent-parser",
+ "validator",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2256,42 +2292,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "poem-admin"
-version = "0.1.0"
-dependencies = [
- "ahash",
- "anyhow",
- "async-stream",
- "bytes 1.1.0",
- "captcha_rust",
- "chrono",
- "configs",
- "db",
- "delay_timer",
- "headers",
- "jsonwebtoken",
- "md5",
- "once_cell",
- "poem",
- "rand 0.8.5",
- "regex",
- "reqwest",
- "scru128",
- "sea-orm",
- "serde",
- "serde_json",
- "sysinfo",
- "time 0.3.7",
- "tokio",
- "toml",
- "tracing 0.1.31",
- "tracing-appender",
- "tracing-subscriber",
- "user-agent-parser",
- "validator",
-]
-
-[[package]]
 name = "poem-derive"
 version = "1.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2301,6 +2301,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "poem_admin"
+version = "0.1.0"
+dependencies = [
+ "app",
+ "configs",
+ "db",
+ "poem",
+ "tracing 0.1.31",
+ "tracing-appender",
+ "tracing-subscriber",
 ]
 
 [[package]]
