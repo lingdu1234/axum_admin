@@ -27,14 +27,14 @@ pub async fn re_init_all_api() {
 
 async fn api_init_func() {
     let db = DB.get_or_init(db_conn).await;
-    let res = system::get_all_sys_menu(db, false).await;
+    let res = system::get_all_sys_menu(db, false, true).await;
     match res {
         Ok(menus) => {
             for menu in menus {
                 self::add_api(db, &menu.id, &menu.api, &menu.menu_name, &menu.is_db_cache, &menu.is_log).await;
             }
             let apis = ALL_APIS.lock().await;
-            info!("初始化时获取路由API成功:{:?}", apis);
+            info!("初始化时获取路由API成功:{:#?}", apis);
             drop(apis);
         }
         Err(e) => {

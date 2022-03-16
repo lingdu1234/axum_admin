@@ -2,7 +2,7 @@
 [target.x86_64-pc-windows-msvc]
 # rustflags = ["-C", "target-feature=+crt-static", "-C", "link-arg=/DEBUG:NONE","--cfg", "tokio_unstable"]
 #  rustflags = [ "--cfg", "tokio_unstable"]
-rustflags = [ "-C", "link-arg=/DEBUG:NONE"]
+# rustflags = [ "-C", "link-arg=/DEBUG:NONE"]
 
 
 [target.x86_64-unknown-linux-gnu]

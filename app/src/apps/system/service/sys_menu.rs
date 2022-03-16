@@ -277,13 +277,20 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
 }
 
 // 获取全部菜单 或者 除开按键api级别的外的路由
-pub async fn get_enabled_menus<C>(db: &C, is_router: bool) -> Result<Vec<MenuResp>>
+// is_router 是否是菜单路由，用于前端生成路由
+// is_only_api 仅获取按键，api级别的路由
+// 不能同时为true
+// 同时false 为获取全部路由
+pub async fn get_enabled_menus<C>(db: &C, is_router: bool, is_only_api: bool) -> Result<Vec<MenuResp>>
 where
     C: TransactionTrait + ConnectionTrait,
 {
     let mut s = SysMenu::find().filter(sys_menu::Column::DeletedAt.is_null()).filter(sys_menu::Column::Status.eq("1"));
     if is_router {
         s = s.filter(sys_menu::Column::MenuType.ne("F"));
+    };
+    if is_only_api {
+        s = s.filter(sys_menu::Column::MenuType.eq("F"));
     };
 
     let res = s.order_by(sys_menu::Column::OrderSort, Order::Asc).into_model::<MenuResp>().all(db).await?;
@@ -293,7 +300,7 @@ where
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all_router_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTree>> {
-    let menus = get_enabled_menus(db, true).await?;
+    let menus = get_enabled_menus(db, true, false).await?;
     let menu_data = self::get_menu_data(menus);
     let menu_tree = self::get_menu_tree(menu_data, "0".to_string());
 
@@ -303,7 +310,7 @@ pub async fn get_all_router_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuT
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all_enabled_menu_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTree>> {
-    let menus = get_enabled_menus(db, false).await?;
+    let menus = get_enabled_menus(db, false, false).await?;
     let menu_data = self::get_menu_data(menus);
     let menu_tree = self::get_menu_tree(menu_data, "0".to_string());
 
@@ -336,7 +343,7 @@ pub async fn get_role_permissions(db: &DatabaseConnection, role_ids: Vec<String>
 pub async fn get_admin_menu_by_role_ids(db: &DatabaseConnection, role_ids: Vec<String>) -> Result<Vec<SysMenuTree>> {
     let (menu_apis, _) = self::get_role_permissions(db, role_ids).await?;
     //  todo 可能以后加条件判断
-    let router_all = get_enabled_menus(db, true).await?;
+    let router_all = get_enabled_menus(db, true, false).await?;
     //  生成menus
     let mut menus: Vec<MenuResp> = Vec::new();
     for ele in router_all {
@@ -399,7 +406,7 @@ pub async fn get_related_api_by_db_name<C>(db: &C, api_id: &str) -> Result<Vec<S
 where
     C: TransactionTrait + ConnectionTrait,
 {
-    let s = sys_menu::Entity::find()
+    let mut s = sys_menu::Entity::find()
         .join_rev(
             JoinType::LeftJoin,
             sys_api_db::Entity::belongs_to(sys_menu::Entity)
@@ -408,7 +415,7 @@ where
                 .into(),
         )
         .filter(
-            Condition::any().add(
+            Condition::all().add(
                 sys_api_db::Column::Db.in_subquery(
                     Query::select()
                         .column(sys_api_db::Column::Db)
@@ -417,9 +424,9 @@ where
                         .to_owned(),
                 ),
             ),
-        )
-        .all(db)
-        .await?;
-    let res = s.iter().map(|x| x.api.clone()).collect::<Vec<String>>();
+        );
+    s = s.filter(sys_menu::Column::Method.eq("GET"));
+    let r = s.all(db).await?;
+    let res = r.iter().map(|x| x.api.clone()).collect::<Vec<String>>();
     Ok(res)
 }
