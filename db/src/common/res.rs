@@ -10,7 +10,6 @@ pub struct ListData<T> {
     pub total_pages: usize,
     pub page_num: usize,
 }
-
 /// 分页参数
 #[derive(Deserialize, Debug, Serialize, Default)]
 pub struct PageParams {
