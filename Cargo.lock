@@ -2311,6 +2311,7 @@ dependencies = [
  "configs",
  "db",
  "poem",
+ "tokio",
  "tracing 0.1.31",
  "tracing-appender",
  "tracing-subscriber",

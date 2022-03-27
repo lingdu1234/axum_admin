@@ -14,27 +14,31 @@ use sea_orm::{
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, search_req: SearchReq) -> Result<ListData<sys_dict_type::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_dict_type::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
     let mut s = SysDictType::find();
 
-    if let Some(x) = search_req.dict_type {
+    if let Some(x) = req.dict_type {
         s = s.filter(sys_dict_type::Column::DictType.contains(&x));
     }
 
-    if let Some(x) = search_req.dict_name {
+    if let Some(x) = req.dict_name {
         s = s.filter(sys_dict_type::Column::DictName.contains(&x));
     }
-    if let Some(x) = search_req.status {
+    if let Some(x) = req.status {
         s = s.filter(sys_dict_type::Column::Status.eq(x));
     }
-    if let Some(x) = search_req.begin_time {
-        s = s.filter(sys_dict_type::Column::CreatedAt.gte(x));
+    if let Some(x) = req.begin_time {
+        let x = x + " 00:00:00";
+        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+        s = s.filter(sys_dict_type::Column::CreatedAt.gte(t));
     }
-    if let Some(x) = search_req.end_time {
-        s = s.filter(sys_dict_type::Column::CreatedAt.lte(x));
+    if let Some(x) = req.end_time {
+        let x = x + " 23:59:59";
+        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+        s = s.filter(sys_dict_type::Column::CreatedAt.lte(t));
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;

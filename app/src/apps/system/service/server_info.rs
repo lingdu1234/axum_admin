@@ -19,7 +19,10 @@ async fn get_server_info() {
     loop {
         let sysinfo = get_oper_sys_info().await;
         let mut ser_info = SYSINFO.lock().await;
-        ser_info.as_mut().map(|s| *s = sysinfo);
+        // ser_info.as_mut().map(|s| *s = sysinfo);
+        if let Some(s) = ser_info.as_mut() {
+            *s = sysinfo
+        }
 
         drop(ser_info);
         tokio::time::sleep(Duration::from_secs(10)).await;

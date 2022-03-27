@@ -122,11 +122,8 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     let job_ids = delete_req.job_ids.clone();
     // 删除任务
     for job_id in job_ids.clone() {
-        match SysJob::find().filter(sys_job::Column::JobId.eq(job_id)).one(db).await? {
-            Some(m) => {
-                tasks::delete_job(m.task_id, true).await.expect("任务删除失败");
-            }
-            None => {}
+        if let Some(m) = SysJob::find().filter(sys_job::Column::JobId.eq(job_id)).one(db).await? {
+            tasks::delete_job(m.task_id, true).await.expect("任务删除失败");
         };
     }
 

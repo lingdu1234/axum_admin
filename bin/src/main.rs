@@ -11,7 +11,10 @@ use configs::CFG;
 use poem::{
     endpoint::StaticFilesEndpoint,
     listener::{Listener, RustlsConfig, TcpListener},
-    middleware::{Compression, Cors},
+    middleware::{
+        Compression,
+        Cors, // ,TokioMetrics
+    },
     EndpointExt, Result, Route, Server,
 };
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
@@ -25,12 +28,6 @@ fn main() -> Result<(), std::io::Error> {
             std::env::set_var("RUST_LOG", &CFG.log.log_level);
         }
         my_env::setup();
-        // let console_layer = console_subscriber::ConsoleLayer::builder()
-        //     .retention(Duration::from_secs(60))
-        //     .server_addr(([127, 0, 0, 1], 5555))
-        //     .spawn();
-        // let console_layer = console_subscriber::spawn();
-
         //  设置日志追踪
         // if &CFG.log.log_level == "TRACE" {
         //     LogTracer::builder()
@@ -65,14 +62,17 @@ fn main() -> Result<(), std::io::Error> {
         tasks::timer_task_init().await.expect("定时任务初始化失败");
         //  跨域
         let cors = Cors::new();
+        // let metrics = TokioMetrics::new();
         // 启动app  注意中间件顺序 最后的先执行，尤其AddData
         // 顺序不对可能会导致数据丢失，无法在某些位置获取数据
 
         let app = Route::new()
             .nest(&CFG.server.api_prefix, apps::api())
             .nest("/", StaticFilesEndpoint::new(&CFG.web.dir).show_files_listing().index_file(&CFG.web.index))
+            // .at("/mtc", metrics.exporter())
             // .with(Tracing)
             .with_if(CFG.server.content_gzip, Compression::new())
+            // .with(metrics)
             .with(cors);
 
         match CFG.server.ssl {

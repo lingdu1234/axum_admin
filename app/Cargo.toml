@@ -63,11 +63,11 @@ ahash = "0.7.6"
 default-features = false
 # features = ["macros", "runtime-tokio-native-tls"]
 features = ["macros", "runtime-tokio-native-tls", "debug-print"]
-version = "0.6.0"
+version = "0.7.0"
 
 [features]
 # default = ["postgres", "mysql"]
-default = ["postgres", "mysql", "sqlite"]
+default = ["postgres", "mysql"]
 mysql = ["sea-orm/sqlx-mysql"]
 postgres = ["sea-orm/sqlx-postgres"]
 sqlite = ["sea-orm/sqlx-sqlite"]

@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use chrono::NaiveDateTime;
 use db::{
     common::res::{ListData, PageParams},
     system::{
@@ -42,10 +43,14 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
         }
     }
     if let Some(x) = req.begin_time {
-        s = s.filter(sys_job_log::Column::CreatedAt.gte(x));
+        let x = x + " 00:00:00";
+        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+        s = s.filter(sys_job_log::Column::CreatedAt.gte(t));
     }
     if let Some(x) = req.end_time {
-        s = s.filter(sys_job_log::Column::CreatedAt.lte(x));
+        let x = x + " 23:59:59";
+        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+        s = s.filter(sys_job_log::Column::CreatedAt.lte(t));
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
@@ -119,23 +124,22 @@ pub async fn clean(db: &DatabaseConnection, job_id: String) -> Result<String> {
         let stmt = Table::truncate().table(sys_job_log::Entity).to_owned();
         let db_backend = db.get_database_backend();
         db.execute(db_backend.build(&stmt)).await?;
-        return Ok("定时任务日志清空成功".to_string());
+        Ok("定时任务日志清空成功".to_string())
     } else {
         let mut s = SysJobLog::delete_many();
         s = s.filter(sys_job_log::Column::JobId.eq(job_id));
         // 开始删除
         let d = s.exec(db).await.map_err(|e| anyhow!(e.to_string(),))?;
-        return match d.rows_affected {
+        match d.rows_affected {
             // 0 => return Err("你要删除的字典类型不存在".into()),
             0 => Err(anyhow!("你要删除的日志不存在".to_string(),)),
 
             i => Ok(format!("成功删除{}条数据", i)),
-        };
-    };
+        }
+    }
 }
 
 /// get_user_by_id 获取用户Id获取用户
-/// db 数据库连接 使用db.0
 pub async fn get_by_id(db: &DatabaseConnection, job_log_id: String) -> Result<sys_job_log::Model> {
     let s = SysJobLog::find().filter(sys_job_log::Column::JobLogId.eq(job_log_id)).one(db).await?;
 

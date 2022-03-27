@@ -23,38 +23,42 @@ use crate::utils;
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, search_req: SearchReq) -> Result<ListData<sys_menu::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_menu::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(u32::MAX as usize);
     //  生成查询条件
     let mut s = SysMenu::find();
 
-    if let Some(x) = search_req.menu_name {
+    if let Some(x) = req.menu_name {
         if !x.is_empty() {
             s = s.filter(sys_menu::Column::MenuName.contains(&x));
         }
     }
-    if let Some(x) = search_req.method {
+    if let Some(x) = req.method {
         if !x.is_empty() {
             s = s.filter(sys_menu::Column::Method.eq(x));
         }
     }
 
-    if let Some(x) = search_req.status {
+    if let Some(x) = req.status {
         if !x.is_empty() {
             s = s.filter(sys_menu::Column::Status.eq(x));
         }
     }
-    if let Some(x) = search_req.menu_type {
+    if let Some(x) = req.menu_type {
         if !x.is_empty() {
             s = s.filter(sys_menu::Column::MenuType.eq(x));
         }
     }
-    if let Some(x) = search_req.begin_time {
-        s = s.filter(sys_menu::Column::CreatedAt.gte(x));
+    if let Some(x) = req.begin_time {
+        let x = x + " 00:00:00";
+        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+        s = s.filter(sys_menu::Column::CreatedAt.gte(t));
     }
-    if let Some(x) = search_req.end_time {
-        s = s.filter(sys_menu::Column::CreatedAt.lte(x));
+    if let Some(x) = req.end_time {
+        let x = x + " 23:59:59";
+        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+        s = s.filter(sys_menu::Column::CreatedAt.lte(t));
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
@@ -72,33 +76,37 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, sea
     Ok(res)
 }
 
-pub async fn get_auth_list(db: &DatabaseConnection, page_params: PageParams, search_req: SearchReq) -> Result<ListData<sys_menu::Model>> {
+pub async fn get_auth_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_menu::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(u32::MAX as usize);
     //  生成查询条件
     let mut s = SysMenu::find().filter(sys_menu::Column::MenuType.eq("F"));
 
-    if let Some(x) = search_req.menu_name {
+    if let Some(x) = req.menu_name {
         if !x.is_empty() {
             s = s.filter(sys_menu::Column::MenuName.contains(&x));
         }
     }
-    if let Some(x) = search_req.method {
+    if let Some(x) = req.method {
         if !x.is_empty() {
             s = s.filter(sys_menu::Column::Method.eq(x));
         }
     }
 
-    if let Some(x) = search_req.status {
+    if let Some(x) = req.status {
         if !x.is_empty() {
             s = s.filter(sys_menu::Column::Status.eq(x));
         }
     }
-    if let Some(x) = search_req.begin_time {
-        s = s.filter(sys_menu::Column::CreatedAt.gte(x));
+    if let Some(x) = req.begin_time {
+        let x = x + " 00:00:00";
+        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+        s = s.filter(sys_menu::Column::CreatedAt.gte(t));
     }
-    if let Some(x) = search_req.end_time {
-        s = s.filter(sys_menu::Column::CreatedAt.lte(x));
+    if let Some(x) = req.end_time {
+        let x = x + " 23:59:59";
+        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+        s = s.filter(sys_menu::Column::CreatedAt.lte(t));
     }
 
     // 获取全部数据条数
@@ -119,13 +127,14 @@ pub async fn get_auth_list(db: &DatabaseConnection, page_params: PageParams, sea
 
 pub async fn check_router_is_exist_update(db: &DatabaseConnection, req: EditReq) -> Result<bool> {
     let s1 = SysMenu::find()
-        .filter(sys_menu::Column::Path.eq(req.clone().path))
-        .filter(sys_menu::Column::Pid.eq(req.clone().pid))
+        .filter(sys_menu::Column::Path.eq(req.path.clone()))
+        .filter(sys_menu::Column::Pid.eq(req.pid.clone()))
         .filter(sys_menu::Column::MenuType.ne("F"))
         .filter(sys_menu::Column::Id.ne(req.id.clone()));
     let count1 = s1.count(db).await?;
     let s2 = SysMenu::find()
         .filter(sys_menu::Column::MenuName.eq(req.menu_name.clone()))
+        .filter(sys_menu::Column::Pid.eq(req.pid.clone()))
         .filter(sys_menu::Column::MenuType.ne("F"))
         .filter(sys_menu::Column::Id.ne(req.id.clone()));
     let count2 = s2.count(db).await?;
@@ -137,11 +146,13 @@ where
     C: TransactionTrait + ConnectionTrait,
 {
     let s1 = SysMenu::find()
-        .filter(sys_menu::Column::Path.eq(req.clone().path))
-        .filter(sys_menu::Column::Pid.eq(req.clone().pid))
+        .filter(sys_menu::Column::Path.eq(req.path.clone()))
+        .filter(sys_menu::Column::Pid.eq(req.pid.clone()))
         .filter(sys_menu::Column::MenuType.ne("F"));
     let count1 = s1.count(db).await?;
-    let s2 = SysMenu::find().filter(sys_menu::Column::MenuName.eq(req.clone().menu_name));
+    let s2 = SysMenu::find()
+        .filter(sys_menu::Column::MenuName.eq(req.clone().menu_name))
+        .filter(sys_menu::Column::Pid.eq(req.pid.clone()));
     let count2 = s2.count(db).await?;
     Ok(count1 > 0 || count2 > 0)
 }
@@ -276,11 +287,11 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
     Ok(res)
 }
 
-// 获取全部菜单 或者 除开按键api级别的外的路由
-// is_router 是否是菜单路由，用于前端生成路由
-// is_only_api 仅获取按键，api级别的路由
-// 不能同时为true
-// 同时false 为获取全部路由
+/// 获取全部菜单 或者 除开按键api级别的外的路由
+/// is_router 是否是菜单路由，用于前端生成路由
+/// is_only_api 仅获取按键，api级别的路由
+/// 不能同时为true
+/// 同时false 为获取全部路由
 pub async fn get_enabled_menus<C>(db: &C, is_router: bool, is_only_api: bool) -> Result<Vec<MenuResp>>
 where
     C: TransactionTrait + ConnectionTrait,
@@ -342,6 +353,7 @@ pub async fn get_role_permissions(db: &DatabaseConnection, role_ids: Vec<String>
 /// db 数据库连接 使用db.0
 pub async fn get_admin_menu_by_role_ids(db: &DatabaseConnection, role_ids: Vec<String>) -> Result<Vec<SysMenuTree>> {
     let (menu_apis, _) = self::get_role_permissions(db, role_ids).await?;
+    println!("menu_apis: {:?}", menu_apis);
     //  todo 可能以后加条件判断
     let router_all = get_enabled_menus(db, true, false).await?;
     //  生成menus
@@ -351,7 +363,9 @@ pub async fn get_admin_menu_by_role_ids(db: &DatabaseConnection, role_ids: Vec<S
             menus.push(ele);
         }
     }
+    println!("menus: {:?}", menus.clone());
     let menu_data = self::get_menu_data(menus);
+    println!("menu_data: {:?}", menu_data.clone());
     let menu_tree = self::get_menu_tree(menu_data, "0".to_string());
     Ok(menu_tree)
 }

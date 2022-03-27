@@ -85,44 +85,59 @@ pub async fn oper_log_add_fn(req: ReqCtx, res: String, status: String, err_msg: 
     if !CFG.log.enable_oper_log {
         return Ok(());
     }
+    let apis = ALL_APIS.lock().await;
+    let (api_name, is_log) = match apis.get(&req.path) {
+        Some(x) => (x.name.clone(), x.is_log.clone()),
+        None => ("".to_string(), "0".to_string()),
+    };
+    drop(apis);
     let now = Local::now().naive_local();
     // 打印日志
     let req_data = req.clone();
     let res_data = res.clone();
     let err_msg_data = err_msg.clone();
     let duration_data = duration;
-    tracing::info!(
-        "\n请求路径:{:?}\n完成时间:{:?}\n消耗时间:{:?}微秒 | {:?}毫秒\n请求数据:{:?}\n响应数据:{}\n错误信息:{:?}\n",
-        req_data.path.clone(),
-        now,
-        duration_data.as_micros(),
-        duration_data.as_millis(),
-        req_data,
-        res_data,
-        err_msg_data,
-    );
-    //  判断是否要记录日志
-    let apis = ALL_APIS.lock().await;
-    let (api_name, is_log) = match apis.get(&req.path) {
-        Some(x) => (x.name.clone(), x.is_log),
-        None => ("".to_string(), true),
-    };
-    drop(apis);
-    if !is_log {
-        return Ok(());
+    match is_log.as_str() {
+        "1" => {
+            tokio::spawn(async move {
+                file_log(req_data, now, duration_data, res_data, err_msg_data);
+            });
+        }
+        "2" => {
+            tokio::spawn(async move {
+                match db_log(duration_data, req, now, api_name, res, status, err_msg).await {
+                    Ok(_) => {}
+                    Err(e) => {
+                        tracing::info!("日志添加失败：{}", e.to_string());
+                    }
+                };
+            });
+        }
+        "3" => {
+            tokio::spawn(async move {
+                file_log(req_data, now, duration_data, res_data, err_msg_data);
+                match db_log(duration_data, req, now, api_name, res, status, err_msg).await {
+                    Ok(_) => {}
+                    Err(e) => {
+                        tracing::info!("日志添加失败：{}", e.to_string());
+                    }
+                };
+            });
+        }
+        _ => return Ok(()),
     }
 
+    Ok(())
+}
+
+async fn db_log(duration: Duration, req: ReqCtx, now: chrono::NaiveDateTime, api_name: String, res: String, status: String, err_msg: String) -> Result<()> {
     let d = duration.as_micros() as i64;
-
     let db = DB.get_or_init(db_conn).await;
-
-    //  获取用户信息
     let (_, m) = check_user_online(Some(db), req.user.token_id.clone()).await;
     let user = match m {
         Some(x) => x,
         None => return Ok(()),
     };
-
     let operator_type = match req.method.as_str() {
         "GET" => "1",    // 查询
         "POST" => "2",   // 新增
@@ -130,7 +145,6 @@ pub async fn oper_log_add_fn(req: ReqCtx, res: String, status: String, err_msg: 
         "DELETE" => "4", // 删除
         _ => "0",        // 其他
     };
-
     let add_data = sys_oper_log::ActiveModel {
         oper_id: Set(scru128::scru128_string()),
         time_id: Set(now.timestamp()),
@@ -144,8 +158,8 @@ pub async fn oper_log_add_fn(req: ReqCtx, res: String, status: String, err_msg: 
         oper_url: Set(req.ori_uri),
         oper_ip: Set(user.ipaddr),
         oper_location: Set(user.login_location),
-        oper_param: Set(if req.data.len() > 1000 { req.data.split_at(1000).0.to_string() } else { req.data }),
-        json_result: Set(if res.len() > 10000 { res.split_at(10000).0.to_string() } else { res }),
+        oper_param: Set(if req.data.len() > 10000 { "数据太长不保存".to_string() } else { req.data }),
+        json_result: Set(if res.len() > 100000 { "数据太长不保存".to_string() } else { res }),
         path_param: Set(req.path_params),
         status: Set(status),
         error_msg: Set(err_msg),
@@ -153,6 +167,18 @@ pub async fn oper_log_add_fn(req: ReqCtx, res: String, status: String, err_msg: 
         oper_time: Set(now),
     };
     SysOperLog::insert(add_data).exec(db).await.expect("oper_log_add error");
-
     Ok(())
+}
+
+fn file_log(req_data: ReqCtx, now: chrono::NaiveDateTime, duration_data: Duration, res_data: String, err_msg_data: String) {
+    tracing::info!(
+        "\n请求路径:{:?}\n完成时间:{:?}\n消耗时间:{:?}微秒 | {:?}毫秒\n请求数据:{:?}\n响应数据:{}\n错误信息:{:?}\n",
+        req_data.path.clone(),
+        now,
+        duration_data.as_micros(),
+        duration_data.as_millis(),
+        req_data,
+        res_data,
+        err_msg_data,
+    );
 }

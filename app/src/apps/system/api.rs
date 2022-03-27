@@ -1,4 +1,3 @@
-use poem::{delete, get, post, put, Route};
 mod common;
 mod sys_api_db;
 mod sys_dept;
@@ -11,6 +10,9 @@ mod sys_menu;
 pub mod sys_oper_log;
 mod sys_post;
 mod sys_role; // 角色管理
+
+//
+use poem::{delete, get, post, put, Route};
 mod sys_user; // 用户管理
 mod sys_user_online; // 操作日志
 

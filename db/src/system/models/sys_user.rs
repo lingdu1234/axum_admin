@@ -120,7 +120,7 @@ pub struct DeleteReq {
 #[derive(Deserialize, Debug, Validate)]
 pub struct UserLoginReq {
     ///  用户名
-    #[validate(length(min = 4, message = "用户名长度不能小于4"))]
+    #[validate(length(min = 2, message = "用户名长度不能小于2"))]
     pub user_name: String,
     ///  用户密码
     #[validate(length(min = 6, message = "密码长度不能小于6"))]

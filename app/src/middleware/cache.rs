@@ -13,6 +13,7 @@ use tokio::sync::Mutex;
 
 use crate::utils::{api_utils::ALL_APIS, jwt};
 
+#[allow(clippy::type_complexity)]
 pub static RES_DATA: Lazy<Arc<Mutex<HashMap<String, HashMap<String, String>>>>> = Lazy::new(|| {
     let data: HashMap<String, HashMap<String, String>> = HashMap::new();
     Arc::new(Mutex::new(data))
@@ -49,16 +50,15 @@ async fn init_loop() {
     }
 }
 
-pub async fn add_cache_data(ori_uri: &str, api_key: &str, token_id: &str, method: &str, data: String) {
+pub async fn add_cache_data(ori_uri: &str, api_key: &str, data_key: &str, data: String) {
     let mut res_bmap = RES_INDEX.lock().await;
-    let data_key = format!("{}_{}_{}", ori_uri, token_id, method);
     let index_key = format!("{}★{}", api_key, &data_key);
     res_bmap.insert(index_key.clone(), Instant::now());
     drop(res_bmap);
     let hmap: HashMap<String, String> = HashMap::new();
     let mut res_data = RES_DATA.lock().await;
     let v = res_data.entry(api_key.to_string()).or_insert(hmap);
-    v.insert(data_key.clone(), data);
+    v.insert(data_key.to_string(), data);
     drop(res_data);
     tracing::info!("add cache data,api_key: {}, data_key: {},api:{}", api_key, data_key, ori_uri);
 }
@@ -75,7 +75,7 @@ pub async fn get_cache_data(api_key: &str, data_key: &str) -> Option<String> {
         None => return None,
     };
     drop(res_data);
-    tracing::info!("get cache data success,api_key: {}, data_key: {},cache data: {:?}", api_key, data_key, res.clone());
+    tracing::info!("get cache data success,api_key: {}, data_key: {}", api_key, data_key);
     res
 }
 
@@ -143,8 +143,8 @@ impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
             Some(x) => x.clone(),
             None => ApiInfo {
                 name: "".to_string(),
-                is_db_cache: false,
-                is_log: false,
+                is_db_cache: "0".to_string(),
+                is_log: "0".to_string(),
                 related_api: None,
             },
         };
@@ -165,10 +165,20 @@ impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
                 Err(e) => Err(e),
             };
         }
-        let data_key = ctx.ori_uri.clone() + "_" + &token_id + "_" + &ctx.method;
+        let data_key = match api_info.is_db_cache.clone().as_str() {
+            "1" => format!("{}_{}_{}", &ctx.ori_uri, &ctx.method, &token_id),
+            _ => format!("{}_{}", &ctx.ori_uri, &ctx.method),
+        };
         // 开始请求数据
-        match api_info.is_db_cache {
-            true => match get_cache_data(&ctx.path, &data_key).await {
+        match api_info.is_db_cache.as_str() {
+            "0" => {
+                let res_end = self.ep.call(req).await;
+                match res_end {
+                    Ok(v) => Ok(v.into_response()),
+                    Err(e) => Err(e),
+                }
+            }
+            _ => match get_cache_data(&ctx.path, &data_key).await {
                 Some(v) => Ok(v.into_response()),
 
                 None => {
@@ -183,7 +193,7 @@ impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
 
                             tokio::spawn(async move {
                                 // 缓存数据
-                                add_cache_data(&ctx.ori_uri, &ctx.path, &token_id, &ctx.method, res_ctx).await;
+                                add_cache_data(&ctx.ori_uri, &ctx.path, &data_key, res_ctx).await;
                             });
 
                             Ok(res)
@@ -192,13 +202,6 @@ impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
                     }
                 }
             },
-            false => {
-                let res_end = self.ep.call(req).await;
-                match res_end {
-                    Ok(v) => Ok(v.into_response()),
-                    Err(e) => Err(e),
-                }
-            }
         }
     }
 }

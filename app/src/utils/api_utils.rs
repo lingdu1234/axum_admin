@@ -58,8 +58,8 @@ where
     let api_info = ApiInfo {
         name: menu_name.to_string(),
         related_api,
-        is_db_cache: is_db_cache == "1",
-        is_log: is_log == "1",
+        is_db_cache: is_db_cache.to_string(),
+        is_log: is_log.to_string(),
     };
     let mut apis = ALL_APIS.lock().await;
     apis.entry(api.to_string())

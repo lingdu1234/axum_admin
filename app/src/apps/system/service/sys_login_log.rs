@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use chrono::Local;
+use chrono::NaiveDateTime;
 use db::{
     common::{
         client::ClientInfo,
@@ -40,10 +41,14 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
         }
     }
     if let Some(x) = req.begin_time {
-        s = s.filter(sys_login_log::Column::LoginTime.gte(x));
+        let x = x + " 00:00:00";
+        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+        s = s.filter(sys_login_log::Column::LoginTime.gte(t));
     }
     if let Some(x) = req.end_time {
-        s = s.filter(sys_login_log::Column::LoginTime.lte(x));
+        let x = x + " 23:59:59";
+        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+        s = s.filter(sys_login_log::Column::LoginTime.lte(t));
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
