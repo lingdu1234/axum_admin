@@ -24,7 +24,7 @@ where
 {
     match db.execute(builder.build(schema.create_table_from_entity(e).to_owned().if_not_exists())).await {
         Ok(_) => println!("创建表格成功:{}", e.table_name()),
-        Err(e) => println!("{}", e.to_string()),
+        Err(e) => println!("{}", e),
     };
 
     Ok(())
@@ -60,7 +60,7 @@ where
     }
     match manager.create_index(index.to_owned()).await {
         Ok(_) => println!("成功创建索引,表格:{},索引名:{},索引列:{:?}", t.table_name(), name, cols_name),
-        Err(e) => println!("{}", e.to_string()),
+        Err(e) => println!("{}", e),
     };
 
     Ok(())
@@ -100,7 +100,7 @@ pub async fn init_data(manager: &SchemaManager<'_>, migration_name: &str) -> Res
         let sql_vec = match get_insert_sql_string(path.clone(), db_end).await {
             Ok(v) => v,
             Err(e) => {
-                println!("{:?}", e.to_string());
+                println!("{:?}", e);
                 return Ok(());
             }
         };
@@ -111,7 +111,7 @@ pub async fn init_data(manager: &SchemaManager<'_>, migration_name: &str) -> Res
                     println!("表格数据初始化成功:{}", path.to_str().unwrap());
                 }
                 Err(e) => {
-                    println!("{}", e.to_string());
+                    println!("{}", e);
                 }
             };
         }

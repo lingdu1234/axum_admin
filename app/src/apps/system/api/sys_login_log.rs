@@ -11,7 +11,6 @@ use poem::{
     handler,
     web::{Json, Query},
 };
-use validator::Validate;
 
 use super::super::service;
 
@@ -29,11 +28,6 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 
 #[handler]
 pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Res<String> {
-    println!("~~~~~~~~~~~~~~~~~~~~~~~~~~~~{:?}", delete_req);
-    match delete_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_login_log::delete(db, delete_req).await;
     println!("{:?}", res);

@@ -24,14 +24,20 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, sea
     let mut s = SysJob::find();
 
     if let Some(x) = search_req.job_name {
-        s = s.filter(sys_job::Column::JobName.contains(&x));
+        if !x.is_empty() {
+            s = s.filter(sys_job::Column::JobName.contains(&x));
+        }
     }
 
     if let Some(x) = search_req.job_group {
-        s = s.filter(sys_job::Column::JobGroup.contains(&x));
+        if !x.is_empty() {
+            s = s.filter(sys_job::Column::JobGroup.contains(&x));
+        }
     }
     if let Some(x) = search_req.status {
-        s = s.filter(sys_job::Column::Status.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_job::Column::Status.eq(x));
+        }
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;

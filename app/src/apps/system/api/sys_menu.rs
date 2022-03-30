@@ -12,7 +12,6 @@ use poem::{
     handler,
     web::{Json, Query},
 };
-use validator::Validate;
 
 use super::super::service;
 use crate::utils::jwt::Claims;
@@ -42,10 +41,6 @@ pub async fn get_auth_list(Query(page_params): Query<PageParams>, Query(search_r
 /// db 数据库连接 使用db.0
 #[handler]
 pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Res<MenuResp> {
-    match search_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    }
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_by_id(db, search_req).await;
     match res {
@@ -57,10 +52,6 @@ pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Res<MenuResp> {
 /// add 添加
 #[handler]
 pub async fn add(Json(req): Json<AddReq>) -> Res<String> {
-    match req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    }
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::add(db, req).await;
     match res {
@@ -83,10 +74,6 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
 // edit 修改
 #[handler]
 pub async fn edit(Json(edit_req): Json<EditReq>) -> Res<String> {
-    match edit_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    }
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::edit(db, edit_req).await;
     match res {

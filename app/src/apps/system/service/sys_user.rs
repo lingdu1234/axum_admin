@@ -41,33 +41,49 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
     s = s.filter(sys_user::Column::DeletedAt.is_null());
     // 查询条件
     if let Some(x) = req.user_id {
-        s = s.filter(sys_user::Column::Id.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_user::Column::Id.eq(x));
+        }
     }
     if let Some(x) = req.user_ids {
-        s = s.filter(sys_user::Column::Id.is_in(x));
+        if !x.is_empty() {
+            s = s.filter(sys_user::Column::Id.is_in(x));
+        }
     }
 
     if let Some(x) = req.user_name {
-        s = s.filter(sys_user::Column::UserName.contains(&x));
+        if !x.is_empty() {
+            s = s.filter(sys_user::Column::UserName.contains(&x));
+        }
     }
     if let Some(x) = req.phone_num {
-        s = s.filter(sys_user::Column::UserName.contains(&x));
+        if !x.is_empty() {
+            s = s.filter(sys_user::Column::UserName.contains(&x));
+        }
     }
     if let Some(x) = req.user_status {
-        s = s.filter(sys_user::Column::UserStatus.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_user::Column::UserStatus.eq(x));
+        }
     }
     if let Some(x) = req.dept_id {
-        s = s.filter(sys_user::Column::DeptId.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_user::Column::DeptId.eq(x));
+        }
     }
     if let Some(x) = req.begin_time {
-        let x = x + " 00:00:00";
-        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
-        s = s.filter(sys_user::Column::CreatedAt.gte(t));
+        if !x.is_empty() {
+            let x = x + " 00:00:00";
+            let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+            s = s.filter(sys_user::Column::CreatedAt.gte(t));
+        }
     }
     if let Some(x) = req.end_time {
-        let x = x + " 23:59:59";
-        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
-        s = s.filter(sys_user::Column::CreatedAt.lte(t));
+        if !x.is_empty() {
+            let x = x + " 23:59:59";
+            let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+            s = s.filter(sys_user::Column::CreatedAt.lte(t));
+        }
     }
     // 获取全部数据条数
     let total = s.clone().count(&txn).await?;
@@ -95,7 +111,7 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
                     is_admin: m.0.is_admin.clone(),
                     phone_num: m.0.phone_num.clone(),
                     role_id: m.0.role_id.clone(),
-                    created_at: m.0.created_at,
+                    created_at: Some(m.0.created_at),
                 },
                 dept: DeptResp {
                     dept_id: v.dept_id.clone(),
@@ -188,7 +204,7 @@ pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserWit
                     is_admin: m.0.is_admin.clone(),
                     phone_num: m.0.phone_num.clone(),
                     role_id: m.0.role_id.clone(),
-                    created_at: m.0.created_at,
+                    created_at: Some(m.0.created_at),
                 },
                 dept: DeptResp {
                     dept_id: v.dept_id.clone(),
@@ -219,33 +235,31 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, c_user_id: String) -> Res
         id: Set(uid.clone()),
         user_salt: Set(salt),
         user_name: Set(req.user_name),
-        user_nickname: Set(req.user_nickname.unwrap_or_else(|| "".to_string())),
+        user_nickname: Set(req.user_nickname),
         user_password: Set(passwd),
-        user_status: Set(req.user_status.unwrap_or_else(|| "1".to_string())),
+        user_status: Set(req.user_status),
         user_email: Set(req.user_email),
-        sex: Set(req.sex.unwrap_or_else(|| "0".to_string())),
+        sex: Set(req.sex),
         dept_id: Set(req.dept_id),
         role_id: Set(req.role_id),
-        remark: Set(req.remark.unwrap_or_else(|| "".to_string())),
-        is_admin: Set(req.is_admin.unwrap_or_else(|| "1".to_string())),
-        phone_num: Set(req.phone_num.unwrap_or_else(|| "".to_string())),
+        remark: Set(req.remark),
+        is_admin: Set(req.is_admin),
+        phone_num: Set(req.phone_num),
         avatar: Set(req.avatar.unwrap_or_else(|| "".to_string())),
-        created_at: Set(Some(now)),
+        created_at: Set(now),
         ..Default::default()
     };
 
     let txn = db.begin().await?;
     SysUser::insert(user).exec(&txn).await?;
     // 添加职位信息
-    if let Some(x) = req.post_ids {
-        super::sys_post::add_post_by_user_id(&txn, &uid, x).await?;
-    }
+    super::sys_post::add_post_by_user_id(&txn, &uid, req.post_ids).await?;
+
     // 添加角色信息
     // 先删除原有的角色信息，再添加新的角色信息
     super::sys_user_role::delete_user_role(&txn, &uid).await?;
-    if let Some(x) = req.role_ids {
-        super::sys_user_role::edit_user_role(&txn, &uid, x, c_user_id).await?;
-    }
+
+    super::sys_user_role::edit_user_role(&txn, &uid, req.role_ids, c_user_id).await?;
 
     txn.commit().await?;
 
@@ -414,9 +428,8 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, c_user_id: String) -> R
     // 更新用户角色信息
     // 先删除原有的角色信息，再添加新的角色信息
     super::sys_user_role::delete_user_role(&txn, &uid).await?;
-    if let Some(x) = req.role_ids {
-        super::sys_user_role::edit_user_role(&txn, &uid, x, c_user_id).await?;
-    }
+
+    super::sys_user_role::edit_user_role(&txn, &uid, req.role_ids, c_user_id).await?;
 
     txn.commit().await?;
     Ok(format!("用户<{}>数据更新成功", uid))

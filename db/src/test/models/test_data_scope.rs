@@ -1,5 +1,4 @@
 use serde::Deserialize;
-use validator::Validate;
 #[derive(Deserialize, Debug)]
 pub struct SearchReq {
     pub data_a: Option<String>,
@@ -12,7 +11,7 @@ pub struct AddReq {
     pub data_b: String,
 }
 
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize)]
 pub struct DeleteReq {
     pub ids: Vec<String>,
 }

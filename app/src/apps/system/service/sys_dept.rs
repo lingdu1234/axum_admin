@@ -22,24 +22,34 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
     let mut s = SysDept::find();
 
     if let Some(x) = req.dept_id {
-        s = s.filter(sys_dept::Column::DeptId.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_dept::Column::DeptId.eq(x));
+        }
     }
 
     if let Some(x) = req.dept_name {
-        s = s.filter(sys_dept::Column::DeptName.contains(&x));
+        if !x.is_empty() {
+            s = s.filter(sys_dept::Column::DeptName.contains(&x));
+        }
     }
     if let Some(x) = req.status {
-        s = s.filter(sys_dept::Column::Status.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_dept::Column::Status.eq(x));
+        }
     }
     if let Some(x) = req.begin_time {
-        let x = x + " 00:00:00";
-        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
-        s = s.filter(sys_dept::Column::CreatedAt.gte(t));
+        if !x.is_empty() {
+            let x = x + " 00:00:00";
+            let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+            s = s.filter(sys_dept::Column::CreatedAt.gte(t));
+        }
     }
     if let Some(x) = req.end_time {
-        let x = x + " 23:59:59";
-        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
-        s = s.filter(sys_dept::Column::CreatedAt.lte(t));
+        if !x.is_empty() {
+            let x = x + " 23:59:59";
+            let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+            s = s.filter(sys_dept::Column::CreatedAt.lte(t));
+        }
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
@@ -83,7 +93,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Resul
         phone: Set(req.phone),
         email: Set(req.email),
         created_by: Set(user_id),
-        created_at: Set(Some(now)),
+        created_at: Set(now),
         ..Default::default()
     };
     let txn = db.begin().await?;
@@ -97,12 +107,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Resul
 
 /// delete 完全删除
 pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
-    let mut s = SysDept::delete_many();
-
-    s = s.filter(sys_dept::Column::DeptId.eq(req.dept_id));
-
-    // 开始删除
-    let d = s.exec(db).await?;
+    let d = SysDept::delete_many().filter(sys_dept::Column::DeptId.eq(req.dept_id)).exec(db).await?;
 
     match d.rows_affected {
         0 => Err(anyhow!("删除失败,数据不存在",)),
@@ -143,7 +148,6 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
 }
 
 /// get_user_by_id 获取用户Id获取用户
-/// db 数据库连接 使用db.0
 pub async fn get_by_id<C>(db: &C, id: &str) -> Result<DeptResp>
 where
     C: ConnectionTrait + TransactionTrait,
@@ -159,7 +163,6 @@ where
 }
 
 /// get_all 获取全部
-/// db 数据库连接 使用db.0
 pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<DeptResp>> {
     let s = SysDept::find()
         .filter(sys_dept::Column::DeletedAt.is_null())

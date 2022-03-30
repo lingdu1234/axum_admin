@@ -13,7 +13,6 @@ use poem::{
     web::{Json, Multipart, Query},
     Request,
 };
-use validator::Validate;
 
 use super::super::service;
 use crate::utils::jwt::{AuthBody, Claims};
@@ -22,10 +21,6 @@ use crate::utils::jwt::{AuthBody, Claims};
 /// page_params 分页参数
 #[handler]
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<UserWithDept>> {
-    match req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::get_sort_list(db, page_params, req).await;
     match res {
@@ -38,10 +33,6 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 
 #[handler]
 pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<UserInfomaion> {
-    match req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
     match req.user_id {
         Some(user_id) => match self::get_user_info_by_id(&user_id).await {
             Err(e) => Res::with_err(&e.to_string()),
@@ -61,7 +52,6 @@ pub async fn get_profile(user: Claims) -> Res<UserInfomaion> {
 
 pub async fn get_user_info_by_id(id: &str) -> Result<UserInfomaion> {
     let db = DB.get_or_init(db_conn).await;
-
     match service::sys_user::get_by_id(db, id).await {
         Err(e) => Err(e),
         Ok(user) => {
@@ -81,10 +71,6 @@ pub async fn get_user_info_by_id(id: &str) -> Result<UserInfomaion> {
 /// add 添加
 #[handler]
 pub async fn add(Json(add_req): Json<AddReq>, user: Claims) -> Res<String> {
-    match add_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    }
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::add(db, add_req, user.id).await;
     match res {
@@ -107,10 +93,6 @@ pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Res<String> {
 // edit 修改
 #[handler]
 pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
-    match edit_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    }
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::edit(db, edit_req, user.id).await;
     match res {
@@ -132,10 +114,6 @@ pub async fn update_profile(Json(req): Json<UpdateProfileReq>) -> Res<String> {
 /// 用户登录
 #[handler]
 pub async fn login(Json(login_req): Json<UserLoginReq>, request: &Request) -> Res<AuthBody> {
-    match login_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    }
     let db = DB.get_or_init(db_conn).await;
     match service::sys_user::login(db, login_req, request).await {
         Ok(x) => Res::with_data(x),
@@ -152,10 +130,7 @@ pub async fn get_info(user: Claims) -> Res<UserInfo> {
         Err(e) => return Res::with_err(&e.to_string()),
     };
 
-    let role_id = match user_info.user.role_id.clone() {
-        Some(x) => x,
-        None => "".to_string(),
-    };
+    let role_id = user_info.user.role_id.clone();
 
     let role_ids = match service::sys_role::get_all_admin_role(db, &user.id).await {
         Ok(x) => x,

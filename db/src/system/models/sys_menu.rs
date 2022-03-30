@@ -1,12 +1,9 @@
 use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
-use validator::Validate;
 
-#[derive(Deserialize, Validate, Clone)]
+#[derive(Deserialize, Clone)]
 pub struct SearchReq {
-    #[validate(length(min = 1))]
     pub id: Option<String>,
-    #[validate(length(min = 1))]
     pub menu_name: Option<String>,
     pub menu_type: Option<String>,
     pub method: Option<String>,
@@ -15,7 +12,7 @@ pub struct SearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, Validate, FromQueryResult, Default)]
+#[derive(Deserialize, Serialize, Debug, Clone, FromQueryResult, Default)]
 pub struct MenuResp {
     pub id: String,
     pub pid: String,
@@ -38,7 +35,7 @@ pub struct MenuResp {
     pub remark: String,
 }
 
-#[derive(Serialize, Clone, Validate, Debug, Default)]
+#[derive(Serialize, Clone, Debug, Default)]
 pub struct UserMenu {
     pub id: String,
     pub pid: String,
@@ -52,12 +49,11 @@ pub struct UserMenu {
     pub meta: Meta,
 }
 
-#[derive(Serialize, Clone, Validate, Debug, Default)]
+#[derive(Serialize, Clone, Debug, Default)]
 pub struct Meta {
     pub icon: String,
     pub title: String,
     pub link: Option<String>,
-    // pub keep_alive: bool,
     pub no_cache: bool,
     pub hidden: bool,
 }
@@ -69,7 +65,7 @@ pub struct SysMenuTree {
     pub children: Option<Vec<SysMenuTree>>,
 }
 
-#[derive(Deserialize, Clone, Debug, Validate)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct AddReq {
     pub pid: String,
     pub path: Option<String>,
@@ -96,7 +92,7 @@ pub struct DeleteReq {
     pub id: String,
 }
 
-#[derive(Debug, Clone, Deserialize, Validate)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct EditReq {
     pub id: String,
     pub pid: String,

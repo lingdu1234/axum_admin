@@ -34,7 +34,9 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
     let mut s = SysRole::find();
 
     if let Some(x) = req.role_ids {
-        s = s.filter(sys_role::Column::RoleId.is_in(x));
+        if !x.is_empty() {
+            s = s.filter(sys_role::Column::RoleId.is_in(x));
+        }
     }
 
     if let Some(x) = req.name {
@@ -44,7 +46,9 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
     }
 
     if let Some(x) = req.status {
-        s = s.filter(sys_role::Column::Status.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_role::Column::Status.eq(x));
+        }
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
@@ -123,9 +127,9 @@ pub async fn add_role(txn: &DatabaseTransaction, req: AddReq) -> Result<String> 
         role_key: Set(req.role_key),
         list_order: Set(req.list_order),
         data_scope: Set(req.data_scope.unwrap_or_else(|| "3".to_string())),
-        created_at: Set(Some(now)),
-        status: Set(req.status.unwrap_or_else(|| "1".to_string())),
-        remark: Set(req.remark.unwrap_or_else(|| "".to_string())),
+        created_at: Set(now),
+        status: Set(req.status),
+        remark: Set(req.remark),
         ..Default::default()
     };
     SysRole::insert(user).exec(txn).await?;
@@ -349,11 +353,7 @@ pub async fn get_all_admin_role(db: &DatabaseConnection, user_id: &str) -> Resul
 
 pub async fn get_current_admin_role(db: &DatabaseConnection, user_id: &str) -> Result<String> {
     let user = super::sys_user::get_by_id(db, user_id).await?;
-    let res = match user.user.role_id {
-        Some(x) => x,
-        None => "".to_string(),
-    };
-    Ok(res)
+    Ok(user.user.role_id)
 }
 
 pub async fn get_auth_users_by_role_id(db: &DatabaseConnection, role_id: &str) -> Result<Vec<String>> {

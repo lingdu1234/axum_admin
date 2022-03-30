@@ -22,24 +22,34 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
     let mut s = SysDictData::find();
 
     if let Some(x) = req.dict_type {
-        s = s.filter(sys_dict_data::Column::DictType.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_dict_data::Column::DictType.eq(x));
+        }
     }
 
     if let Some(x) = req.dict_label {
-        s = s.filter(sys_dict_data::Column::DictLabel.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_dict_data::Column::DictLabel.eq(x));
+        }
     }
     if let Some(x) = req.status {
-        s = s.filter(sys_dict_data::Column::Status.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_dict_data::Column::Status.eq(x));
+        }
     }
     if let Some(x) = req.begin_time {
-        let x = x + " 00:00:00";
-        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
-        s = s.filter(sys_dict_data::Column::CreatedAt.gte(t));
+        if !x.is_empty() {
+            let x = x + " 00:00:00";
+            let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+            s = s.filter(sys_dict_data::Column::CreatedAt.gte(t));
+        }
     }
     if let Some(x) = req.end_time {
-        let x = x + " 23:59:59";
-        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
-        s = s.filter(sys_dict_data::Column::CreatedAt.lte(t));
+        if !x.is_empty() {
+            let x = x + " 23:59:59";
+            let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+            s = s.filter(sys_dict_data::Column::CreatedAt.lte(t));
+        }
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
@@ -62,10 +72,8 @@ where
     C: TransactionTrait + ConnectionTrait,
 {
     let s = SysDictData::find().filter(sys_dict_data::Column::DictType.eq(req.dict_type));
-    let s1 = s.clone().filter(sys_dict_data::Column::DictValue.eq(req.dict_value));
-    let s2 = s.clone().filter(sys_dict_data::Column::DictLabel.eq(req.dict_label));
-    let count1 = s1.count(db).await?;
-    let count2 = s2.count(db).await?;
+    let count1 = s.clone().filter(sys_dict_data::Column::DictValue.eq(req.dict_value)).count(db).await?;
+    let count2 = s.clone().filter(sys_dict_data::Column::DictLabel.eq(req.dict_label)).count(db).await?;
     Ok(count1 > 0 || count2 > 0)
 }
 
@@ -97,8 +105,8 @@ where
             Some(x) => Set(x),
             None => NotSet,
         },
-        status: Set(add_req.status.unwrap_or_else(|| "1".to_string())),
-        remark: Set(Some(add_req.remark.unwrap_or_else(|| "".to_string()))),
+        status: Set(add_req.status),
+        remark: Set(add_req.remark),
         created_at: Set(Some(now)),
         ..Default::default()
     };

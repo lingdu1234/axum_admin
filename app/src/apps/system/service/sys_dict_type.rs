@@ -81,8 +81,8 @@ where
         dict_type_id: Set(uid.clone()),
         dict_name: Set(req.dict_name),
         dict_type: Set(req.dict_type),
-        status: Set(req.status.unwrap_or_else(|| "1".to_string())),
-        remark: Set(Some(req.remark.unwrap_or_else(|| "".to_string()))),
+        status: Set(req.status),
+        remark: Set(req.remark),
         create_by: Set(user_id),
         created_at: Set(Some(now)),
         ..Default::default()
@@ -137,7 +137,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
         dict_name: Set(edit_req.dict_name),
         dict_type: Set(edit_req.dict_type),
         status: Set(edit_req.status),
-        remark: Set(Some(edit_req.remark)),
+        remark: Set(edit_req.remark),
         update_by: Set(Some(user_id)),
         updated_at: Set(Some(now)),
         ..s_r
@@ -149,7 +149,6 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
 }
 
 /// get_user_by_id 获取用户Id获取用户
-/// db 数据库连接 使用db.0
 pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> {
     let mut s = SysDictType::find();
     // s = s.filter(sys_dict_type::Column::DeletedAt.is_null());
@@ -164,9 +163,6 @@ pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> 
         Some(m) => m,
         None => return Err(anyhow!("没有找到数据")),
     };
-    // let result: Resp =
-    // serde_json::from_value(serde_json::json!(res))?;
-    // //这种数据转换效率不知道怎么样
     Ok(res)
 }
 
@@ -180,9 +176,5 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
         .into_model::<Resp>()
         .all(db)
         .await?;
-    // println!("{:?}", s);
-    // let result: Vec<Resp> =
-    // serde_json::from_value(serde_json::json!(s))?;
-    // //这种数据转换效率不知道怎么样
     Ok(s)
 }

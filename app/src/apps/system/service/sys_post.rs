@@ -19,24 +19,34 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
     let mut s = SysPost::find();
 
     if let Some(x) = req.post_code {
-        s = s.filter(sys_post::Column::PostCode.contains(&x));
+        if !x.is_empty() {
+            s = s.filter(sys_post::Column::PostCode.contains(&x));
+        }
     }
 
     if let Some(x) = req.post_name {
-        s = s.filter(sys_post::Column::PostName.contains(&x));
+        if !x.is_empty() {
+            s = s.filter(sys_post::Column::PostName.contains(&x));
+        }
     }
     if let Some(x) = req.status {
-        s = s.filter(sys_post::Column::Status.eq(x));
+        if !x.is_empty() {
+            s = s.filter(sys_post::Column::Status.eq(x));
+        }
     }
     if let Some(x) = req.begin_time {
-        let x = x + " 00:00:00";
-        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
-        s = s.filter(sys_post::Column::CreatedAt.gte(t));
+        if !x.is_empty() {
+            let x = x + " 00:00:00";
+            let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+            s = s.filter(sys_post::Column::CreatedAt.gte(t));
+        }
     }
     if let Some(x) = req.end_time {
-        let x = x + " 23:59:59";
-        let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
-        s = s.filter(sys_post::Column::CreatedAt.lte(t));
+        if !x.is_empty() {
+            let x = x + " 23:59:59";
+            let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
+            s = s.filter(sys_post::Column::CreatedAt.lte(t));
+        }
     }
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
@@ -91,15 +101,14 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Resul
         post_code: Set(req.post_code),
         post_sort: Set(req.post_sort),
         post_name: Set(req.post_name),
-        status: Set(req.status.unwrap_or_else(|| "1".to_string())),
+        status: Set(req.status),
         remark: Set(Some(req.remark.unwrap_or_else(|| "".to_string()))),
         created_by: Set(user_id),
         created_at: Set(Some(now)),
         ..Default::default()
     };
     let txn = db.begin().await?;
-    //  let re =   user.insert(db).await?; 这个多查询一次结果
-    let _ = SysPost::insert(user).exec(&txn).await?;
+    SysPost::insert(user).exec(&txn).await?;
     txn.commit().await?;
     Ok("添加成功".to_string())
 }
@@ -134,7 +143,7 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
         post_name: Set(edit_req.post_name),
         post_sort: Set(edit_req.post_sort),
         status: Set(edit_req.status),
-        remark: Set(Some(edit_req.remark)),
+        remark: Set(edit_req.remark),
         updated_by: Set(Some(user_id)),
         updated_at: Set(Some(now)),
         ..s_r

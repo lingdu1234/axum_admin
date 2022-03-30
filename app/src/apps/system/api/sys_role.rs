@@ -14,7 +14,6 @@ use poem::{
     handler,
     web::{Json, Query},
 };
-use validator::Validate;
 
 use super::super::service;
 use crate::utils::jwt::Claims;
@@ -23,10 +22,6 @@ use crate::utils::jwt::Claims;
 /// page_params 分页参数
 #[handler]
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<sys_role::Model>> {
-    match req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::get_sort_list(db, page_params, req).await;
     match res {
@@ -38,10 +33,6 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 /// add 添加
 #[handler]
 pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Res<String> {
-    match req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::add(db, req, &user.id).await;
     match res {
@@ -53,10 +44,6 @@ pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Res<String> {
 /// delete 完全删除
 #[handler]
 pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Res<String> {
-    match delete_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::delete(db, delete_req).await;
     match res {
@@ -68,11 +55,6 @@ pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Res<String> {
 // edit 修改
 #[handler]
 pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
-    //  数据验证
-    match edit_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::edit(db, edit_req, &user.id).await;
     match res {
@@ -84,7 +66,6 @@ pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
 // set_status 修改状态
 #[handler]
 pub async fn change_status(Json(req): Json<StatusReq>) -> Res<String> {
-    //  数据验证
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::set_status(db, req).await;
     match res {
@@ -95,11 +76,6 @@ pub async fn change_status(Json(req): Json<StatusReq>) -> Res<String> {
 // set_data_scope 修改数据权限范围
 #[handler]
 pub async fn set_data_scope(Json(req): Json<DataScopeReq>) -> Res<String> {
-    //  数据验证
-    match req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::set_data_scope(db, req).await;
     match res {
@@ -111,10 +87,6 @@ pub async fn set_data_scope(Json(req): Json<DataScopeReq>) -> Res<String> {
 /// get_user_by_id 获取用户Id获取用户
 #[handler]
 pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<Resp> {
-    match req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::get_by_id(db, req).await;
     match res {
@@ -137,10 +109,6 @@ pub async fn get_all() -> Res<Vec<Resp>> {
 /// get_role_menu 获取角色授权菜单id数组
 #[handler]
 pub async fn get_role_menu(Query(req): Query<SearchReq>) -> Res<Vec<String>> {
-    match req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
     let db = DB.get_or_init(db_conn).await;
     match req.role_id {
         None => Res::with_msg("role_id不能为空"),
@@ -157,10 +125,6 @@ pub async fn get_role_menu(Query(req): Query<SearchReq>) -> Res<Vec<String>> {
 /// get_role_dept 获取角色授权部门id数组
 #[handler]
 pub async fn get_role_dept(Query(req): Query<SearchReq>) -> Res<Vec<String>> {
-    match req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
     match req.role_id {
         None => Res::with_msg("role_id不能为空"),
         Some(id) => {

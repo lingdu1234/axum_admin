@@ -1,42 +1,40 @@
 use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
-use validator::Validate;
 
-#[derive(Deserialize, Debug, Validate)]
+#[derive(Deserialize, Debug)]
 pub struct SearchReq {
     pub dept_id: Option<String>,
-    #[validate(length(min = 1))]
     pub dept_name: Option<String>,
     pub status: Option<String>,
     pub begin_time: Option<String>,
     pub end_time: Option<String>,
 }
 
-#[derive(Deserialize, Clone, Debug, Validate)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct AddReq {
     pub parent_id: String,
     pub dept_name: String,
     pub order_num: i32,
-    pub leader: String,
-    pub phone: String,
-    pub email: String,
+    pub leader: Option<String>,
+    pub phone: Option<String>,
+    pub email: Option<String>,
     pub status: String,
 }
 
-#[derive(Deserialize, Validate)]
+#[derive(Deserialize)]
 pub struct DeleteReq {
     pub dept_id: String,
 }
 
-#[derive(Deserialize, Clone, Debug, Validate)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct EditReq {
     pub dept_id: String,
     pub parent_id: String,
     pub dept_name: String,
     pub order_num: i32,
-    pub leader: String,
-    pub phone: String,
-    pub email: String,
+    pub leader: Option<String>,
+    pub phone: Option<String>,
+    pub email: Option<String>,
     pub status: String,
 }
 
@@ -46,9 +44,9 @@ pub struct DeptResp {
     pub parent_id: String,
     pub dept_name: String,
     pub order_num: i32,
-    pub leader: String,
-    pub phone: String,
-    pub email: String,
+    pub leader: Option<String>,
+    pub phone: Option<String>,
+    pub email: Option<String>,
     pub status: String,
 }
 
