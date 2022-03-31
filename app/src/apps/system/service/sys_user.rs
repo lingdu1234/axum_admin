@@ -12,9 +12,7 @@ use db::{
 };
 use poem::Request;
 use scru128::scru128_string;
-use sea_orm::{
-    sea_query::Expr, ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, JoinType, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait,
-};
+use sea_orm::{sea_query::Expr, ColumnTrait, DatabaseConnection, EntityTrait, JoinType, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait};
 
 use crate::utils::{
     self,
@@ -23,7 +21,6 @@ use crate::utils::{
 
 /// get_user_list 获取用户列表
 /// page_params 分页参数
-/// db 数据库连接
 pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<UserWithDept>> {
     let txn = db.begin().await?;
     let page_num = page_params.page_num.unwrap_or(1);
@@ -399,27 +396,25 @@ pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
 // edit 修改
 pub async fn edit(db: &DatabaseConnection, req: EditReq, c_user_id: String) -> Result<String> {
     let uid = req.id;
-    let s_u = SysUser::find_by_id(uid.clone()).one(db).await?;
-    let s_user: sys_user::ActiveModel = s_u.unwrap().into();
-    let now: NaiveDateTime = Local::now().naive_local();
-    let user = sys_user::ActiveModel {
-        user_name: Set(req.user_name),
-        user_nickname: Set(req.user_nickname),
-        user_status: Set(req.user_status),
-        user_email: Set(req.user_email),
-        sex: Set(req.sex),
-        dept_id: Set(req.dept_id),
-        remark: Set(req.remark),
-        is_admin: Set(req.is_admin),
-        phone_num: Set(req.phone_num),
-        updated_at: Set(Some(now)),
-        role_id: Set(req.role_id),
-        ..s_user
-    };
     // 更新
     let txn = db.begin().await?;
     // 更新用户信息
-    user.update(&txn).await?;
+    sys_user::Entity::update_many()
+        .col_expr(sys_user::Column::UserName, Expr::value(req.user_name))
+        .col_expr(sys_user::Column::UserNickname, Expr::value(req.user_nickname))
+        .col_expr(sys_user::Column::UserStatus, Expr::value(req.user_status))
+        .col_expr(sys_user::Column::UserEmail, Expr::value(req.user_email))
+        .col_expr(sys_user::Column::Sex, Expr::value(req.sex))
+        .col_expr(sys_user::Column::DeptId, Expr::value(req.dept_id))
+        .col_expr(sys_user::Column::Remark, Expr::value(req.remark))
+        .col_expr(sys_user::Column::IsAdmin, Expr::value(req.is_admin))
+        .col_expr(sys_user::Column::PhoneNum, Expr::value(req.phone_num))
+        .col_expr(sys_user::Column::UpdatedAt, Expr::value(Local::now().naive_local()))
+        .col_expr(sys_user::Column::RoleId, Expr::value(req.role_id))
+        .filter(sys_user::Column::Id.eq(uid.clone()))
+        .exec(&txn)
+        .await?;
+
     //  更新岗位信息
     // 1.先删除用户岗位关系
     super::sys_post::delete_post_by_user_id(&txn, vec![uid.clone()]).await?;
@@ -432,7 +427,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, c_user_id: String) -> R
     super::sys_user_role::edit_user_role(&txn, &uid, req.role_ids, c_user_id).await?;
 
     txn.commit().await?;
-    Ok(format!("用户<{}>数据更新成功", uid))
+    Ok("用户数据更新成功".to_string())
 }
 
 /// 用户登录

@@ -7,7 +7,7 @@ use db::{
         models::sys_post::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
     },
 };
-use sea_orm::{ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
+use sea_orm::{sea_query::Expr, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -129,28 +129,24 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<String> {
+pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
-    if eidt_check_data_is_exist(edit_req.clone().post_id, edit_req.clone().post_code, edit_req.clone().post_name, db).await? {
+    if eidt_check_data_is_exist(req.post_id.clone(), req.post_code.clone(), req.post_name.clone(), db).await? {
         return Err(anyhow!("数据已存在"));
     }
-    let uid = edit_req.post_id;
-    let s_s = SysPost::find_by_id(uid.clone()).one(db).await?;
-    let s_r: sys_post::ActiveModel = s_s.unwrap().into();
-    let now: NaiveDateTime = Local::now().naive_local();
-    let act = sys_post::ActiveModel {
-        post_code: Set(edit_req.post_code),
-        post_name: Set(edit_req.post_name),
-        post_sort: Set(edit_req.post_sort),
-        status: Set(edit_req.status),
-        remark: Set(edit_req.remark),
-        updated_by: Set(Some(user_id)),
-        updated_at: Set(Some(now)),
-        ..s_r
-    };
+    sys_post::Entity::update_many()
+        .col_expr(sys_post::Column::PostCode, Expr::value(req.post_code))
+        .col_expr(sys_post::Column::PostName, Expr::value(req.post_name))
+        .col_expr(sys_post::Column::PostSort, Expr::value(req.post_sort))
+        .col_expr(sys_post::Column::Status, Expr::value(req.status))
+        .col_expr(sys_post::Column::Remark, Expr::value(req.remark))
+        .col_expr(sys_post::Column::UpdatedBy, Expr::value(user_id))
+        .col_expr(sys_post::Column::UpdatedAt, Expr::value(Local::now().naive_local()))
+        .filter(sys_post::Column::PostId.eq(req.post_id))
+        .exec(db)
+        .await?;
     // 更新
-    let _aa = act.update(db).await?; // 这个两种方式一样 都要多查询一次
-    Ok(format!("用户<{}>数据更新成功", uid))
+    Ok("用户数据更新成功".to_string())
 }
 
 /// get_user_by_id 获取用户Id获取用户

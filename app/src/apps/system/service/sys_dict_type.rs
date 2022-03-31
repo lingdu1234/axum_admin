@@ -8,7 +8,7 @@ use db::{
     },
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, JoinType, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait,
+    sea_query::Expr, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, JoinType, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait,
 };
 
 /// get_list 获取列表
@@ -128,24 +128,18 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<String> {
-    let uid = edit_req.dict_type_id;
-    let s_s = SysDictType::find_by_id(uid.clone()).one(db).await?;
-    let s_r: sys_dict_type::ActiveModel = s_s.unwrap().into();
-    let now: NaiveDateTime = Local::now().naive_local();
-    let act = sys_dict_type::ActiveModel {
-        dict_name: Set(edit_req.dict_name),
-        dict_type: Set(edit_req.dict_type),
-        status: Set(edit_req.status),
-        remark: Set(edit_req.remark),
-        update_by: Set(Some(user_id)),
-        updated_at: Set(Some(now)),
-        ..s_r
-    };
-    // 更新
-    let _aa = act.update(db).await?; // 这个两种方式一样 都要多查询一次
-
-    Ok(format!("用户<{}>数据更新成功", uid))
+pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Result<String> {
+    sys_dict_type::Entity::update_many()
+        .col_expr(sys_dict_type::Column::DictName, Expr::value(req.dict_name))
+        .col_expr(sys_dict_type::Column::DictType, Expr::value(req.dict_type))
+        .col_expr(sys_dict_type::Column::Status, Expr::value(req.status))
+        .col_expr(sys_dict_type::Column::Remark, Expr::value(req.remark))
+        .col_expr(sys_dict_type::Column::UpdateBy, Expr::value(user_id))
+        .col_expr(sys_dict_type::Column::UpdatedAt, Expr::value(Local::now().naive_local()))
+        .filter(sys_dict_type::Column::DictTypeId.eq(req.dict_type_id))
+        .exec(db)
+        .await?;
+    Ok("数据更新成功".to_string())
 }
 
 /// get_user_by_id 获取用户Id获取用户

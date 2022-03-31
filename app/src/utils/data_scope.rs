@@ -38,18 +38,6 @@ pub async fn get_data_scope_user_ids(db: &DatabaseConnection, uid: &str) -> Resu
     let res = match data_scope.as_str() {
         "1" => None,
         "2" => {
-            // let sr = sys_role_dept::Entity::find()
-            //     .filter(sys_role_dept::Column::RoleId.eq(role_id))
-            //     .all(db)
-            //     .await?;
-            // let dept_ids = sr
-            //     .iter()
-            //     .map(|x| x.dept_id.clone())
-            //     .collect::<Vec<String>>();
-            // let s = sys_user::Entity::find()
-            //     .filter(sys_user::Column::DeptId.is_in(dept_ids))
-            //     .all(db)
-            //     .await?;
             let s = sys_user::Entity::find()
                 .filter(
                     Condition::any().add(

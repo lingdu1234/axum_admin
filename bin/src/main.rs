@@ -1,4 +1,4 @@
-// use std::time::Duration;
+use std::time::Duration;
 
 use app::{
     apps,
@@ -80,28 +80,28 @@ fn main() -> Result<(), std::io::Error> {
                 let listener = TcpListener::bind(&CFG.server.address).rustls(RustlsConfig::new().key(&*CERT_KEY.key).cert(&*CERT_KEY.cert));
                 let server = Server::new(listener).name(&CFG.server.name);
                 server
-                    .run(app)
-                    // .run_with_graceful_shutdown(
-                    //     app,
-                    //     async move {
-                    //         let _ = tokio::signal::ctrl_c().await;
-                    //     },
-                    //     Some(Duration::from_secs(1)),
-                    // )
+                    // .run(app)
+                    .run_with_graceful_shutdown(
+                        app,
+                        async move {
+                            let _ = tokio::signal::ctrl_c().await;
+                        },
+                        Some(Duration::from_secs(1)),
+                    )
                     .await
             }
             false => {
                 let listener = TcpListener::bind(&CFG.server.address);
                 let server = Server::new(listener).name(&CFG.server.name);
                 server
-                    .run(app)
-                    // .run_with_graceful_shutdown(
-                    //     app,
-                    //     async move {
-                    //         let _ = tokio::signal::ctrl_c().await;
-                    //     },
-                    //     Some(Duration::from_secs(1)),
-                    // )
+                    // .run(app)
+                    .run_with_graceful_shutdown(
+                        app,
+                        async move {
+                            let _ = tokio::signal::ctrl_c().await;
+                        },
+                        Some(Duration::from_secs(1)),
+                    )
                     .await
             }
         }

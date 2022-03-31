@@ -8,9 +8,9 @@ use db::{
     },
 };
 use sea_orm::{sea_query::Table, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder};
+
 /// get_list 获取列表
 /// page_params 分页参数
-/// db 数据库连接 使用db.0
 pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_oper_log::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
@@ -78,7 +78,6 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     let d = s.exec(db).await.map_err(|e| anyhow!(e.to_string()))?;
 
     match d.rows_affected {
-        // 0 => return Err("你要删除的字典类型不存在".into()),
         0 => Err(anyhow!("你要删除的日志不存在".to_string(),)),
 
         i => Ok(format!("成功删除{}条数据", i)),

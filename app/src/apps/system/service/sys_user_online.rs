@@ -16,7 +16,6 @@ use sea_orm::{sea_query::Expr, ColumnTrait, DatabaseConnection, EntityTrait, Pag
 
 /// get_list 获取列表
 /// page_params 分页参数
-/// db 数据库连接 使用db.0
 pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_user_online::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);

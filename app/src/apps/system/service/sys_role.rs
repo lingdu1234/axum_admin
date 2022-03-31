@@ -20,13 +20,9 @@ use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait, JoinType, PaginatorTrait, QueryFilter, QueryOrder,
     QuerySelect, Set, TransactionTrait, Value,
 };
-// use sea_orm_casbin_adapter::casbin::MgmtApi;
-
-// use crate::utils::get_enforcer;
 
 /// get_list 获取列表
 /// page_params 分页参数
-/// db 数据库连接 使用db.0
 pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_role::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
@@ -135,37 +131,6 @@ pub async fn add_role(txn: &DatabaseTransaction, req: AddReq) -> Result<String> 
     SysRole::insert(user).exec(txn).await?;
     Ok(uid)
 }
-
-// /// delete 完全删除
-// pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) ->
-// Result<String> {     let txn = db.begin().await?;
-//     let mut s = SysRole::delete_many();
-//     s = s.filter(sys_role::Column::RoleId.is_in(delete_req.role_ids.
-// clone()));     // 开始删除
-//     let d = s.exec(db).await?;
-//     let mut e = get_enforcer(false).await;
-//     // 删除角色权限数据 和 部门权限数据
-//     for it in delete_req.role_ids.clone() {
-//         e.remove_filtered_policy(0, vec![it.clone()])
-//             .await
-//             ?;
-//     }
-//     SysRoleDept::delete_many()
-//         .filter(sys_role_dept::Column::RoleId.is_in(delete_req.role_ids.
-// clone()))         .exec(&txn)
-//         .await
-//         ?;
-//     // 提交事务
-//     txn.commit().await?;
-//     match d.rows_affected {
-//         0 => Err(anyhow!(
-//             "删除失败,数据不存在",
-//
-//         )),
-
-//         i => return Ok(format!("成功删除{}条数据", i)),
-//     }
-// }
 
 /// delete 完全删除
 pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {

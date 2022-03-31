@@ -8,9 +8,7 @@ use db::{
     },
 };
 // use poem::{error::BadRequest, http::StatusCode, Error, Result};
-use sea_orm::{
-    ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
-};
+use sea_orm::{ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -97,14 +95,8 @@ where
         dict_sort: Set(add_req.dict_sort),
         is_default: Set(add_req.is_default),
         create_by: Set(user_id),
-        css_class: match Some(add_req.css_class) {
-            Some(x) => Set(x),
-            None => NotSet,
-        },
-        list_class: match Some(add_req.list_class) {
-            Some(x) => Set(x),
-            None => NotSet,
-        },
+        css_class: Set(add_req.css_class),
+        list_class: Set(add_req.list_class),
         status: Set(add_req.status),
         remark: Set(add_req.remark),
         created_at: Set(Some(now)),
@@ -145,14 +137,8 @@ pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -
         dict_sort: Set(edit_req.dict_sort),
         dict_value: Set(edit_req.dict_value),
         update_by: Set(Some(user_id)),
-        css_class: match Some(edit_req.css_class) {
-            Some(x) => Set(x),
-            None => NotSet,
-        },
-        list_class: match Some(edit_req.list_class) {
-            Some(x) => Set(x),
-            None => NotSet,
-        },
+        css_class: Set(edit_req.css_class),
+        list_class: Set(edit_req.list_class),
         is_default: Set(edit_req.is_default),
         status: Set(edit_req.status),
         remark: Set(Some(edit_req.remark)),
