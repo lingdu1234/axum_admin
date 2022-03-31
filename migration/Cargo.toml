@@ -11,6 +11,6 @@ path = "src/lib.rs"
 [dependencies]
 db = {path = "../db"}
 #
-anyhow = "1.0.53"
+anyhow = "1.0.55"
 sea-schema = {version = "0.7.1", default-features = false, features = ["migration"]}
 # "debug-print"
