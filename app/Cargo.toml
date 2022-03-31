@@ -62,7 +62,7 @@ version = "0.7.0"
 
 [features]
 # default = ["postgres", "mysql"]
-default = ["postgres", "mysql"]
+default = ["postgres", "mysql", "sqlite"]
 mysql = ["sea-orm/sqlx-mysql"]
 postgres = ["sea-orm/sqlx-postgres"]
 sqlite = ["sea-orm/sqlx-sqlite"]
