@@ -144,3 +144,9 @@ pub struct ChangeRoleReq {
     pub user_id: String,
     pub role_id: String,
 }
+
+#[derive(Deserialize, Clone)]
+pub struct ChangeDeptReq {
+    pub user_id: String,
+    pub dept_id: String,
+}

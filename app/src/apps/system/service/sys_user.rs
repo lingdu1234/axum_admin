@@ -6,7 +6,10 @@ use db::{
         entities::{prelude::SysUser, sys_dept, sys_user},
         models::{
             sys_dept::DeptResp,
-            sys_user::{AddReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq, UpdateProfileReq, UpdatePwdReq, UserLoginReq, UserResp, UserWithDept},
+            sys_user::{
+                AddReq, ChangeDeptReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq, UpdateProfileReq, UpdatePwdReq, UserLoginReq, UserResp,
+                UserWithDept,
+            },
         },
     },
 };
@@ -350,7 +353,7 @@ pub async fn change_role(db: &DatabaseConnection, req: ChangeRoleReq) -> Result<
     let txn = db.begin().await?;
     // 更新用户信息
     SysUser::update_many()
-        .col_expr(sys_user::Column::RoleId, Expr::value(req.clone().role_id))
+        .col_expr(sys_user::Column::RoleId, Expr::value(req.role_id))
         .filter(sys_user::Column::Id.eq(req.user_id))
         .exec(&txn)
         .await?;
@@ -360,6 +363,22 @@ pub async fn change_role(db: &DatabaseConnection, req: ChangeRoleReq) -> Result<
 
     Ok(res)
 }
+
+pub async fn change_dept(db: &DatabaseConnection, req: ChangeDeptReq) -> Result<String> {
+    let txn = db.begin().await?;
+    // 更新用户信息
+    SysUser::update_many()
+        .col_expr(sys_user::Column::DeptId, Expr::value(req.dept_id))
+        .filter(sys_user::Column::Id.eq(req.user_id))
+        .exec(&txn)
+        .await?;
+    // user.update(&txn).await?;
+    txn.commit().await?;
+    let res = "用户部门切换成功".to_string();
+
+    Ok(res)
+}
+
 pub async fn update_avatar(db: &DatabaseConnection, img: &str, user_id: &str) -> Result<String> {
     let txn = db.begin().await?;
     // 更新用户信息

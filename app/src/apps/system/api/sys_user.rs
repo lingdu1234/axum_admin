@@ -4,7 +4,8 @@ use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
     system::models::sys_user::{
-        AddReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq, UpdateProfileReq, UpdatePwdReq, UserInfo, UserInfomaion, UserLoginReq, UserWithDept,
+        AddReq, ChangeDeptReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq, UpdateProfileReq, UpdatePwdReq, UserInfo, UserInfomaion, UserLoginReq,
+        UserWithDept,
     },
     DB,
 };
@@ -213,6 +214,15 @@ pub async fn fresh_token(user: Claims) -> Res<AuthBody> {
 pub async fn change_role(Json(req): Json<ChangeRoleReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::change_role(db, req).await;
+    match res {
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
+    }
+}
+#[handler]
+pub async fn change_dept(Json(req): Json<ChangeDeptReq>) -> Res<String> {
+    let db = DB.get_or_init(db_conn).await;
+    let res = service::sys_user::change_dept(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),

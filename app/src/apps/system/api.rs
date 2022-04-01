@@ -53,6 +53,7 @@ fn sys_user_api() -> Route {
         .at("/update_passwd", put(sys_user::update_passwd)) // 重置密码
         .at("/change_status", put(sys_user::change_status)) // 修改状态
         .at("/change_role", put(sys_user::change_role)) // 切换角色
+        .at("/change_dept", put(sys_user::change_dept)) // 切换部门
         .at("/fresh_token", put(sys_user::fresh_token)) // 修改状态
         .at("/update_avatar", post(sys_user::update_avatar)) // 修改头像
 }
