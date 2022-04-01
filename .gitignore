@@ -10,7 +10,6 @@
 .env
 /config/config.toml
 /config/cert
-/migration/data
 *.exe
 /test
 常用命令.txt

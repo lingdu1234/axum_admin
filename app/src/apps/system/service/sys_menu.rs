@@ -334,13 +334,13 @@ pub async fn get_all_enabled_menu_tree(db: &DatabaseConnection) -> Result<Vec<Sy
 
 //  获取角色对应的api 和 api id
 // 返回结果(Vec<String>, Vec<String>) 为（apis,api_ids）
-pub async fn get_role_permissions(db: &DatabaseConnection, role_ids: Vec<String>) -> Result<(Vec<String>, Vec<String>)> {
+pub async fn get_role_permissions(db: &DatabaseConnection, role_id: &str) -> Result<(Vec<String>, Vec<String>)> {
     let s = SysMenu::find()
         .join_rev(
             JoinType::InnerJoin,
             SysRoleApi::belongs_to(SysMenu).from(sys_role_api::Column::Api).to(sys_menu::Column::Api).into(),
         )
-        .filter(sys_role_api::Column::RoleId.is_in(role_ids))
+        .filter(sys_role_api::Column::RoleId.eq(role_id))
         .all(db)
         .await?;
 
@@ -355,9 +355,8 @@ pub async fn get_role_permissions(db: &DatabaseConnection, role_ids: Vec<String>
 
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
-pub async fn get_admin_menu_by_role_ids(db: &DatabaseConnection, role_ids: Vec<String>) -> Result<Vec<SysMenuTree>> {
-    let (menu_apis, _) = self::get_role_permissions(db, role_ids).await?;
-    println!("menu_apis: {:?}", menu_apis);
+pub async fn get_admin_menu_by_role_ids(db: &DatabaseConnection, role_id: &str) -> Result<Vec<SysMenuTree>> {
+    let (menu_apis, _) = self::get_role_permissions(db, role_id).await?;
     //  todo 可能以后加条件判断
     let router_all = get_enabled_menus(db, true, false).await?;
     //  生成menus

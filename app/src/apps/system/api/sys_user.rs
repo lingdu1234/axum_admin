@@ -13,6 +13,7 @@ use poem::{
     web::{Json, Multipart, Query},
     Request,
 };
+use tokio::join;
 
 use super::super::service;
 use crate::utils::jwt::{AuthBody, Claims};
@@ -57,11 +58,13 @@ pub async fn get_user_info_by_id(id: &str) -> Result<UserInfomaion> {
         Ok(user) => {
             let post_ids = service::sys_post::get_post_ids_by_user_id(db, &user.user.id).await.unwrap();
             let role_ids = service::sys_user_role::get_role_ids_by_user_id(db, &user.user.id).await.expect("角色id获取失败");
+            let dept_ids = service::sys_user_dept::get_dept_ids_by_user_id(db, &user.user.id).await.expect("角色id获取失败");
             let res = UserInfomaion {
                 user_info: user.clone(),
                 dept_id: user.user.dept_id,
                 post_ids,
                 role_ids,
+                dept_ids,
             };
             Ok(res)
         }
@@ -124,36 +127,45 @@ pub async fn login(Json(login_req): Json<UserLoginReq>, request: &Request) -> Re
 #[handler]
 pub async fn get_info(user: Claims) -> Res<UserInfo> {
     let db = DB.get_or_init(db_conn).await;
-    //  获取用户信息
-    let user_info = match service::sys_user::get_by_id(db, &user.id).await {
+
+    let (role_ids_r, dept_ids_r, user_r) = join!(
+        service::sys_user_role::get_role_ids_by_user_id(db, &user.id),
+        service::sys_user_dept::get_dept_ids_by_user_id(db, &user.id),
+        self::get_user_info_permission(&user.id),
+    );
+
+    let roles = match role_ids_r {
         Ok(x) => x,
         Err(e) => return Res::with_err(&e.to_string()),
     };
-
-    let role_id = user_info.user.role_id.clone();
-
-    let role_ids = match service::sys_role::get_all_admin_role(db, &user.id).await {
+    let depts = match dept_ids_r {
         Ok(x) => x,
         Err(e) => return Res::with_err(&e.to_string()),
     };
+    let (user, permissions) = match user_r {
+        Ok((x, y)) => (x, y),
+        Err(e) => return Res::with_err(&e.to_string()),
+    };
 
-    // 检查是否超管用户
-    let permissions = if CFG.system.super_user.contains(&user.id) {
-        vec!["*:*:*".to_string()]
-    } else {
-        match service::sys_menu::get_role_permissions(db, vec![role_id]).await {
-            Ok((x, _)) => x,
-            Err(e) => return Res::with_err(&e.to_string()),
-        }
-    };
-    // 获取用户菜单信息
-    let res = UserInfo {
-        user: user_info,
-        roles: role_ids,
-        permissions,
-    };
+    let res = UserInfo { user, roles, depts, permissions };
 
     Res::with_data(res)
+}
+
+// 获取用户信息以及权限
+async fn get_user_info_permission(user_id: &str) -> Result<(UserWithDept, Vec<String>)> {
+    let db = DB.get_or_init(db_conn).await;
+    //  获取用户信息
+    let user_info = service::sys_user::get_by_id(db, user_id).await?;
+
+    // 检查是否超管用户
+    let permissions = if CFG.system.super_user.contains(&user_id.to_string()) {
+        vec!["*:*:*".to_string()]
+    } else {
+        let (_, ids) = service::sys_menu::get_role_permissions(db, &user_info.user.role_id).await?;
+        ids
+    };
+    Ok((user_info, permissions))
 }
 
 // edit 修改

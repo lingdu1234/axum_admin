@@ -27,6 +27,8 @@ pub mod sys_job_log;
 pub mod sys_oper_log;
 // 用户角色
 pub mod sys_user_role;
+// 用户部门
+pub mod sys_user_dept;
 // 角色api
 pub mod sys_role_api;
 // api对应的数据库

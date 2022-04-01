@@ -96,11 +96,6 @@ pub async fn get_all_enabled_menu_tree() -> Res<Vec<SysMenuTree>> {
 #[handler]
 pub async fn get_routers(user: Claims) -> Res<Vec<SysMenuTree>> {
     let db = DB.get_or_init(db_conn).await;
-    //    获取角色列表
-    // let all_roles = match service::sys_role::get_all(db).await {
-    //     Ok(x) => x,
-    //     Err(e) => return Res::with_err(&e.to_string()),
-    // };
     //  获取 用户角色
     let role_id = match service::sys_role::get_current_admin_role(db, &user.id).await {
         Ok(x) => x,
@@ -111,7 +106,7 @@ pub async fn get_routers(user: Claims) -> Res<Vec<SysMenuTree>> {
     let res = if CFG.system.super_user.contains(&user.id) {
         service::sys_menu::get_all_router_tree(db).await
     } else {
-        service::sys_menu::get_admin_menu_by_role_ids(db, vec![role_id]).await
+        service::sys_menu::get_admin_menu_by_role_ids(db, &role_id).await
     };
     match res {
         Ok(x) => Res::with_data(x),

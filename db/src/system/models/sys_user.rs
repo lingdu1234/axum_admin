@@ -13,11 +13,12 @@ pub struct AddReq {
     pub user_email: Option<String>,
     pub sex: String,
     pub avatar: Option<String>,
-    pub dept_id: String,
     pub remark: Option<String>,
     pub is_admin: String,
     pub phone_num: Option<String>,
     pub post_ids: Vec<String>,
+    pub dept_ids: Vec<String>,
+    pub dept_id: String,
     pub role_ids: Vec<String>,
     pub role_id: String,
 }
@@ -31,11 +32,12 @@ pub struct EditReq {
     pub user_email: Option<String>,
     pub sex: String,
     pub avatar: String,
-    pub dept_id: String,
     pub remark: Option<String>,
     pub is_admin: String,
     pub phone_num: Option<String>,
     pub post_ids: Vec<String>,
+    pub dept_ids: Vec<String>,
+    pub dept_id: String,
     pub role_ids: Vec<String>,
     pub role_id: String,
 }
@@ -78,6 +80,7 @@ pub struct UserInfomaion {
     pub user_info: UserWithDept,
     pub post_ids: Vec<String>,
     pub role_ids: Vec<String>,
+    pub dept_ids: Vec<String>,
     pub dept_id: String,
 }
 
@@ -115,6 +118,7 @@ pub struct UserLoginReq {
 pub struct UserInfo {
     pub user: UserWithDept,
     pub roles: Vec<String>,
+    pub depts: Vec<String>,
     pub permissions: Vec<String>,
 }
 #[derive(Deserialize)]

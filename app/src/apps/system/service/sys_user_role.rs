@@ -4,7 +4,7 @@ use db::system::entities::{sys_user, sys_user_role};
 use sea_orm::{sea_query::Expr, ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, Set, TransactionTrait, Value};
 
 // 添加修改用户角色
-pub async fn edit_user_role<C>(db: &C, user_id: &str, role_ids: Vec<String>, created_by: String) -> Result<()>
+pub async fn edit_user_role<C>(db: &C, user_id: &str, role_ids: Vec<String>, created_by: &str) -> Result<()>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -17,7 +17,7 @@ where
                 id: Set(scru128::scru128_string()),
                 user_id: Set(user_id.to_string()),
                 role_id: Set(x.to_string()),
-                created_by: Set(created_by.clone()),
+                created_by: Set(created_by.to_string()),
                 created_at: Set(Local::now().naive_local()),
             })
             .collect::<Vec<_>>(),
@@ -34,7 +34,7 @@ where
     Ok(())
 }
 // 给角色批量添加用户
-pub async fn add_role_by_lot_user_ids<C>(db: &C, user_ids: Vec<String>, role_id: String, created_by: String) -> Result<()>
+pub async fn add_role_by_lot_user_ids<C>(db: &C, user_ids: Vec<String>, role_id: String, created_by: &str) -> Result<()>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -45,7 +45,7 @@ where
                 id: Set(scru128::scru128_string()),
                 user_id: Set(x.to_string()),
                 role_id: Set(role_id.clone()),
-                created_by: Set(created_by.clone()),
+                created_by: Set(created_by.to_string()),
                 created_at: Set(Local::now().naive_local()),
             })
             .collect::<Vec<_>>(),

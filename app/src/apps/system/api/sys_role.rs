@@ -113,7 +113,7 @@ pub async fn get_role_menu(Query(req): Query<SearchReq>) -> Res<Vec<String>> {
     match req.role_id {
         None => Res::with_msg("role_id不能为空"),
         Some(id) => {
-            let api_ids = match service::sys_menu::get_role_permissions(db, vec![id]).await {
+            let api_ids = match service::sys_menu::get_role_permissions(db, &id).await {
                 Ok((_, x)) => x,
                 Err(e) => return Res::with_err(&e.to_string()),
             };

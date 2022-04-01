@@ -1,6 +1,6 @@
 /*
 SQLyog Ultimate
-MySQL - 10.6.5-MariaDB-1:10.6.5+maria~focal : Database - wk3
+MySQL - 10.6.5-MariaDB-1:10.6.5+maria~focal : Database - poem_demo
 *********************************************************************
 */
 
@@ -39,7 +39,7 @@ insert  into `sys_menu`(`id`,`pid`,`path`,`menu_name`,`icon`,`menu_type`,`query`
 ('00VRNG2J3461ETB20J4AH78ILE','00UDFVHR632BT4PVUGAO6UOSPN','','登录日志-删除','','F',NULL,61002,'1','system/login-log/delete','DELETE','','1','1','1','1','0','0','登录日志-删除','2022-03-03 09:13:40','2022-03-06 16:36:31',NULL),
 ('00VRNH2NQVNQKUNNPEG24M1S91','00UDFVHR632BT4PVUGAO6UOSPN','','登录日志-清空','','F',NULL,61003,'1','system/login-log/clean','DELETE','','1','1','1','1','0','0','登录日志-清空','2022-03-03 09:14:46','2022-03-06 16:36:39',NULL),
 ('00VRO4RNUAU5I9A2TC2CFS9HN2','00TV8ENLC2DL61K03MS9LT04F3','','用户-查询','','F',NULL,12101,'1','system/user/list','GET','','1','1','1','1','0','0','用户-查询','2022-03-03 09:36:23',NULL,NULL),
-('00VRO6RNKGKJOTJDMDK8JIP6BI','00TV8ENLC2DL61K03MS9LT04F3','','用户-修改','','F',NULL,12102,'1','system/user/edit','POST','','1','1','1','1','0','0','用户-修改','2022-03-03 09:38:34','2022-03-03 18:04:59',NULL),
+('00VRO6RNKGKJOTJDMDK8JIP6BI','00TV8ENLC2DL61K03MS9LT04F3','','用户-修改','','F',NULL,12102,'1','system/user/edit','PUT','','1','1','1','1','0','0','用户-修改','2022-03-03 09:38:34','2022-04-01 14:11:00',NULL),
 ('00VRO7IC5CJ6IVBGV4EJ4GM64A','00TV8ENLC2DL61K03MS9LT04F3','','用户-删除','','F',NULL,12104,'1','system/user/delete','DELETE','','1','1','1','1','0','0','用户-删除','2022-03-03 09:39:20',NULL,NULL),
 ('00VRO8BAO5P72IHJ39N7QCCR04','00TV8ENLC2DL61K03MS9LT04F3','','用户-重置密码','','F',NULL,12105,'1','system/user/reset_passwd','PUT','','1','1','1','1','0','0','用户-重置密码','2022-03-03 09:40:11',NULL,NULL),
 ('00VRO8UU3P5MA05UI4PS3IA6E5','00TV8ENLC2DL61K03MS9LT04F3','','用户-更新密码','','F',NULL,12106,'1','system/user/update_passwd','PUT','','1','1','1','1','0','0','用户-更新密码','2022-03-03 09:40:51',NULL,NULL),

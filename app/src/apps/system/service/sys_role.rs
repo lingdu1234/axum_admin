@@ -6,8 +6,8 @@ use db::{
     common::res::{ListData, PageParams},
     system::{
         entities::{
-            prelude::{SysRole, SysRoleDept, SysUserRole},
-            sys_role, sys_role_dept, sys_user, sys_user_role,
+            prelude::{SysRole, SysRoleDept},
+            sys_role, sys_role_dept, sys_user,
         },
         models::{
             sys_menu::MenuResp,
@@ -17,8 +17,8 @@ use db::{
     },
 };
 use sea_orm::{
-    sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait, JoinType, PaginatorTrait, QueryFilter, QueryOrder,
-    QuerySelect, Set, TransactionTrait, Value,
+    sea_query::Expr, ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, DatabaseTransaction, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set,
+    TransactionTrait, Value,
 };
 
 /// get_list 获取列表
@@ -299,22 +299,22 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
 }
 
 //  获取用户角色
-pub async fn get_all_admin_role(db: &DatabaseConnection, user_id: &str) -> Result<Vec<String>> {
-    let s = SysUserRole::find()
-        .join_rev(
-            JoinType::LeftJoin,
-            sys_user::Entity::belongs_to(sys_user_role::Entity)
-                .from(sys_user::Column::Id)
-                .to(sys_user_role::Column::UserId)
-                .into(),
-        )
-        // .select_with(sys_user_role::Entity)
-        .filter(sys_user::Column::Id.eq(user_id))
-        .all(db)
-        .await?;
-    let res = s.iter().map(|x| x.role_id.clone()).collect::<Vec<String>>();
-    Ok(res)
-}
+// pub async fn get_all_admin_role(db: &DatabaseConnection, user_id: &str) -> Result<Vec<String>> {
+//     let s = SysUserRole::find()
+//         .join_rev(
+//             JoinType::LeftJoin,
+//             sys_user::Entity::belongs_to(sys_user_role::Entity)
+//                 .from(sys_user::Column::Id)
+//                 .to(sys_user_role::Column::UserId)
+//                 .into(),
+//         )
+//         // .select_with(sys_user_role::Entity)
+//         .filter(sys_user::Column::Id.eq(user_id))
+//         .all(db)
+//         .await?;
+//     let res = s.iter().map(|x| x.role_id.clone()).collect::<Vec<String>>();
+//     Ok(res)
+// }
 
 pub async fn get_current_admin_role(db: &DatabaseConnection, user_id: &str) -> Result<String> {
     let user = super::sys_user::get_by_id(db, user_id).await?;
@@ -328,14 +328,14 @@ pub async fn get_auth_users_by_role_id(db: &DatabaseConnection, role_id: &str) -
 pub async fn add_role_by_user_id(db: &DatabaseConnection, user_id: &str, role_ids: Vec<String>, created_by: String) -> Result<()> {
     let txn = db.begin().await?;
     super::sys_user_role::delete_user_role(&txn, user_id).await?;
-    super::sys_user_role::edit_user_role(&txn, user_id, role_ids, created_by).await?;
+    super::sys_user_role::edit_user_role(&txn, user_id, role_ids, &created_by).await?;
     txn.commit().await?;
     Ok(())
 }
 
 pub async fn add_role_with_user_ids(db: &DatabaseConnection, user_ids: Vec<String>, role_id: String, created_by: String) -> Result<()> {
     let txn = db.begin().await?;
-    super::sys_user_role::add_role_by_lot_user_ids(&txn, user_ids, role_id, created_by).await?;
+    super::sys_user_role::add_role_by_lot_user_ids(&txn, user_ids, role_id, &created_by).await?;
     txn.commit().await?;
     Ok(())
 }

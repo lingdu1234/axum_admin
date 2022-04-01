@@ -48,6 +48,7 @@ async fn create_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
     Cot(db, builder, &schema, sys_user_role::Entity).await?;
     Cot(db, builder, &schema, sys_user::Entity).await?;
     Cot(db, builder, &schema, sys_api_db::Entity).await?;
+    Cot(db, builder, &schema, sys_user_dept::Entity).await?;
 
     Cot(db, builder, &schema, sys_user_online::Entity).await?;
     Cot(db, builder, &schema, sys_job_log::Entity).await?;
@@ -115,6 +116,7 @@ async fn drop_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
     Dot(manager, sys_user_role::Entity).await?;
     Dot(manager, sys_user::Entity).await?;
     Dot(manager, sys_api_db::Entity).await?;
+    Dot(manager, sys_user_dept::Entity).await?;
 
     Dot(manager, sys_user_online::Entity).await?;
     Dot(manager, sys_job_log::Entity).await?;

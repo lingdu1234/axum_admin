@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Ok, Result};
 use chrono::{Local, NaiveDateTime};
 use db::{
     common::res::{ListData, PageParams},
@@ -256,7 +256,11 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, c_user_id: String) -> Res
     // 先删除原有的角色信息，再添加新的角色信息
     super::sys_user_role::delete_user_role(&txn, &uid).await?;
 
-    super::sys_user_role::edit_user_role(&txn, &uid, req.role_ids, c_user_id).await?;
+    super::sys_user_role::edit_user_role(&txn, &uid, req.role_ids, &c_user_id).await?;
+    // 删除原有部门信息
+    super::sys_user_dept::delete_user_dept(&txn, &uid).await?;
+    // 添加新的部门信息
+    super::sys_user_dept::edit_user_dept(&txn, &uid, req.dept_ids, &c_user_id).await?;
 
     txn.commit().await?;
 
@@ -384,7 +388,9 @@ pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
     // 删除用户职位数据
     super::sys_post::delete_post_by_user_id(&txn, req.user_ids.clone()).await?;
     // 删除用户角色数据
-    super::sys_user_role::delete_user_role_by_user_ids(&txn, req.user_ids, None).await?;
+    super::sys_user_role::delete_user_role_by_user_ids(&txn, req.user_ids.clone(), None).await?;
+    // 删除用户部门数据
+    super::sys_user_dept::delete_user_dept_by_user_ids(&txn, req.user_ids).await?;
 
     txn.commit().await?;
     return match d.rows_affected {
@@ -424,7 +430,11 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, c_user_id: String) -> R
     // 先删除原有的角色信息，再添加新的角色信息
     super::sys_user_role::delete_user_role(&txn, &uid).await?;
 
-    super::sys_user_role::edit_user_role(&txn, &uid, req.role_ids, c_user_id).await?;
+    super::sys_user_role::edit_user_role(&txn, &uid, req.role_ids, &c_user_id).await?;
+    // 删除原有部门信息
+    super::sys_user_dept::delete_user_dept(&txn, &uid).await?;
+    // 添加新的部门信息
+    super::sys_user_dept::edit_user_dept(&txn, &uid, req.dept_ids, &c_user_id).await?;
 
     txn.commit().await?;
     Ok("用户数据更新成功".to_string())

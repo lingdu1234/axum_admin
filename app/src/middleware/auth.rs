@@ -34,7 +34,7 @@ impl<E: Endpoint> Endpoint for AuthEndpoint<E> {
         // 验证api权限，如果不在路由表中，则放行，否则验证权限
 
         if ApiUtils::is_in(&ctx.path).await {
-            if ApiUtils::check_api_permission(&ctx.path, &ctx.method).await {
+            if ApiUtils::check_api_permission(&ctx.path, &ctx.method, &ctx.user.id).await {
                 return self.ep.call(req).await;
             } else {
                 return Err(Error::from_string("你没有权限访问该页面/API", StatusCode::FORBIDDEN));

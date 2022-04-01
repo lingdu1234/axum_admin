@@ -95,6 +95,7 @@ dependencies = [
  "configs",
  "db",
  "delay_timer",
+ "futures",
  "headers",
  "jsonwebtoken",
  "md5",

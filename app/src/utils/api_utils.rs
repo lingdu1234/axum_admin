@@ -1,7 +1,12 @@
 use std::sync::Arc;
 
 use ahash::AHashMap as HashMap;
-use db::{common::ctx::ApiInfo, db_conn, system::entities::sys_role_api, DB};
+use db::{
+    common::ctx::ApiInfo,
+    db_conn,
+    system::entities::{sys_role_api, sys_user},
+    DB,
+};
 use once_cell::sync::Lazy;
 use sea_orm::{ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, TransactionTrait};
 use tokio::sync::Mutex;
@@ -83,11 +88,25 @@ pub async fn is_in(api: &str) -> bool {
     res
 }
 
-pub async fn check_api_permission(api: &str, method: &str) -> bool {
+pub async fn check_api_permission(api: &str, method: &str, user_id: &str) -> bool {
     let db = DB.get_or_init(db_conn).await;
+    let role_id = match sys_user::Entity::find().filter(sys_user::Column::Id.eq(user_id)).one(db).await {
+        Ok(v) => match v {
+            Some(user) => user.dept_id,
+            None => {
+                info!("未查找到当前用户:{:?}", &user_id);
+                return false;
+            }
+        },
+        Err(e) => {
+            info!("查找用户出现错误:{:#?}", e);
+            return false;
+        }
+    };
     match sys_role_api::Entity::find()
         .filter(sys_role_api::Column::Api.eq(api))
         .filter(sys_role_api::Column::Method.eq(method))
+        .filter(sys_role_api::Column::RoleId.eq(role_id))
         .one(db)
         .await
     {
