@@ -92,7 +92,7 @@ pub async fn check_api_permission(api: &str, method: &str, user_id: &str) -> boo
     let db = DB.get_or_init(db_conn).await;
     let role_id = match sys_user::Entity::find().filter(sys_user::Column::Id.eq(user_id)).one(db).await {
         Ok(v) => match v {
-            Some(user) => user.dept_id,
+            Some(user) => user.role_id,
             None => {
                 info!("未查找到当前用户:{:?}", &user_id);
                 return false;
