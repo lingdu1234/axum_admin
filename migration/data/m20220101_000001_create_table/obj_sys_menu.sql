@@ -81,13 +81,13 @@ insert  into `sys_menu`(`id`,`pid`,`path`,`menu_name`,`icon`,`menu_type`,`query`
 ('00VRTTQBPBDT7MLGN9844N4QAP','00TV8H55BU243CFAFK9O9GKL5P','','部门管理-新增','','F',NULL,12203,'1','system/dept/add','POST','','1','1','1','1','0','0','部门管理-新增','2022-03-03 12:58:24',NULL,NULL),
 ('00VRTVF09JPILH0UFCF236BOE2','00TV8H55BU243CFAFK9O9GKL5P','','部门管理-编辑','','F',NULL,12204,'1','system/dept/edit','PUT','','1','1','1','1','0','0','部门管理-编辑','2022-03-03 13:00:12',NULL,NULL),
 ('00VRTVSH7U34NHE5IDT7P5A6UF','00TV8H55BU243CFAFK9O9GKL5P','','部门管理-删除','','F',NULL,12205,'1','system/dept/delete','DELETE','','1','1','1','1','0','0','部门管理-删除','2022-03-03 13:00:39',NULL,NULL),
-('00VRU0G3MI3LU7TFKJ08OQIT8I','00TV8H55BU243CFAFK9O9GKL5P','','部门管理-列表','','F',NULL,12201,'1','system/dept/list','GET','','1','1','1','1','0','0','部门管理-列表','2022-03-03 13:01:19',NULL,NULL),
+('00VRU0G3MI3LU7TFKJ08OQIT8I','00VS0T54CT6VS5HMHI7N8SQIEO','','部门管理-列表','','F',NULL,12201,'1','system/dept/list','GET','','1','1','1','1','0','0','部门管理-列表','2022-03-03 13:01:19','2022-04-01 18:08:24',NULL),
 ('00VRU2G6ULR1E2L9Q33PV4L87V','00TV8HV6G76KBTOJ74AM5BPFS1','','岗位管理-列表','','F',NULL,12301,'1','system/post/list','GET','','1','1','1','1','0','0','岗位管理-列表','2022-03-03 13:03:31',NULL,NULL),
 ('00VRU3JDE3CFU6MLPTG2SS56CE','00TV8HV6G76KBTOJ74AM5BPFS1','','岗位管理-详情','','F',NULL,12302,'1','system/post/get_by_id','GET','','1','1','1','1','0','0','岗位管理-详情','2022-03-03 13:04:43',NULL,NULL),
 ('00VRU46HO45KUJTQF0R6N3H7N1','00TV8HV6G76KBTOJ74AM5BPFS1','','岗位管理-新增','','F',NULL,12303,'1','system/post/add','POST','','1','1','1','1','0','0','岗位管理-新增','2022-03-03 13:05:22',NULL,NULL),
 ('00VRU4SCKU568QL7S9F6K0M913','00TV8HV6G76KBTOJ74AM5BPFS1','','岗位管理-编辑','','F',NULL,12304,'1','system/post/edit','PUT','','1','1','1','1','0','0','岗位管理-编辑','2022-03-03 13:06:07',NULL,NULL),
 ('00VRU5E4E2U47VP7NKER84ANSV','00TV8HV6G76KBTOJ74AM5BPFS1','','岗位管理-删除','','F',NULL,12305,'1','system/post/delete','DELETE','','1','1','1','1','0','0','岗位管理-删除','2022-03-03 13:06:43',NULL,NULL),
-('00VRU6SNSR3JKQEJPV42P1TO43','00TV8FT34RNV9T5PUSHHOVF56R','','角色管理-列表','','F',NULL,12401,'1','system/role/list','GET','','1','1','1','1','0','0','角色管理-列表','2022-03-03 13:08:19',NULL,NULL),
+('00VRU6SNSR3JKQEJPV42P1TO43','00VS0T54CT6VS5HMHI7N8SQIEO','','角色管理-列表','','F',NULL,12401,'1','system/role/list','GET','','1','1','1','1','0','0','角色管理-列表','2022-03-03 13:08:19','2022-04-01 18:07:43',NULL),
 ('00VRU90LRQ009Q85FNKDHDCF2K','00TV8FT34RNV9T5PUSHHOVF56R','','角色管理-详情','','F',NULL,12402,'1','system/role/get_by_id','GET','','1','1','1','1','0','0','角色管理-详情','2022-03-03 13:10:38',NULL,NULL),
 ('00VRU9IHUV512BR8ACOPNVJOEL','00TV8FT34RNV9T5PUSHHOVF56R','','角色管理-新增','','F',NULL,12403,'1','system/role/add','POST','','1','1','1','1','0','0','角色管理-新增','2022-03-03 13:11:14',NULL,NULL),
 ('00VRUA27HG6K7PULSJHEPTK0C7','00TV8FT34RNV9T5PUSHHOVF56R','','角色管理-编辑','','F',NULL,12404,'1','system/role/edit','PUT','','1','1','1','1','0','0','角色管理-编辑','2022-03-03 13:11:46',NULL,NULL),
@@ -108,7 +108,8 @@ insert  into `sys_menu`(`id`,`pid`,`path`,`menu_name`,`icon`,`menu_type`,`query`
 ('00VVUL5R74RNERJGKTC9OQM0GF','00UVPJ8H374OKE77M4EBTHOGIV','','权限查询-数据库关联修改','','F',NULL,11603,'1','system/api_db/add','POST','','1','1','1','1','0','0','权限查询-数据库关联修改','2022-03-06 15:57:50',NULL,NULL),
 ('0100TVEON187DJPSHN1F8P8CC2','00VS0T54CT6VS5HMHI7N8SQIEO','','获取全部激活菜单树','','F',NULL,99103,'1','system/menu/get_all_enabled_menu_tree','GET','','1','1','1','1','0','0','获取全部激活菜单树A','2022-03-07 10:12:36','2022-03-07 10:17:42',NULL),
 ('01054NOSI7GEC0F8JDB6KEDPEL','00UDF1SCLDT1FESNLIRG0IVD3B','server','服务监控','server','C',NULL,66000,'1','M-monitor-server','','monitor/server/index','1','1','1','1','0','0','服务监控','2022-03-10 16:42:47','2022-03-10 21:08:39',NULL),
-('01054P7OBFVI0UH5MSL07RG439','01054NOSI7GEC0F8JDB6KEDPEL','','服务监控-信息获取','','F',NULL,65001,'1','system/monitor/server','GET','','1','1','0','0','0','0','服务监控-信息获取','2022-03-10 16:44:23',NULL,NULL);
+('01054P7OBFVI0UH5MSL07RG439','01054NOSI7GEC0F8JDB6KEDPEL','','服务监控-信息获取','','F',NULL,65001,'1','system/monitor/server','GET','','1','1','0','0','0','0','服务监控-信息获取','2022-03-10 16:44:23',NULL,NULL),
+('0111I88S2UPB7GDGSEMJLF3A7Q','00VS0T54CT6VS5HMHI7N8SQIEO','','用户-切换部门','','F',NULL,12111,'1','system/user/change_dept','PUT','','1','1','1','1','0','0','用户-切换部门','2022-04-01 18:32:40',NULL,NULL);
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;

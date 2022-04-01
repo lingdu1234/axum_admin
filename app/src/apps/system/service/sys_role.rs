@@ -141,6 +141,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     let d = s.exec(db).await?;
     // 删除角色权限数据 和 部门权限数据
     super::sys_role_api::delete_role_api(&txn, delete_req.role_ids.clone()).await?;
+
     SysRoleDept::delete_many()
         .filter(sys_role_dept::Column::RoleId.is_in(delete_req.role_ids.clone()))
         .exec(&txn)
