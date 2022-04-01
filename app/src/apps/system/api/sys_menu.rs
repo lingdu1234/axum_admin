@@ -4,7 +4,7 @@ use db::{
     db_conn,
     system::{
         entities::sys_menu,
-        models::sys_menu::{AddReq, DeleteReq, EditReq, MenuResp, SearchReq, SysMenuTree},
+        models::sys_menu::{AddReq, DeleteReq, EditReq, MenuRelated, MenuResp, SearchReq, SysMenuTree},
     },
     DB,
 };
@@ -21,16 +21,6 @@ use crate::utils::jwt::Claims;
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(search_req): Query<SearchReq>) -> Res<ListData<sys_menu::Model>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_sort_list(db, page_params, search_req).await;
-    match res {
-        Ok(x) => Res::with_data(x),
-        Err(e) => Res::with_err(&e.to_string()),
-    }
-}
-
-#[handler]
-pub async fn get_auth_list(Query(page_params): Query<PageParams>, Query(search_req): Query<SearchReq>) -> Res<ListData<sys_menu::Model>> {
-    let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_menu::get_auth_list(db, page_params, search_req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -92,6 +82,18 @@ pub async fn get_all_enabled_menu_tree() -> Res<Vec<SysMenuTree>> {
         Err(e) => Res::with_err(&e.to_string()),
     }
 }
+
+/// get_related_api_and_db 获取全部菜单树
+#[handler]
+pub async fn get_related_api_and_db(Query(page_params): Query<PageParams>, Query(search_req): Query<SearchReq>) -> Res<ListData<MenuRelated>> {
+    let db = DB.get_or_init(db_conn).await;
+    let res = service::sys_menu::get_related_api_and_db(db, page_params, search_req).await;
+    match res {
+        Ok(x) => Res::with_data(x),
+        Err(e) => Res::with_err(&e.to_string()),
+    }
+}
+
 /// 获取用户路由
 #[handler]
 pub async fn get_routers(user: Claims) -> Res<Vec<SysMenuTree>> {

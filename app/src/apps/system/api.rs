@@ -125,13 +125,14 @@ fn sys_role_api() -> Route {
 fn sys_menu_api() -> Route {
     Route::new()
         .at("/list", get(sys_menu::get_sort_list)) // 获取筛选分页
-        .at("/get_auth_list", get(sys_menu::get_auth_list)) // 权限查询列表
+        // .at("/get_auth_list", get(sys_menu::get_auth_list)) // 权限查询列表
         .at("/get_by_id", get(sys_menu::get_by_id)) // 按id获取
         .at("/add", post(sys_menu::add)) // 添加
         .at("/edit", put(sys_menu::edit)) // 更新
         .at("/delete", delete(sys_menu::delete)) // 硬删除
         .at("/get_all_enabled_menu_tree", get(sys_menu::get_all_enabled_menu_tree)) // 获取全部正常的路由菜单树
         .at("/get_routers", get(sys_menu::get_routers)) // 获取用户菜单树
+        .at("/get_auth_list", get(sys_menu::get_related_api_and_db)) // 获取用户菜单树
 }
 fn sys_login_log_api() -> Route {
     Route::new()

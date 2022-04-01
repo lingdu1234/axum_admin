@@ -1,6 +1,8 @@
 use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 
+use crate::system::entities::sys_menu;
+
 #[derive(Deserialize, Clone)]
 pub struct SearchReq {
     pub id: Option<String>,
@@ -33,6 +35,14 @@ pub struct MenuResp {
     pub is_log: String,
     pub is_db_cache: String,
     pub remark: String,
+}
+
+#[derive(Serialize, Clone, Debug)]
+pub struct MenuRelated {
+    #[serde(flatten)]
+    pub menu: sys_menu::Model,
+    pub dbs: Vec<String>,
+    pub apis: Vec<String>,
 }
 
 #[derive(Serialize, Clone, Debug, Default)]

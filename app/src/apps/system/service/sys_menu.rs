@@ -8,7 +8,7 @@ use db::{
             prelude::{SysMenu, SysRoleApi},
             sys_api_db, sys_menu, sys_role_api,
         },
-        models::sys_menu::{AddReq, EditReq, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu},
+        models::sys_menu::{AddReq, EditReq, MenuRelated, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu},
     },
     DB,
 };
@@ -60,59 +60,6 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
         let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
         s = s.filter(sys_menu::Column::CreatedAt.lte(t));
     }
-    // 获取全部数据条数
-    let total = s.clone().count(db).await?;
-    // 分页获取数据
-    let paginator = s.order_by_asc(sys_menu::Column::OrderSort).paginate(db, page_per_size);
-    let total_pages = paginator.num_pages().await?;
-    let list = paginator.fetch_page(page_num - 1).await?;
-
-    let res = ListData {
-        list,
-        total,
-        total_pages,
-        page_num,
-    };
-    Ok(res)
-}
-
-pub async fn get_auth_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_menu::Model>> {
-    let page_num = page_params.page_num.unwrap_or(1);
-    let page_per_size = page_params.page_size.unwrap_or(u32::MAX as usize);
-    //  生成查询条件
-    let mut s = SysMenu::find().filter(sys_menu::Column::MenuType.eq("F"));
-
-    if let Some(x) = req.menu_name {
-        if !x.is_empty() {
-            s = s.filter(sys_menu::Column::MenuName.contains(&x));
-        }
-    }
-    if let Some(x) = req.method {
-        if !x.is_empty() {
-            s = s.filter(sys_menu::Column::Method.eq(x));
-        }
-    }
-
-    if let Some(x) = req.status {
-        if !x.is_empty() {
-            s = s.filter(sys_menu::Column::Status.eq(x));
-        }
-    }
-    if let Some(x) = req.begin_time {
-        if !x.is_empty() {
-            let x = x + " 00:00:00";
-            let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
-            s = s.filter(sys_menu::Column::CreatedAt.gte(t));
-        }
-    }
-    if let Some(x) = req.end_time {
-        if !x.is_empty() {
-            let x = x + " 23:59:59";
-            let t = NaiveDateTime::parse_from_str(&x, "%Y-%m-%d %H:%M:%S")?;
-            s = s.filter(sys_menu::Column::CreatedAt.lte(t));
-        }
-    }
-
     // 获取全部数据条数
     let total = s.clone().count(db).await?;
     // 分页获取数据
@@ -444,4 +391,32 @@ where
     let r = s.all(db).await?;
     let res = r.iter().map(|x| x.api.clone()).collect::<Vec<String>>();
     Ok(res)
+}
+
+pub async fn get_related_api_and_db(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<MenuRelated>> {
+    let menus = self::get_sort_list(db, page_params, req).await?;
+    let mut res: Vec<MenuRelated> = Vec::new();
+    for item in menus.list {
+        let (dbs_model, apis) = tokio::join!(
+            sys_api_db::Entity::find().filter(sys_api_db::Column::ApiId.eq(item.id.clone())).all(db),
+            self::get_related_api_by_db_name(db, &item.id),
+        );
+
+        let dbs = match dbs_model {
+            Ok(v) => v.iter().map(|x| x.db.clone()).collect::<Vec<String>>(),
+            Err(e) => return Err(anyhow!("{}", e)),
+        };
+        let apis = match apis {
+            Ok(v) => v,
+            Err(e) => return Err(anyhow!("{}", e)),
+        };
+        res.push(MenuRelated { menu: item, dbs, apis });
+    }
+
+    Ok(ListData {
+        list: res,
+        total: menus.total,
+        total_pages: menus.total_pages,
+        page_num: menus.page_num,
+    })
 }
