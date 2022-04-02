@@ -163,8 +163,8 @@ async fn get_user_info_permission(user_id: &str) -> Result<(UserWithDept, Vec<St
     let permissions = if CFG.system.super_user.contains(&user_id.to_string()) {
         vec!["*:*:*".to_string()]
     } else {
-        let (_, ids) = service::sys_menu::get_role_permissions(db, &user_info.user.role_id).await?;
-        ids
+        let (apis, _) = service::sys_menu::get_role_permissions(db, &user_info.user.role_id).await?;
+        apis
     };
     Ok((user_info, permissions))
 }
