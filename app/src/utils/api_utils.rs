@@ -36,7 +36,7 @@ async fn api_init_func() {
     match res {
         Ok(menus) => {
             for menu in menus {
-                self::add_api(db, &menu.id, &menu.api, &menu.menu_name, &menu.is_db_cache, &menu.is_log).await;
+                self::add_api(db, &menu.id, &menu.api, &menu.menu_name, &menu.data_cache_method, &menu.log_method).await;
             }
             let apis = ALL_APIS.lock().await;
             info!("初始化时获取路由API成功:{:#?}", apis);
@@ -48,7 +48,7 @@ async fn api_init_func() {
     }
 }
 
-pub async fn add_api<C>(db: &C, api_id: &str, api: &str, menu_name: &str, is_db_cache: &str, is_log: &str)
+pub async fn add_api<C>(db: &C, api_id: &str, api: &str, menu_name: &str, data_cache_method: &str, log_method: &str)
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -63,8 +63,8 @@ where
     let api_info = ApiInfo {
         name: menu_name.to_string(),
         related_api,
-        is_db_cache: is_db_cache.to_string(),
-        is_log: is_log.to_string(),
+        data_cache_method: data_cache_method.to_string(),
+        log_method: log_method.to_string(),
     };
     let mut apis = ALL_APIS.lock().await;
     apis.entry(api.to_string())

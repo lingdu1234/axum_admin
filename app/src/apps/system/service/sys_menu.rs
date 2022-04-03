@@ -8,13 +8,14 @@ use db::{
             prelude::{SysMenu, SysRoleApi},
             sys_api_db, sys_menu, sys_role_api,
         },
-        models::sys_menu::{AddReq, EditReq, MenuRelated, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu},
+        models::sys_menu::{AddReq, EditReq, LogCacheEditReq, MenuRelated, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu},
     },
     DB,
 };
 use sea_orm::{
-    sea_query::Query, ActiveModelTrait, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, EntityTrait, JoinType, ModelTrait, Order, PaginatorTrait, QueryFilter,
-    QueryOrder, QuerySelect, Set, TransactionTrait,
+    sea_query::{Expr, Query},
+    ActiveModelTrait, ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, EntityTrait, JoinType, ModelTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect,
+    Set, TransactionTrait,
 };
 
 use super::super::service;
@@ -135,9 +136,9 @@ where
         visible: Set(req.visible),
         path: Set(req.path.unwrap_or_else(|| "".to_string())),
         component: Set(req.component.unwrap_or_else(|| "".to_string())),
-        is_data_scope: Set(req.is_data_scope),
-        is_db_cache: Set(req.is_db_cache),
-        is_log: Set(req.is_log),
+        data_scope: Set(req.data_scope),
+        data_cache_method: Set(req.data_cache_method),
+        log_method: Set(req.log_method),
         is_frame: Set(req.is_frame),
         is_cache: Set(req.is_cache),
         created_at: Set(Some(now)),
@@ -149,21 +150,25 @@ where
     txn.commit().await?;
     let res = format!("{} 添加成功", &uid);
     // 添加api到全局
-    utils::ApiUtils::add_api(db, &uid, &reqq.api, &reqq.menu_name, &reqq.is_db_cache, &reqq.is_log).await;
+    utils::ApiUtils::add_api(db, &uid, &reqq.api, &reqq.menu_name, &reqq.data_cache_method, &reqq.log_method).await;
     Ok(res)
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, id: String) -> Result<String> {
-    let s = SysMenu::find().filter(sys_menu::Column::Id.eq(id)).one(db).await?;
-    let txn = db.begin().await?;
-    if let Some(m) = s {
-        utils::ApiUtils::remove_api(&m.api).await;
-        m.delete(db).await?;
+pub async fn delete(db: &DatabaseConnection, id: &str) -> Result<String> {
+    match SysMenu::find().filter(sys_menu::Column::Pid.eq(id)).count(db).await? {
+        0 => {
+            let s = SysMenu::find().filter(sys_menu::Column::Id.eq(id)).one(db).await?;
+            let txn = db.begin().await?;
+            if let Some(m) = s {
+                utils::ApiUtils::remove_api(&m.api).await;
+                m.delete(db).await?;
+            }
+            txn.commit().await?;
+            Ok("菜单删除成功".to_string())
+        }
+        _ => Err(anyhow!("请先删除子菜单")),
     }
-    // SysMenu::delete_many().filter(sys_menu::Column::Id.eq(id)).exec(&txn).await?;
-    txn.commit().await?;
-    Ok("菜单删除成功".to_string())
 }
 
 // edit 修改
@@ -195,11 +200,11 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
         visible: Set(req.visible),
         path: Set(req.path),
         component: Set(req.component),
-        is_data_scope: Set(req.is_data_scope),
+        data_scope: Set(req.data_scope),
         is_frame: Set(req.is_frame),
         is_cache: Set(req.is_cache),
-        is_log: Set(req.is_log),
-        is_db_cache: Set(req.is_db_cache),
+        log_method: Set(req.log_method),
+        data_cache_method: Set(req.data_cache_method),
         updated_at: Set(Some(now)),
         ..s_r
     };
@@ -208,7 +213,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
     tokio::spawn(async move {
         let db = DB.get_or_init(db_conn).await;
         utils::ApiUtils::remove_api(&s_y.api).await;
-        utils::ApiUtils::add_api(db, &up_model.id, &up_model.api, &up_model.menu_name, &up_model.is_db_cache, &up_model.is_log).await;
+        utils::ApiUtils::add_api(db, &up_model.id, &up_model.api, &up_model.menu_name, &up_model.data_cache_method, &up_model.log_method).await;
         service::sys_role_api::update_api(db, (&s_y.api, &s_y.method), (&up_model.api, &up_model.method))
             .await
             .expect("更新api失败");
@@ -218,8 +223,19 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
     Ok(res)
 }
 
+/// 更新日志和缓存方法
+pub async fn update_log_cache_method(db: &DatabaseConnection, req: LogCacheEditReq) -> Result<String> {
+    sys_menu::Entity::update_many()
+        .col_expr(sys_menu::Column::LogMethod, Expr::value(req.log_method))
+        .col_expr(sys_menu::Column::DataCacheMethod, Expr::value(req.data_cache_method))
+        .col_expr(sys_menu::Column::UpdatedAt, Expr::value(Local::now().naive_local()))
+        .filter(sys_menu::Column::Id.eq(req.id))
+        .exec(db)
+        .await?;
+    Ok("数据更新成功".to_string())
+}
+
 /// get_user_by_id 获取用户Id获取用户
-/// db 数据库连接 使用db.0
 pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<MenuResp> {
     let mut s = SysMenu::find();
     s = s.filter(sys_menu::Column::DeletedAt.is_null());

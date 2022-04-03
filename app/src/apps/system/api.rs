@@ -129,6 +129,7 @@ fn sys_menu_api() -> Route {
         .at("/get_by_id", get(sys_menu::get_by_id)) // 按id获取
         .at("/add", post(sys_menu::add)) // 添加
         .at("/edit", put(sys_menu::edit)) // 更新
+        .at("/update_log_cache_method", put(sys_menu::update_log_cache_method)) // 更新api缓存方式和日志记录方式
         .at("/delete", delete(sys_menu::delete)) // 硬删除
         .at("/get_all_enabled_menu_tree", get(sys_menu::get_all_enabled_menu_tree)) // 获取全部正常的路由菜单树
         .at("/get_routers", get(sys_menu::get_routers)) // 获取用户菜单树

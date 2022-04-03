@@ -3,13 +3,14 @@ use db::{
     db_conn,
     system::{
         entities::sys_dict_type,
-        models::sys_dict_type::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
+        models::sys_dict_type::{AddReq, DeleteReq, EditReq, SearchReq},
     },
     DB,
 };
 use poem::{
     handler,
     web::{Json, Query},
+    IntoResponse,
 };
 
 use super::super::service;
@@ -17,7 +18,6 @@ use crate::utils::jwt::Claims;
 
 /// get_list 获取列表
 /// page_params 分页参数
-/// db 数据库连接 使用db.0
 #[handler]
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<sys_dict_type::Model>> {
     let db = DB.get_or_init(db_conn).await;
@@ -61,9 +61,8 @@ pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
 }
 
 /// get_user_by_id 获取用户Id获取用户
-/// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<Resp> {
+pub async fn get_by_id(Query(req): Query<SearchReq>) -> impl IntoResponse {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_type::get_by_id(db, req).await;
     match res {
@@ -73,9 +72,9 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<Resp> {
 }
 
 /// get_all 获取全部
-/// db 数据库连接 使用db.0
+
 #[handler]
-pub async fn get_all() -> Res<Vec<Resp>> {
+pub async fn get_all() -> impl IntoResponse {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_type::get_all(db).await;
     match res {

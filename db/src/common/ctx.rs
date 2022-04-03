@@ -26,7 +26,7 @@ pub struct ResInfo {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ApiInfo {
     pub name: String,
-    pub is_db_cache: String,
-    pub is_log: String,
+    pub data_cache_method: String,
+    pub log_method: String,
     pub related_api: Option<Vec<String>>,
 }

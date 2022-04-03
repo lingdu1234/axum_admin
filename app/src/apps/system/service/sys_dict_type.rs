@@ -4,7 +4,7 @@ use db::{
     common::res::{ListData, PageParams},
     system::{
         entities::{prelude::SysDictType, sys_dict_data, sys_dict_type},
-        models::sys_dict_type::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
+        models::sys_dict_type::{AddReq, DeleteReq, EditReq, SearchReq},
     },
 };
 use sea_orm::{
@@ -143,9 +143,8 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
 }
 
 /// get_user_by_id 获取用户Id获取用户
-pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> {
-    let mut s = SysDictType::find();
-    // s = s.filter(sys_dict_type::Column::DeletedAt.is_null());
+pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<sys_dict_type::Model> {
+    let mut s = SysDictType::find().filter(sys_dict_type::Column::DeletedAt.is_null());
     //
     if let Some(x) = req.dict_type_id {
         s = s.filter(sys_dict_type::Column::DictTypeId.eq(x));
@@ -153,7 +152,7 @@ pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> 
         return Err(anyhow!("请求参数错误,请输入Id"));
     }
 
-    let res = match s.into_model::<Resp>().one(db).await? {
+    let res = match s.one(db).await? {
         Some(m) => m,
         None => return Err(anyhow!("没有找到数据")),
     };
@@ -162,12 +161,11 @@ pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> 
 
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
-pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
+pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<sys_dict_type::Model>> {
     let s = SysDictType::find()
-        // .filter(sys_dict_type::Column::DeletedAt.is_null())
+        .filter(sys_dict_type::Column::DeletedAt.is_null())
         .filter(sys_dict_type::Column::Status.eq("1"))
         .order_by(sys_dict_type::Column::DictTypeId, Order::Asc)
-        .into_model::<Resp>()
         .all(db)
         .await?;
     Ok(s)

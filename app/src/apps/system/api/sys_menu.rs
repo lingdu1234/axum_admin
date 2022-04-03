@@ -4,7 +4,7 @@ use db::{
     db_conn,
     system::{
         entities::sys_menu,
-        models::sys_menu::{AddReq, DeleteReq, EditReq, MenuRelated, MenuResp, SearchReq, SysMenuTree},
+        models::sys_menu::{AddReq, DeleteReq, EditReq, LogCacheEditReq, MenuRelated, MenuResp, SearchReq, SysMenuTree},
     },
     DB,
 };
@@ -54,7 +54,7 @@ pub async fn add(Json(req): Json<AddReq>) -> Res<String> {
 #[handler]
 pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_menu::delete(db, req.id).await;
+    let res = service::sys_menu::delete(db, &req.id).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -66,6 +66,16 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
 pub async fn edit(Json(edit_req): Json<EditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::edit(db, edit_req).await;
+    match res {
+        Ok(x) => Res::with_msg(&x),
+        Err(e) => Res::with_err(&e.to_string()),
+    }
+}
+// update_log_cache_method 修改菜单日志缓存方法
+#[handler]
+pub async fn update_log_cache_method(Json(edit_req): Json<LogCacheEditReq>) -> Res<String> {
+    let db = DB.get_or_init(db_conn).await;
+    let res = service::sys_menu::update_log_cache_method(db, edit_req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),

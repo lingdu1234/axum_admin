@@ -143,8 +143,8 @@ impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
             Some(x) => x.clone(),
             None => ApiInfo {
                 name: "".to_string(),
-                is_db_cache: "0".to_string(),
-                is_log: "0".to_string(),
+                data_cache_method: "0".to_string(),
+                log_method: "0".to_string(),
                 related_api: None,
             },
         };
@@ -165,12 +165,12 @@ impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
                 Err(e) => Err(e),
             };
         }
-        let data_key = match api_info.is_db_cache.clone().as_str() {
+        let data_key = match api_info.data_cache_method.clone().as_str() {
             "1" => format!("{}_{}_{}", &ctx.ori_uri, &ctx.method, &token_id),
             _ => format!("{}_{}", &ctx.ori_uri, &ctx.method),
         };
         // 开始请求数据
-        match api_info.is_db_cache.as_str() {
+        match api_info.data_cache_method.as_str() {
             "0" => {
                 let res_end = self.ep.call(req).await;
                 match res_end {

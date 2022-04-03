@@ -87,7 +87,7 @@ pub async fn oper_log_add_fn(req: ReqCtx, res: String, status: String, err_msg: 
     }
     let apis = ALL_APIS.lock().await;
     let (api_name, is_log) = match apis.get(&req.path) {
-        Some(x) => (x.name.clone(), x.is_log.clone()),
+        Some(x) => (x.name.clone(), x.log_method.clone()),
         None => ("".to_string(), "0".to_string()),
     };
     drop(apis);

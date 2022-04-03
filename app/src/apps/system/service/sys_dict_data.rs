@@ -4,7 +4,7 @@ use db::{
     common::res::{ListData, PageParams},
     system::{
         entities::{prelude::SysDictData, sys_dict_data},
-        models::sys_dict_data::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
+        models::sys_dict_data::{AddReq, DeleteReq, EditReq, SearchReq},
     },
 };
 // use poem::{error::BadRequest, http::StatusCode, Error, Result};
@@ -126,22 +126,22 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, edit_req: EditReq, user_id: String) -> Result<String> {
-    let uid = edit_req.dict_data_id;
+pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Result<String> {
+    let uid = req.dict_data_id;
     let s_s = SysDictData::find_by_id(uid.clone()).one(db).await?;
     let s_r: sys_dict_data::ActiveModel = s_s.unwrap().into();
     let now: NaiveDateTime = Local::now().naive_local();
     let act = sys_dict_data::ActiveModel {
-        dict_label: Set(edit_req.dict_label),
-        dict_type: Set(edit_req.dict_type),
-        dict_sort: Set(edit_req.dict_sort),
-        dict_value: Set(edit_req.dict_value),
+        dict_label: Set(req.dict_label),
+        dict_type: Set(req.dict_type),
+        dict_sort: Set(req.dict_sort),
+        dict_value: Set(req.dict_value),
         update_by: Set(Some(user_id)),
-        css_class: Set(edit_req.css_class),
-        list_class: Set(edit_req.list_class),
-        is_default: Set(edit_req.is_default),
-        status: Set(edit_req.status),
-        remark: Set(Some(edit_req.remark)),
+        css_class: Set(req.css_class),
+        list_class: Set(req.list_class),
+        is_default: Set(req.is_default),
+        status: Set(req.status),
+        remark: Set(req.remark),
         updated_at: Set(Some(now)),
         ..s_r
     };
@@ -184,16 +184,12 @@ pub async fn get_by_type(db: &DatabaseConnection, search_req: SearchReq) -> Resu
 
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
-pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
+pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<sys_dict_data::Model>> {
     let s = SysDictData::find()
-        // .filter(sys_dict_data::Column::DeletedAt.is_null())
+        .filter(sys_dict_data::Column::DeletedAt.is_null())
         .filter(sys_dict_data::Column::Status.eq("1"))
         .order_by(sys_dict_data::Column::DictDataId, Order::Asc)
-        .into_model::<Resp>()
         .all(db)
         .await?;
-    // let result: Vec<Resp> =
-    // serde_json::from_value(serde_json::json!(s))?;
-    // //这种数据转换效率不知道怎么样
     Ok(s)
 }

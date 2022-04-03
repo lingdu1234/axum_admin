@@ -1,5 +1,4 @@
-use sea_orm::{entity::prelude::DateTime, FromQueryResult};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 pub struct SearchReq {
@@ -40,17 +39,5 @@ pub struct EditReq {
     pub list_class: Option<String>,
     pub is_default: String,
     pub status: String,
-    pub remark: String,
-}
-
-#[derive(Debug, Serialize, FromQueryResult, Clone)]
-pub struct Resp {
-    pub dict_type: String,
-    pub dict_label: String,
-    pub dict_value: String,
-    pub dict_sort: i32,
-    pub is_default: String,
-    pub status: String,
-    pub remark: String,
-    pub created_at: DateTime,
+    pub remark: Option<String>,
 }

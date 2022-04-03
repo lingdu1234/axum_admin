@@ -31,9 +31,9 @@ pub struct MenuResp {
     pub visible: String,
     pub is_frame: String,
     pub is_cache: String,
-    pub is_data_scope: String,
-    pub is_log: String,
-    pub is_db_cache: String,
+    pub data_scope: String,
+    pub log_method: String,
+    pub data_cache_method: String,
     pub remark: String,
 }
 
@@ -91,9 +91,9 @@ pub struct AddReq {
     pub visible: String,
     pub is_frame: String,
     pub is_cache: String,
-    pub is_data_scope: String,
-    pub is_log: String,
-    pub is_db_cache: String,
+    pub data_scope: String,
+    pub log_method: String,
+    pub data_cache_method: String,
     pub remark: String,
 }
 
@@ -119,8 +119,15 @@ pub struct EditReq {
     pub visible: String,
     pub is_frame: String,
     pub is_cache: String,
-    pub is_data_scope: String,
-    pub is_log: String,
-    pub is_db_cache: String,
+    pub data_scope: String,
+    pub log_method: String,
+    pub data_cache_method: String,
     pub remark: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct LogCacheEditReq {
+    pub id: String,
+    pub log_method: String,
+    pub data_cache_method: String,
 }

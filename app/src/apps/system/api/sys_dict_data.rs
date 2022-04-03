@@ -3,13 +3,14 @@ use db::{
     db_conn,
     system::{
         entities::sys_dict_data,
-        models::sys_dict_data::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
+        models::sys_dict_data::{AddReq, DeleteReq, EditReq, SearchReq},
     },
     DB,
 };
 use poem::{
     handler,
     web::{Json, Query},
+    IntoResponse,
 };
 
 use super::super::service;
@@ -87,7 +88,7 @@ pub async fn get_by_type(Query(req): Query<SearchReq>) -> Res<Vec<sys_dict_data:
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
 #[handler]
-pub async fn get_all() -> Res<Vec<Resp>> {
+pub async fn get_all() -> impl IntoResponse {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_data::get_all(db).await;
     match res {
