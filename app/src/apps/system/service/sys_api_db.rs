@@ -22,7 +22,9 @@ pub async fn add(db: &DatabaseConnection, req: AddEditReq) -> Result<String> {
             db: Set(db),
         });
     }
-    sys_api_db::Entity::insert_many(items).exec(&txn).await?;
+    if !items.is_empty() {
+        sys_api_db::Entity::insert_many(items).exec(&txn).await?;
+    }
     txn.commit().await?;
     Ok("添加成功".to_string())
 }
