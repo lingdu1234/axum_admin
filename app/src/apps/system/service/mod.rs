@@ -33,3 +33,5 @@ pub mod sys_user_dept;
 pub mod sys_role_api;
 // api对应的数据库
 pub mod sys_api_db;
+// 更新日志、
+pub mod sys_update_log;

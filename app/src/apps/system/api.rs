@@ -10,6 +10,7 @@ mod sys_menu;
 pub mod sys_oper_log;
 mod sys_post;
 mod sys_role; // 角色管理
+mod sys_update_log;
 
 //
 use poem::{delete, get, post, put, Route};
@@ -37,6 +38,7 @@ pub fn system_api() -> Route {
         .nest("/oper_log", sys_oper_log_api()) // 操作日志
         .nest("/api_db", sys_api_db_api()) // 操作日志
         .nest("/monitor", sys_monitor_api()) // 操作日志
+        .nest("/update_log", sys_update_log_api()) // 更新日志
 }
 
 fn sys_user_api() -> Route {
@@ -179,4 +181,12 @@ fn sys_api_db_api() -> Route {
 }
 fn sys_monitor_api() -> Route {
     Route::new().at("/server", get(common::get_server_info)) // 服务器信息
+}
+
+fn sys_update_log_api() -> Route {
+    Route::new()
+        .at("/add", post(sys_update_log::add)) // 添加
+        .at("/edit", put(sys_update_log::edit)) // 更新
+        .at("/delete", delete(sys_update_log::delete)) // 硬删除
+        .at("/get_all", get(sys_update_log::get_all)) // 获取全部
 }

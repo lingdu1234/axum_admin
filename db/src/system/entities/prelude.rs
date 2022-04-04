@@ -13,6 +13,7 @@ pub use super::sys_post::Entity as SysPost;
 pub use super::sys_role::Entity as SysRole;
 pub use super::sys_role_api::Entity as SysRoleApi;
 pub use super::sys_role_dept::Entity as SysRoleDept;
+pub use super::sys_update_log::Entity as SysUpdateLog;
 pub use super::sys_user::Entity as SysUser;
 pub use super::sys_user_dept::Entity as SysUserDept;
 pub use super::sys_user_online::Entity as SysUserOnline;

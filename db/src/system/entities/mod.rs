@@ -15,6 +15,7 @@ pub mod sys_post;
 pub mod sys_role;
 pub mod sys_role_api;
 pub mod sys_role_dept;
+pub mod sys_update_log;
 pub mod sys_user;
 pub mod sys_user_dept;
 pub mod sys_user_online;
