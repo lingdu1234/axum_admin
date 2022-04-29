@@ -8,6 +8,7 @@
 .vscode
 /tests
 .env
+fleet.toml
 /config/config.toml
 /config/cert
 *.exe

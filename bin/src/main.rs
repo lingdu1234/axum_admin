@@ -17,6 +17,7 @@ use poem::{
     },
     EndpointExt, Result, Route, Server,
 };
+use poem::listener::RustlsCertificate;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
 // 路由日志追踪
@@ -77,7 +78,7 @@ fn main() -> Result<(), std::io::Error> {
 
         match CFG.server.ssl {
             true => {
-                let listener = TcpListener::bind(&CFG.server.address).rustls(RustlsConfig::new().key(&*CERT_KEY.key).cert(&*CERT_KEY.cert));
+                let listener = TcpListener::bind(&CFG.server.address).rustls(RustlsConfig::new().fallback(RustlsCertificate::new().key(&*CERT_KEY.key).cert(&*CERT_KEY.cert)));
                 let server = Server::new(listener).name(&CFG.server.name);
                 server
                     // .run(app)
