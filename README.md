@@ -53,3 +53,13 @@
 ## 说明
 
 1. 部门切换,不知道有啥用，角色切换，数据权限，部门切换 3者组合可以实现诡异的权限组合
+
+
+## 数据迁移
+1. 安装sea-orm cli 工具 `cargo install sea-orm-cli`
+2. 在 .env中设置数据库地址
+3. 运行迁移命令：`sea-orm-cli migrate up`
+
+* 数据库迁移重置：`sea-orm-cli migrate fresh`
+* 数据库降级：`sea-orm-cli migrate down`
+* 更多数据库迁移操作详见：[https://www.sea-ql.org/SeaORM/docs/migration/running-migration](https://www.sea-ql.org/SeaORM/docs/migration/running-migration)
