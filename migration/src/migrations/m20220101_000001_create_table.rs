@@ -54,6 +54,7 @@ async fn create_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
     Cot(db, builder, &schema, sys_job_log::Entity).await?;
     Cot(db, builder, &schema, sys_oper_log::Entity).await?;
     Cot(db, builder, &schema, sys_login_log::Entity).await?;
+    Cot(db, builder, &schema, sys_update_log::Entity).await?;
 
     // -----test-------
     Cot(db, builder, &schema, test_data_scope::Entity).await?;
@@ -122,6 +123,7 @@ async fn drop_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
     Dot(manager, sys_job_log::Entity).await?;
     Dot(manager, sys_oper_log::Entity).await?;
     Dot(manager, sys_login_log::Entity).await?;
+    Dot(manager, sys_update_log::Entity).await?;
 
     // -----test-------
     Dot(manager, test_data_scope::Entity).await?;
