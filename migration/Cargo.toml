@@ -12,6 +12,8 @@ path = "src/lib.rs"
 db = {path = "../db"}
 #
 anyhow = "1"
+# 
+async-std = "1.11.0"
 
 [dependencies.sea-orm-migration]
-version = "^0.8.0"
+version = "0.8.3"
