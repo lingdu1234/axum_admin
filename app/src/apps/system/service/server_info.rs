@@ -13,7 +13,7 @@ pub static SYSINFO: Lazy<Arc<Mutex<Option<SysInfo>>>> = Lazy::new(|| {
     Arc::new(Mutex::new(None))
 });
 
-use sysinfo::{NetworkExt, NetworksExt, ProcessExt, ProcessorExt, System, SystemExt};
+use sysinfo::{NetworkExt, NetworksExt, ProcessExt, System, SystemExt, CpuExt};
 //  获取基础信息
 async fn get_server_info() {
     loop {
@@ -68,12 +68,12 @@ pub async fn get_oper_sys_info() -> SysInfo {
         });
     }
     let cpu = Cpu {
-        name: sys.global_processor_info().brand().to_string(),
+        name: sys.global_cpu_info().brand().to_string(),
         arch: std::env::consts::ARCH.to_string(),
         cores: sys.physical_core_count().map(|c| c.to_string()).unwrap_or_else(|| "Unknown".to_owned()),
-        total_use: sys.global_processor_info().cpu_usage(),
-        frequency: sys.global_processor_info().frequency(),
-        processors: sys.processors().len(),
+        total_use: sys.global_cpu_info().cpu_usage(),
+        frequency: sys.global_cpu_info().frequency(),
+        processors: sys.cpus().len(),
     };
     let cpu_load = CpuLoad {
         one: sys.load_average().one,
