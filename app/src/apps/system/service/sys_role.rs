@@ -200,11 +200,10 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, created_by: &str) -> Re
     let role_apis = self::get_permissions_data(&txn, uid.clone(), req.menu_ids.clone()).await?;
 
     // 删除全部权限 按角色id删除
-
-    super::sys_role_api::delete_role_api(db, vec![uid.clone()]).await?;
+    super::sys_role_api::delete_role_api(&txn, vec![uid.clone()]).await?;
 
     // 添加角色权限数据
-    super::sys_role_api::add_role_api(db, role_apis, created_by).await?;
+    super::sys_role_api::add_role_api(&txn, role_apis, created_by).await?;
 
     // 提交事务
     txn.commit().await?;
