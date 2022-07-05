@@ -7,7 +7,7 @@ use poem::handler;
 use super::super::service::server_info::{get_oper_sys_info, SYSINFO};
 
 #[handler]
-pub fn get_captcha() -> Res<CaptchaImage> {
+pub async fn get_captcha() -> Res<CaptchaImage> {
     let res = super::super::service::common::get_captcha();
     Res::with_data(res)
 }
