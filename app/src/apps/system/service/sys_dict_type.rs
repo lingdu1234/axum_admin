@@ -8,7 +8,8 @@ use db::{
     },
 };
 use sea_orm::{
-    sea_query::Expr, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, JoinType, Order, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait,
+    sea_query::{Expr, Query},
+    ColumnTrait, Condition, ConnectionTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait,
 };
 
 /// get_list 获取列表
@@ -93,18 +94,32 @@ where
 
 /// delete 完全删除
 pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
-    let count = SysDictType::find()
-        .select_only()
-        .column(sys_dict_type::Column::DictTypeId)
-        .column(sys_dict_data::Column::DictType)
-        .join_rev(
-            JoinType::InnerJoin,
-            sys_dict_data::Entity::belongs_to(sys_dict_type::Entity)
-                .from(sys_dict_data::Column::DictType)
-                .to(sys_dict_type::Column::DictType)
-                .into(),
+    // let count = SysDictType::find()
+    //     .select_only()
+    //     .column(sys_dict_type::Column::DictTypeId)
+    //     .column(sys_dict_data::Column::DictType)
+    //     .join_rev(
+    //         JoinType::InnerJoin,
+    //         sys_dict_data::Entity::belongs_to(sys_dict_type::Entity)
+    //             .from(sys_dict_data::Column::DictType)
+    //             .to(sys_dict_type::Column::DictType)
+    //             .into(),
+    //     )
+    //     .filter(sys_dict_type::Column::DictTypeId.is_in(delete_req.dict_type_ids.clone()))
+    //     .all(db)
+    //     .await?;
+    let count = sys_dict_data::Entity::find()
+        .filter(
+            Condition::any().add(
+                sys_dict_data::Column::DictType.in_subquery(
+                    Query::select()
+                        .column(sys_dict_type::Column::DictType)
+                        .from(sys_dict_type::Entity)
+                        .and_where(Expr::col(sys_dict_type::Column::DictTypeId).is_in(delete_req.dict_type_ids.clone()))
+                        .to_owned(),
+                ),
+            ),
         )
-        .filter(sys_dict_type::Column::DictTypeId.is_in(delete_req.dict_type_ids.clone()))
         .count(db)
         .await?;
     if count > 0 {

@@ -5,7 +5,7 @@ use db::{
     db_conn,
     system::{
         entities::{
-            prelude::{SysMenu, SysRoleApi},
+            prelude::{SysMenu},
             sys_api_db, sys_menu, sys_role_api,
         },
         models::sys_menu::{AddReq, EditReq, LogCacheEditReq, MenuRelated, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu},
@@ -298,12 +298,27 @@ pub async fn get_all_enabled_menu_tree(db: &DatabaseConnection) -> Result<Vec<Sy
 //  获取角色对应的api 和 api id
 // 返回结果(Vec<String>, Vec<String>) 为（apis,api_ids）
 pub async fn get_role_permissions(db: &DatabaseConnection, role_id: &str) -> Result<(Vec<String>, Vec<String>)> {
-    let s = SysMenu::find()
-        .join_rev(
-            JoinType::InnerJoin,
-            SysRoleApi::belongs_to(SysMenu).from(sys_role_api::Column::Api).to(sys_menu::Column::Api).into(),
+    // let s = SysMenu::find()
+    //     .join_rev(
+    //         JoinType::InnerJoin,
+    //         SysRoleApi::belongs_to(SysMenu).from(sys_role_api::Column::Api).to(sys_menu::Column::Api).into(),
+    //     )
+    //     .filter(sys_role_api::Column::RoleId.eq(role_id))
+    //     .all(db)
+    //     .await?;
+
+    let s = sys_menu::Entity::find()
+        .filter(
+            Condition::any().add(
+                sys_menu::Column::Api.in_subquery(
+                    Query::select()
+                        .column(sys_role_api::Column::Api)
+                        .from(sys_role_api::Entity)
+                        .and_where(Expr::col(sys_role_api::Column::RoleId).eq(role_id.clone()))
+                        .to_owned(),
+                ),
+            ),
         )
-        .filter(sys_role_api::Column::RoleId.eq(role_id))
         .all(db)
         .await?;
 

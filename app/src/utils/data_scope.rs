@@ -1,32 +1,43 @@
 use anyhow::{anyhow, Result};
-use db::{
-    common::data_scope::DataScopeInfo,
-    system::entities::{sys_dept, sys_role, sys_role_dept, sys_user},
-};
-use sea_orm::{sea_query::Query, ColumnTrait, Condition, DatabaseConnection, EntityTrait, JoinType, QueryFilter, QuerySelect};
+use db::system::entities::{sys_dept, sys_role, sys_role_dept, sys_user};
+use sea_orm::{sea_query::Query, ColumnTrait, Condition, DatabaseConnection, EntityTrait, QueryFilter};
 
 ///  获取数据所对应的id，需要在数据库中添加created_by字段
 pub async fn get_data_scope_user_ids(db: &DatabaseConnection, uid: &str) -> Result<Option<Vec<String>>> {
-    let s = sys_user::Entity::find()
-        .select_only()
-        .column(sys_user::Column::Id)
-        .column(sys_user::Column::DeptId)
-        .column(sys_user::Column::RoleId)
-        .column(sys_role::Column::DataScope)
-        .join_rev(
-            JoinType::LeftJoin,
-            sys_role::Entity::belongs_to(sys_user::Entity)
-                .from(sys_role::Column::RoleId)
-                .to(sys_user::Column::RoleId)
-                .into(),
-        )
-        .filter(sys_user::Column::Id.eq(uid))
-        .into_model::<DataScopeInfo>()
-        .one(db)
-        .await?;
-    let (user_id, dept_id, role_id, data_scope) = match s {
-        Some(x) => (x.id, x.dept_id, x.role_id, x.data_scope),
+    // let s = sys_user::Entity::find()
+    //     .select_only()
+    //     .column(sys_user::Column::Id)
+    //     .column(sys_user::Column::DeptId)
+    //     .column(sys_user::Column::RoleId)
+    //     .column(sys_role::Column::DataScope)
+    //     .join_rev(
+    //         JoinType::LeftJoin,
+    //         sys_role::Entity::belongs_to(sys_user::Entity)
+    //             .from(sys_role::Column::RoleId)
+    //             .to(sys_user::Column::RoleId)
+    //             .into(),
+    //     )
+    //     .filter(sys_user::Column::Id.eq(uid))
+    //     .into_model::<DataScopeInfo>()
+    //     .one(db)
+    //     .await?;
+
+    //     let (user_id, dept_id, role_id, data_scope) = match s {
+    //         Some(x) => (x.id, x.dept_id, x.role_id, x.data_scope),
+    //         None => return Err(anyhow!("用户不存在")),
+    //     };
+
+    // 先获取用户
+    let u_s = sys_user::Entity::find().filter(sys_user::Column::Id.eq(uid)).one(db).await?;
+    let (user_id, dept_id, role_id, data_scope) = match u_s {
         None => return Err(anyhow!("用户不存在")),
+        Some(x) => {
+            let r_s = sys_role::Entity::find().filter(sys_role::Column::RoleId.eq(x.role_id.clone())).one(db).await?;
+            match r_s {
+                Some(v) => (x.id, x.dept_id, x.role_id, v.data_scope),
+                None => return Err(anyhow!("用户对应的角色不存在")),
+            }
+        }
     };
 
     // 数据范围

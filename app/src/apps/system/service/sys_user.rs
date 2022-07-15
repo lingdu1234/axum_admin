@@ -173,54 +173,96 @@ pub async fn get_un_auth_user(db: &DatabaseConnection, page_params: PageParams, 
 
 /// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接
-
 pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserWithDept> {
-    let s = SysUser::find()
-        .join_rev(
-            JoinType::LeftJoin,
-            sys_dept::Entity::belongs_to(sys_user::Entity)
-                .from(sys_dept::Column::DeptId)
-                .to(sys_user::Column::DeptId)
-                .into(),
-        )
-        .select_also(sys_dept::Entity)
+    let user_s = SysUser::find()
         .filter(sys_user::Column::DeletedAt.is_null())
         .filter(sys_user::Column::Id.eq(user_id))
         .one(db)
         .await?;
-    let user = match s {
-        Some(m) => match m.1 {
-            Some(v) => UserWithDept {
-                user: UserResp {
-                    id: m.0.id.clone(),
-                    user_name: m.0.user_name.clone(),
-                    user_nickname: m.0.user_nickname.clone(),
-                    user_status: m.0.user_status.clone(),
-                    user_email: m.0.user_email.clone(),
-                    sex: m.0.sex.clone(),
-                    avatar: m.0.avatar.clone(),
-                    dept_id: m.0.dept_id.clone(),
-                    remark: m.0.remark.clone(),
-                    is_admin: m.0.is_admin.clone(),
-                    phone_num: m.0.phone_num.clone(),
-                    role_id: m.0.role_id.clone(),
-                    created_at: Some(m.0.created_at),
-                },
-                dept: DeptResp {
-                    dept_id: v.dept_id.clone(),
-                    parent_id: v.parent_id.clone(),
-                    dept_name: v.dept_name.clone(),
-                    order_num: v.order_num,
-                    leader: v.leader.clone(),
-                    phone: v.phone.clone(),
-                    email: v.email.clone(),
-                    status: v.status,
-                },
-            },
-            None => return Err(anyhow!("{}无部门信息", user_id)),
-        },
+
+    let user = match user_s {
         None => return Err(anyhow!("用户不存在")),
+        Some(u) => {
+            let dept_s = sys_dept::Entity::find().filter(sys_dept::Column::DeptId.eq(u.dept_id.clone())).one(db).await?;
+            match dept_s {
+                None => return Err(anyhow!("{}无部门信息", user_id)),
+                Some(v) => UserWithDept {
+                    user: UserResp {
+                        id: u.id.clone(),
+                        user_name: u.user_name.clone(),
+                        user_nickname: u.user_nickname.clone(),
+                        user_status: u.user_status.clone(),
+                        user_email: u.user_email.clone(),
+                        sex: u.sex.clone(),
+                        avatar: u.avatar.clone(),
+                        dept_id: u.dept_id.clone(),
+                        remark: u.remark.clone(),
+                        is_admin: u.is_admin.clone(),
+                        phone_num: u.phone_num.clone(),
+                        role_id: u.role_id.clone(),
+                        created_at: Some(u.created_at),
+                    },
+                    dept: DeptResp {
+                        dept_id: v.dept_id.clone(),
+                        parent_id: v.parent_id.clone(),
+                        dept_name: v.dept_name.clone(),
+                        order_num: v.order_num,
+                        leader: v.leader.clone(),
+                        phone: v.phone.clone(),
+                        email: v.email.clone(),
+                        status: v.status,
+                    },
+                },
+            }
+        }
     };
+
+    // let s = SysUser::find()
+    //     .join_rev(
+    //         JoinType::LeftJoin,
+    //         sys_dept::Entity::belongs_to(sys_user::Entity)
+    //             .from(sys_dept::Column::DeptId)
+    //             .to(sys_user::Column::DeptId)
+    //             .into(),
+    //     )
+    //     .select_also(sys_dept::Entity)
+    //     .filter(sys_user::Column::DeletedAt.is_null())
+    //     .filter(sys_user::Column::Id.eq(user_id))
+    //     .one(db)
+    //     .await?;
+    // let user = match s {
+    //     Some(m) => match m.1 {
+    //         Some(v) => UserWithDept {
+    //             user: UserResp {
+    //                 id: m.0.id.clone(),
+    //                 user_name: m.0.user_name.clone(),
+    //                 user_nickname: m.0.user_nickname.clone(),
+    //                 user_status: m.0.user_status.clone(),
+    //                 user_email: m.0.user_email.clone(),
+    //                 sex: m.0.sex.clone(),
+    //                 avatar: m.0.avatar.clone(),
+    //                 dept_id: m.0.dept_id.clone(),
+    //                 remark: m.0.remark.clone(),
+    //                 is_admin: m.0.is_admin.clone(),
+    //                 phone_num: m.0.phone_num.clone(),
+    //                 role_id: m.0.role_id.clone(),
+    //                 created_at: Some(m.0.created_at),
+    //             },
+    //             dept: DeptResp {
+    //                 dept_id: v.dept_id.clone(),
+    //                 parent_id: v.parent_id.clone(),
+    //                 dept_name: v.dept_name.clone(),
+    //                 order_num: v.order_num,
+    //                 leader: v.leader.clone(),
+    //                 phone: v.phone.clone(),
+    //                 email: v.email.clone(),
+    //                 status: v.status,
+    //             },
+    //         },
+    //         None => return Err(anyhow!("{}无部门信息", user_id)),
+    //     },
+    //     None => return Err(anyhow!("用户不存在")),
+    // };
 
     Ok(user)
 }
