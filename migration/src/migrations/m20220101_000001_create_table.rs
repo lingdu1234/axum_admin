@@ -1,7 +1,7 @@
 use anyhow::Result;
 use db::{system::entities::*, test::entities::*};
 pub use sea_orm::{ConnectionTrait, DatabaseConnection, DatabaseTransaction, Schema};
-use sea_schema::migration::*;
+use sea_orm_migration::prelude::*;
 
 use super::super::db_utils::{creat_one_table as Cot, create_table_index as Cti, drop_one_table as Dot, init_data};
 
@@ -48,11 +48,13 @@ async fn create_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
     Cot(db, builder, &schema, sys_user_role::Entity).await?;
     Cot(db, builder, &schema, sys_user::Entity).await?;
     Cot(db, builder, &schema, sys_api_db::Entity).await?;
+    Cot(db, builder, &schema, sys_user_dept::Entity).await?;
 
     Cot(db, builder, &schema, sys_user_online::Entity).await?;
     Cot(db, builder, &schema, sys_job_log::Entity).await?;
     Cot(db, builder, &schema, sys_oper_log::Entity).await?;
     Cot(db, builder, &schema, sys_login_log::Entity).await?;
+    Cot(db, builder, &schema, sys_update_log::Entity).await?;
 
     // -----test-------
     Cot(db, builder, &schema, test_data_scope::Entity).await?;
@@ -63,26 +65,37 @@ async fn create_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
 //  创建索引
 async fn create_index(m: &SchemaManager<'_>) -> Result<(), DbErr> {
     println!("开始创建索引----------");
-    Cti(m, sys_api_db::Entity, "db", vec![sys_api_db::Column::Db], "i").await?;
-    Cti(m, sys_dept::Entity, "pid", vec![sys_dept::Column::ParentId], "i").await?;
-    Cti(m, sys_dict_data::Entity, "d_type_a", vec![sys_dict_data::Column::DictType], "i").await?;
-    Cti(m, sys_dict_type::Entity, "d_type_b", vec![sys_dict_type::Column::DictType], "i").await?;
-    Cti(m, sys_job::Entity, "t_id", vec![sys_job::Column::TaskId], "i").await?;
-    Cti(m, sys_job_log::Entity, "job_id", vec![sys_job_log::Column::JobId], "i").await?;
-    Cti(m, sys_role_api::Entity, "api", vec![sys_role_api::Column::Api], "i").await?;
-    Cti(m, sys_role_api::Entity, "role_id_a", vec![sys_role_api::Column::RoleId], "i").await?;
-    Cti(m, sys_role_dept::Entity, "role_id_b", vec![sys_role_dept::Column::RoleId], "i").await?;
-    Cti(m, sys_role_dept::Entity, "dept_id_a", vec![sys_role_dept::Column::DeptId], "i").await?;
-    Cti(m, sys_user::Entity, "role_id_c", vec![sys_user::Column::RoleId], "i").await?;
-    Cti(m, sys_user::Entity, "dept_id_b", vec![sys_user::Column::DeptId], "i").await?;
-    Cti(m, sys_user_online::Entity, "u_id", vec![sys_user_online::Column::UId], "i").await?;
-    Cti(m, sys_user_online::Entity, "t_id", vec![sys_user_online::Column::TokenId], "i").await?;
-    Cti(m, sys_user_role::Entity, "user_id", vec![sys_user_role::Column::UserId], "i").await?;
-    Cti(m, sys_user_role::Entity, "r_id", vec![sys_user_role::Column::RoleId], "i").await?;
+    Cti(m, sys_api_db::Entity, "db_db", vec![sys_api_db::Column::Db], "i").await?;
 
-    Cti(m, sys_menu::Entity, "p_o", vec![sys_menu::Column::Pid, sys_menu::Column::OrderSort], "u").await?;
+    Cti(m, sys_dept::Entity, "dept_pid", vec![sys_dept::Column::ParentId], "i").await?;
+
+    Cti(m, sys_dict_data::Entity, "d_type_tp", vec![sys_dict_data::Column::DictType], "i").await?;
+    Cti(m, sys_dict_type::Entity, "d_data_tp", vec![sys_dict_type::Column::DictType], "i").await?;
+
+    Cti(m, sys_job::Entity, "job_tid", vec![sys_job::Column::TaskId], "i").await?;
+
+    Cti(m, sys_job_log::Entity, "jobL_jid", vec![sys_job_log::Column::JobId], "i").await?;
+
+    Cti(m, sys_role_api::Entity, "ra_api", vec![sys_role_api::Column::Api], "i").await?;
+    Cti(m, sys_role_api::Entity, "ra_api_rid", vec![sys_role_api::Column::RoleId], "i").await?;
+
+    Cti(m, sys_role_dept::Entity, "rd_rid", vec![sys_role_dept::Column::RoleId], "i").await?;
+    Cti(m, sys_role_dept::Entity, "rd_dpid", vec![sys_role_dept::Column::DeptId], "i").await?;
+
+    Cti(m, sys_user::Entity, "user_rid", vec![sys_user::Column::RoleId], "i").await?;
+    Cti(m, sys_user::Entity, "user_dpid", vec![sys_user::Column::DeptId], "i").await?;
+
+    Cti(m, sys_user_online::Entity, "uo_uid", vec![sys_user_online::Column::UId], "i").await?;
+    Cti(m, sys_user_online::Entity, "uo_tid", vec![sys_user_online::Column::TokenId], "i").await?;
+
+    Cti(m, sys_user_role::Entity, "ur_uid", vec![sys_user_role::Column::UserId], "i").await?;
+    Cti(m, sys_user_role::Entity, "ur_rid", vec![sys_user_role::Column::RoleId], "i").await?;
+
+    Cti(m, sys_menu::Entity, "sm_po", vec![sys_menu::Column::Pid, sys_menu::Column::OrderSort], "u").await?;
+    Cti(m, sys_menu::Entity, "sm_method", vec![sys_menu::Column::Method], "i").await?;
+    Cti(m, sys_menu::Entity, "sm_mt", vec![sys_menu::Column::MenuType], "i").await?;
     // 测试
-    Cti(m, test_data_scope::Entity, "created_by", vec![test_data_scope::Column::CreatedBy], "i").await?;
+    Cti(m, test_data_scope::Entity, "td_uid", vec![test_data_scope::Column::CreatedBy], "i").await?;
 
     Ok(())
 }
@@ -104,11 +117,13 @@ async fn drop_table(manager: &SchemaManager<'_>) -> Result<(), DbErr> {
     Dot(manager, sys_user_role::Entity).await?;
     Dot(manager, sys_user::Entity).await?;
     Dot(manager, sys_api_db::Entity).await?;
+    Dot(manager, sys_user_dept::Entity).await?;
 
     Dot(manager, sys_user_online::Entity).await?;
     Dot(manager, sys_job_log::Entity).await?;
     Dot(manager, sys_oper_log::Entity).await?;
     Dot(manager, sys_login_log::Entity).await?;
+    Dot(manager, sys_update_log::Entity).await?;
 
     // -----test-------
     Dot(manager, test_data_scope::Entity).await?;

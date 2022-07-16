@@ -1,55 +1,45 @@
-use once_cell::sync::Lazy;
-use regex::Regex;
-use sea_orm::{entity::prelude::DateTime, FromQueryResult};
+use chrono::NaiveDateTime;
+use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
-use validator::Validate;
 
 use super::sys_dept::DeptResp;
 
-static PHONE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^([1]\d{10}|([\(（]?0[0-9]{2,3}[）\)]?[-]?)?([2-9][0-9]{6,7})+(\-[0-9]{1,4})?)$").unwrap());
-// static MOBILE_REGEX: Lazy<Regex> =
-//     Lazy::new(||
-// Regex::new(r"^1([358][0-9]|4[579]|66|7[0135678]|9[89])[0-9]{8}$").unwrap());
-#[derive(Deserialize, Debug, Validate)]
+#[derive(Deserialize, Debug)]
 pub struct AddReq {
     pub user_name: String,
-    #[validate(length(min = 1))]
-    pub user_nickname: Option<String>,
+    pub user_nickname: String,
     pub user_password: String,
-    pub user_status: Option<String>,
-    #[validate(email)]
-    pub user_email: String,
-    pub sex: Option<String>,
-    #[validate(length(min = 1))]
+    pub user_status: String,
+    pub user_email: Option<String>,
+    pub sex: String,
     pub avatar: Option<String>,
-    #[validate(length(min = 1))]
-    pub dept_id: String,
-    #[validate(length(min = 1))]
     pub remark: Option<String>,
-    pub is_admin: Option<String>,
-    #[validate(regex(path = "PHONE_REGEX", code = "phone_num is invalid"))]
+    pub is_admin: String,
     pub phone_num: Option<String>,
-    pub post_ids: Option<Vec<String>>,
-    pub role_ids: Option<Vec<String>>,
-    pub role_id: Option<String>,
+    pub post_ids: Vec<String>,
+    pub dept_ids: Vec<String>,
+    pub dept_id: String,
+    pub role_ids: Vec<String>,
+    pub role_id: String,
 }
 
-#[derive(Deserialize, Debug, Validate)]
+#[derive(Deserialize, Debug)]
 pub struct EditReq {
     pub id: String,
     pub user_name: String,
     pub user_nickname: String,
     pub user_status: String,
-    pub user_email: String,
+    pub user_email: Option<String>,
     pub sex: String,
     pub avatar: String,
-    pub dept_id: String,
-    pub remark: String,
+    pub remark: Option<String>,
     pub is_admin: String,
-    pub phone_num: String,
+    pub phone_num: Option<String>,
     pub post_ids: Vec<String>,
-    pub role_ids: Option<Vec<String>>,
-    pub role_id: Option<String>,
+    pub dept_ids: Vec<String>,
+    pub dept_id: String,
+    pub role_ids: Vec<String>,
+    pub role_id: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -67,15 +57,15 @@ pub struct UserResp {
     pub user_name: String,
     pub user_nickname: String,
     pub user_status: String,
-    pub user_email: String,
+    pub user_email: Option<String>,
     pub sex: String,
     pub avatar: String,
     pub dept_id: String,
-    pub remark: String,
+    pub remark: Option<String>,
     pub is_admin: String,
-    pub phone_num: String,
-    pub role_id: Option<String>,
-    pub created_at: Option<DateTime>,
+    pub phone_num: Option<String>,
+    pub role_id: String,
+    pub created_at: Option<NaiveDateTime>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -90,22 +80,19 @@ pub struct UserInfomaion {
     pub user_info: UserWithDept,
     pub post_ids: Vec<String>,
     pub role_ids: Vec<String>,
+    pub dept_ids: Vec<String>,
     pub dept_id: String,
 }
 
-#[derive(Deserialize, Debug, Validate)]
+#[derive(Deserialize, Debug)]
 pub struct SearchReq {
-    #[validate(length(min = 1))]
     pub user_id: Option<String>,
     pub role_id: Option<String>,
     pub user_ids: Option<Vec<String>>,
-    #[validate(length(min = 1))]
     pub user_name: Option<String>,
     pub phone_num: Option<String>,
-    #[validate(length(min = 1))]
     pub user_nickname: Option<String>,
     pub user_status: Option<String>,
-    #[validate(length(min = 1))]
     pub dept_id: Option<String>,
     pub begin_time: Option<String>,
     pub end_time: Option<String>,
@@ -117,15 +104,12 @@ pub struct DeleteReq {
 }
 
 ///  用户登录
-#[derive(Deserialize, Debug, Validate)]
+#[derive(Deserialize, Debug)]
 pub struct UserLoginReq {
     ///  用户名
-    #[validate(length(min = 4, message = "用户名长度不能小于4"))]
     pub user_name: String,
     ///  用户密码
-    #[validate(length(min = 6, message = "密码长度不能小于6"))]
     pub user_password: String,
-    #[validate(length(min = 1, message = "验证码不能为空"))]
     pub code: String,
     pub uuid: String,
 }
@@ -134,6 +118,7 @@ pub struct UserLoginReq {
 pub struct UserInfo {
     pub user: UserWithDept,
     pub roles: Vec<String>,
+    pub depts: Vec<String>,
     pub permissions: Vec<String>,
 }
 #[derive(Deserialize)]
@@ -158,4 +143,10 @@ pub struct ChangeStatusReq {
 pub struct ChangeRoleReq {
     pub user_id: String,
     pub role_id: String,
+}
+
+#[derive(Deserialize, Clone)]
+pub struct ChangeDeptReq {
+    pub user_id: String,
+    pub dept_id: String,
 }

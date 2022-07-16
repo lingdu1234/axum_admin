@@ -1,4 +1,4 @@
-pub use sea_schema::migration::*;
+pub use sea_orm_migration::prelude::*;
 
 pub mod db_utils;
 mod migrations;

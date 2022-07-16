@@ -8,8 +8,10 @@
 .vscode
 /tests
 .env
+fleet.toml
 /config/config.toml
 /config/cert
 *.exe
 /test
 常用命令.txt
+a.sql

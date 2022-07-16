@@ -1,0 +1,68 @@
+[package]
+edition = "2021"
+name = "app"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+#
+configs = {path = "../configs"}
+db = {path = "../db"}
+#
+anyhow = "1"
+bytes = "1"
+futures = "0.3"
+# env_logger = "0.9"
+async-stream = "0.3"
+chrono = {version = "0.4", features = ["serde"]}
+headers = "0.3"
+jsonwebtoken = "8"
+once_cell = "1"
+poem = {version = "1", features = ["static-files", "rustls", "compression", "multipart"]}
+# poem = "=1.1.1"
+# poem-derive = "=1.1.1"
+# poem-openapi = "1.1.1"
+# 用于生成可排序的唯一id
+# lazy_static = "1.4.0"
+scru128 = "2"
+serde = {version = "1", features = ["derive"]}
+serde_json = "1"
+tokio = {version = "1", features = ["rt-multi-thread", "macros", "parking_lot", "signal", "time"]}
+#  "tracing"
+# tokio = {version = "1", features = ["full"]}
+toml = "0.5"
+# tracing
+time = "0.3"
+tracing = "0.1"
+tracing-appender = "0.2"
+# tracing-log = "0.1"
+tracing-subscriber = {version = "0.3", features = ["json", "env-filter", "local-time", "registry"]}
+
+# 计划任务
+delay_timer = {version = "0.11"}
+reqwest = {version = "0.11", features = ["json"]}
+user-agent-parser = "0.3"
+
+#  随机数
+md5 = "0.7"
+rand = "0.8"
+# 系统信息
+sysinfo = "0.24.5"
+# 验证码
+captcha_rust = "0.1.3"
+# aHashMap
+ahash = "0.7.6"
+# sea-orm
+[dependencies.sea-orm]
+default-features = false
+# features = ["macros", "runtime-tokio-native-tls"]
+features = ["macros", "runtime-tokio-native-tls", "debug-print"]
+version = "0.9"
+
+[features]
+# default = ["postgres", "mysql"]
+default = ["postgres", "mysql", "sqlite"]
+mysql = ["sea-orm/sqlx-mysql"]
+postgres = ["sea-orm/sqlx-postgres"]
+sqlite = ["sea-orm/sqlx-sqlite"]
