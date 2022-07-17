@@ -12,5 +12,5 @@ path = "src/lib.rs"
 db = {path = "../db"}
 #
 anyhow = "1.0.55"
-sea-schema = {version = "0.5.0", default-features = false, features = ["migration"]}
+sea-schema = {version = "0.9.2", default-features = false, features = ["migration"]}
 # "debug-print"
