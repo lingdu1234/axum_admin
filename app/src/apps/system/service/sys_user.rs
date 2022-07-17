@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use axum::http::request::Parts;
+
 use chrono::{Local, NaiveDateTime};
 use db::{
     common::res::{ListData, PageParams},
@@ -14,7 +14,7 @@ use db::{
         },
     },
 };
-use poem::Request;
+use headers::HeaderMap;
 use scru128::scru128_string;
 use sea_orm::{sea_query::Expr, ColumnTrait, DatabaseConnection, EntityTrait, JoinType, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait};
 
@@ -503,14 +503,14 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, c_user_id: String) -> R
 }
 
 /// 用户登录
-pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq, req: &Request) -> Result<AuthBody> {
+pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq, header: HeaderMap) -> Result<AuthBody> {
     let mut msg = "登录成功".to_string();
     let mut status = "1".to_string();
     // 验证验证码
     if utils::encrypt_password(&login_req.code, "") != login_req.uuid {
         msg = "验证码错误".to_string();
         status = "0".to_string();
-        set_login_info(req, "".to_string(), login_req.user_name.clone(), msg.clone(), status.clone(), None, None).await;
+        set_login_info(header, "".to_string(), login_req.user_name.clone(), msg.clone(), status.clone(), None, None).await;
         return Err(anyhow!("验证码错误"));
     }
     // 根据用户名获取用户信息
@@ -519,7 +519,7 @@ pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq, req: &Reque
             if &user.user_status == "0" {
                 msg = "用户已被禁用".to_string();
                 status = "0".to_string();
-                set_login_info(req, "".to_string(), login_req.user_name.clone(), msg.clone(), status.clone(), None, None).await;
+                set_login_info(header, "".to_string(), login_req.user_name.clone(), msg.clone(), status.clone(), None, None).await;
                 return Err(anyhow!("用户已被禁用"));
             } else {
                 user
@@ -528,7 +528,7 @@ pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq, req: &Reque
         None => {
             msg = "用户不存在".to_string();
             status = "0".to_string();
-            set_login_info(req, "".to_string(), login_req.user_name.clone(), msg.clone(), status.clone(), None, None).await;
+            set_login_info(header, "".to_string(), login_req.user_name.clone(), msg.clone(), status.clone(), None, None).await;
             return Err(anyhow!("用户不存在"));
         }
     };
@@ -536,7 +536,7 @@ pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq, req: &Reque
     if utils::encrypt_password(&login_req.user_password, &user.user_salt) != user.user_password {
         msg = "密码错误".to_string();
         status = "0".to_string();
-        set_login_info(req, "".to_string(), login_req.user_name.clone(), msg.clone(), status.clone(), None, None).await;
+        set_login_info(header, "".to_string(), login_req.user_name.clone(), msg.clone(), status.clone(), None, None).await;
         return Err(anyhow!("密码不正确"));
     };
     // 注册JWT
@@ -550,7 +550,7 @@ pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq, req: &Reque
     //  写入登录日志
 
     set_login_info(
-        req,
+        header,
         user.id.to_string(),
         login_req.user_name.clone(),
         msg.clone(),
@@ -578,8 +578,8 @@ pub async fn fresh_token(user: Claims) -> Result<AuthBody> {
     Ok(token)
 }
 
-pub async fn set_login_info(req: &Parts, u_id: String, user: String, msg: String, status: String, token_id: Option<String>, token: Option<AuthBody>) {
-    let header = req.headers.to_owned();
+pub async fn set_login_info(header: HeaderMap, u_id: String, user: String, msg: String, status: String, token_id: Option<String>, token: Option<AuthBody>) {
+  
     let u = utils::get_client_info(header).await;
     // 写入登录日志
     let u2 = u.clone();

@@ -1,3 +1,4 @@
+use axum::{extract::Query, Json};
 use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
@@ -7,11 +8,6 @@ use db::{
     },
     DB,
 };
-use poem::{
-    handler,
-    web::{Json, Query},
-};
-use validator::Validate;
 
 use super::super::service;
 use crate::utils::jwt::Claims;
@@ -53,10 +49,6 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
 // edit 修改
 
 pub async fn edit(Json(req): Json<EditReq>, user: Claims) -> Res<String> {
-    match req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    };
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dept::edit(db, req, user.id).await;
     match res {

@@ -1,3 +1,5 @@
+use axum::{extract::Query, Json, response::IntoResponse};
+
 use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
@@ -7,11 +9,7 @@ use db::{
     },
     DB,
 };
-use poem::{
-    handler,
-    web::{Json, Query},
-};
-use validator::Validate;
+
 
 use super::super::service;
 use crate::utils::jwt::Claims;
@@ -19,7 +17,6 @@ use crate::utils::jwt::Claims;
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<sys_dict_data::Model>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_data::get_sort_list(db, page_params, req).await;
@@ -30,7 +27,6 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 }
 
 /// add 添加
-
 pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_data::add(db, req, user.id).await;
@@ -41,7 +37,6 @@ pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Res<String> {
 }
 
 /// delete 完全删除
-
 pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_data::delete(db, req).await;
@@ -88,7 +83,7 @@ pub async fn get_by_type(Query(req): Query<SearchReq>) -> Res<Vec<sys_dict_data:
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
 
-pub async fn get_all() -> Res<Vec<Resp>> {
+pub async fn get_all() -> impl IntoResponse {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_data::get_all(db).await;
     match res {

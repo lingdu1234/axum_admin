@@ -129,7 +129,7 @@ fn sys_role_api() -> Router {
 fn sys_menu_api() -> Router {
     Router::new()
         .route("/list", get(sys_menu::get_sort_list)) // 获取筛选分页
-        .route("/get_auth_list", get(sys_menu::get_auth_list)) // 权限查询列表
+        // .route("/get_auth_list", get(sys_menu::get_auth_list)) // 权限查询列表
         .route("/get_by_id", get(sys_menu::get_by_id)) // 按id获取
         .route("/add", post(sys_menu::add)) // 添加
         .route("/edit", put(sys_menu::edit)) // 更新
@@ -138,7 +138,7 @@ fn sys_menu_api() -> Router {
         .route("/get_routers", get(sys_menu::get_routers)) // 获取用户菜单树
       .route("/get_auth_list", get(sys_menu::get_related_api_and_db)) // 获取用户菜单树
 }
-}
+
 fn sys_login_log_api() -> Router {
     Router::new()
         .route("/list", get(sys_login_log::get_sort_list)) // 获取筛选分页
@@ -186,7 +186,7 @@ fn sys_monitor_api() -> Router {
 }
 
 fn sys_update_log_api() -> Router {
-    Route::new()
+    Router::new()
         .route("/add", post(sys_update_log::add)) // 添加
         .route("/edit", put(sys_update_log::edit)) // 更新
         .route("/delete", delete(sys_update_log::delete)) // 硬删除

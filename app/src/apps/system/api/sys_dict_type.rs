@@ -1,4 +1,4 @@
-use axum::{extract::Query, Json};
+use axum::{extract::Query, Json, response::IntoResponse};
 use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
@@ -8,11 +8,6 @@ use db::{
     },
     DB,
 };
-use poem::{
-    handler,
-    web::{Json, Query},
-};
-use validator::Validate;
 
 use super::super::service;
 use crate::utils::jwt::Claims;
@@ -65,7 +60,7 @@ pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
 /// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
 
-pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<Resp> {
+pub async fn get_by_id(Query(req): Query<SearchReq>) -> impl IntoResponse {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_type::get_by_id(db, req).await;
     match res {
@@ -77,7 +72,7 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<Resp> {
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
 
-pub async fn get_all() -> Res<Vec<Resp>> {
+pub async fn get_all() -> impl IntoResponse {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_type::get_all(db).await;
     match res {

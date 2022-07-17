@@ -1,7 +1,6 @@
 use anyhow::Result;
 use axum::{
     extract::{Multipart, Query},
-    http::{request::Parts, Request},
     Json,
 };
 use configs::CFG;
@@ -14,12 +13,8 @@ use db::{
     },
     DB,
 };
-use poem::{
-    handler,
-    web::{Json, Multipart, Query},
-    Request,
-};
-use validator::Validate;
+use headers::HeaderMap;
+use tokio::join;
 
 use super::super::service;
 use crate::utils::jwt::{AuthBody, Claims};
@@ -119,9 +114,9 @@ pub async fn update_profile(Json(req): Json<UpdateProfileReq>) -> Res<String> {
 
 /// 用户登录
 
-pub async fn login(Json(login_req): Json<UserLoginReq>, request: &Parts) -> Res<AuthBody> {
+pub async fn login(Json(login_req): Json<UserLoginReq>, header: HeaderMap) -> Res<AuthBody> {
     let db = DB.get_or_init(db_conn).await;
-    match service::sys_user::login(db, login_req, request).await {
+    match service::sys_user::login(db, login_req, header).await {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
     }

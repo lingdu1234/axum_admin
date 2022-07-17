@@ -1,3 +1,4 @@
+use axum::{extract::Query, Json};
 use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
@@ -6,10 +7,6 @@ use db::{
         models::sys_job::{AddReq, DeleteReq, EditReq, JobId, SearchReq, StatusReq},
     },
     DB,
-};
-use poem::{
-    handler,
-    web::{Json, Query},
 };
 
 use super::super::service;

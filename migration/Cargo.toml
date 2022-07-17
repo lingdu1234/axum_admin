@@ -1,8 +1,8 @@
 [package]
-edition = "2021"
 name = "migration"
-publish = false
 version = "0.1.0"
+edition = "2021"
+publish = false
 
 [lib]
 name = "migration"
@@ -11,6 +11,9 @@ path = "src/lib.rs"
 [dependencies]
 db = {path = "../db"}
 #
-anyhow = "1.0.55"
-sea-schema = {version = "0.9.2", default-features = false, features = ["migration"]}
-# "debug-print"
+anyhow = "1"
+# 
+async-std = "1.11.0"
+
+[dependencies.sea-orm-migration]
+version = "0.9"

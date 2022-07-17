@@ -1,5 +1,5 @@
 use axum::{
-    routing::{delete, get, post, post_service},
+    routing::{delete, get, post},
     Router,
 };
 pub mod test_data_scope;

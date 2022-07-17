@@ -1,3 +1,5 @@
+use axum::{extract::Query, Json};
+
 use configs::CFG;
 use db::{
     common::res::{ListData, PageParams, Res},
@@ -8,11 +10,6 @@ use db::{
     },
     DB,
 };
-use poem::{
-    handler,
-    web::{Json, Query},
-};
-use validator::Validate;
 
 use super::super::service;
 use crate::utils::jwt::Claims;
@@ -28,23 +25,10 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(search_r
     }
 }
 
-pub async fn get_auth_list(Query(page_params): Query<PageParams>, Query(search_req): Query<SearchReq>) -> Res<ListData<sys_menu::Model>> {
-    let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_menu::get_auth_list(db, page_params, search_req).await;
-    match res {
-        Ok(x) => Res::with_data(x),
-        Err(e) => Res::with_err(&e.to_string()),
-    }
-}
-
 /// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
 
 pub async fn get_by_id(Query(search_req): Query<SearchReq>) -> Res<MenuResp> {
-    match search_req.validate() {
-        Ok(_) => {}
-        Err(e) => return Res::with_err(&e.to_string()),
-    }
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_by_id(db, search_req).await;
     match res {

@@ -5,6 +5,7 @@ use axum::{
 use configs::CFG;
 use reqwest::StatusCode;
 use tower::layer::layer_fn;
+
 use tower_http::services::ServeDir;
 
 use crate::middleware;
@@ -44,7 +45,7 @@ pub fn api() -> Router {
 
 pub fn no_auth_api() -> Router {
     Router::new()
-        // .route("/login", post(system::SysLogin)) // 登录
-        // .route("/get_captcha", get(system::get_captcha)) // 获取验证码
+        .route("/login", post(system::SysLogin)) // 登录
+        .route("/get_captcha", get(system::get_captcha)) // 获取验证码
         .route("/log_out", post(system::log_out)) // 退出登录
 }

@@ -9,7 +9,7 @@ version = "0.1.0"
 #
 configs = {path = "../configs"}
 #
-axum = {version = "0.4.5"}
+axum = {version = "0.5"}
 mime = "0.3.16"
 #
 chrono = {version = "0.4", features = ["serde"]}
@@ -19,12 +19,12 @@ serde = {version = "1.0", features = ["derive"]}
 serde_json = "1"
 tokio = {version = "1", features = ["rt-multi-thread", "macros", "parking_lot", "signal"]}
 tracing = {git = "https://github.com/tokio-rs/tracing.git"}
-validator = {version = "0.14.0", features = ["derive", "phone"]}
+validator = {version = "0.15.0", features = ["derive", "phone"]}
 
 [dependencies.sea-orm]
 default-features = false
-features = ["macros", "runtime-tokio-native-tls"]
-version = "0.6.0"
+features = ["macros", "runtime-tokio-native-tls","with-chrono"]
+version = "0.9.0"
 
 [features]
 # default = ["postgres"]

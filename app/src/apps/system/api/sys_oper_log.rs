@@ -1,3 +1,5 @@
+use axum::{extract::Query, Json};
+
 use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
@@ -7,10 +9,7 @@ use db::{
     },
     DB,
 };
-use poem::{
-    handler,
-    web::{Json, Query},
-};
+
 
 use super::super::service;
 /// get_list 获取列表
