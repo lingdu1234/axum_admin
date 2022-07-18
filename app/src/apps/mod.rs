@@ -1,14 +1,14 @@
 use axum::{
+    middleware,
     routing::{get, get_service, post},
     Router,
 };
 use configs::CFG;
 use reqwest::StatusCode;
-use tower::layer::layer_fn;
 
 use tower_http::services::ServeDir;
 
-use crate::middleware;
+use crate::middleware_fn::auth::auth_fn_mid;
 
 pub mod system;
 pub mod test;
@@ -25,19 +25,16 @@ pub fn api() -> Router {
         // 系统管理模块
         .nest(
             "/system",
-            system::system_api()
-                // .layer(layer_fn(|inner| middleware::ApiAuth { inner }))
-                // .layer(layer_fn(|inner| middleware::OperLog { inner }))
-                // .layer(layer_fn(|inner| middleware::Cache { inner }))
-                // .layer(layer_fn(|inner| middleware::Ctx { inner })),
+            system::system_api().route_layer(middleware::from_fn(auth_fn_mid)), // .layer(layer_fn(|inner| middleware::OperLog { inner }))
+                                                                                // .layer(layer_fn(|inner| middleware::Cache { inner }))
+                                                                                // .layer(layer_fn(|inner| middleware::Ctx { inner })),
         )
         //  测试模块
         .nest(
             "/test",
-            test::api::test_api()
-        //         .layer(layer_fn(|inner| middleware::ApiAuth { inner }))
-        //         .layer(layer_fn(|inner| middleware::OperLog { inner }))
-        //         .layer(layer_fn(|inner| middleware::Ctx { inner })),
+            test::api::test_api().route_layer(middleware::from_fn(auth_fn_mid)),
+            //         .layer(layer_fn(|inner| middleware::OperLog { inner }))
+            //         .layer(layer_fn(|inner| middleware::Ctx { inner })),
         )
 }
 

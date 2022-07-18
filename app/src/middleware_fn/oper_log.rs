@@ -26,7 +26,6 @@ pub struct OperLog<E> {
     pub inner: E,
 }
 
-#[axum::async_trait]
 impl<E> Service<Request<Body>> for OperLog<E>
 where
     E: Service<Request<Body>, Response = Response> + Clone + Send + 'static,
@@ -40,14 +39,15 @@ where
         self.inner.poll_ready(cx)
     }
 
-    async fn call(&self, req: Request<Body>) -> Self::Future {
+    fn call(&mut self, req: Request<Body>) -> Self::Future {
         let req_ctx = match req.extensions().get::<ReqCtx>() {
             Some(x) => x.clone(),
             None => {
-                return match self.inner.call(req).await {
-                    Ok(res) => Ok(res.into_response()),
-                    Err(e) => Err(e),
-                };
+                let future = self.inner.call(req);
+                Box::pin(async move {
+                    let response: Response = future.await?;
+                    Ok(response)
+                })
             }
         };
         // 开始请求数据
