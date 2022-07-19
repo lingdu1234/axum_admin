@@ -10,7 +10,7 @@
                或者 分支 [poem](https://github.com/lingdu1234/poem_admin/tree/poem)
 
 后端git(axum)：  [axum_admin](https://github.com/lingdu1234/axum_admin)   <https://github.com/lingdu1234/axum_admin>
-或者 分支 [poem](https://github.com/lingdu1234/poem_admin/tree/axum)
+或者 分支 [axum](https://github.com/lingdu1234/poem_admin/tree/axum)
 
 
 预览地址：
