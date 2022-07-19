@@ -3,9 +3,10 @@ use axum::{
     headers::{authorization::Bearer, Authorization},
     http::StatusCode,
     response::{IntoResponse, Response},
-    Error, Json,
+    Json,
 };
 use chrono::{Duration, Local};
+use db::common::ctx::UserInfo;
 use jsonwebtoken::{decode, encode, errors::ErrorKind, DecodingKey, EncodingKey, Header, Validation};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
@@ -80,7 +81,13 @@ where
                 }
             },
         };
-        Ok(token_data.claims)
+        let user = token_data.claims;
+        req.extensions_mut().insert(UserInfo {
+            id: user.id.clone(),
+            token_id: user.token_id.clone(),
+            name: user.name.clone(),
+        });
+        Ok(user)
     }
 }
 
@@ -109,7 +116,6 @@ pub async fn authorize(payload: AuthPayload, token_id: String) -> Result<AuthBod
     };
     // Create the authorization token
     let token = encode(&Header::default(), &claims, &KEYS.encoding).map_err(|_| AuthError::WrongCredentials)?;
-
     // Send the authorized token
     Ok(AuthBody::new(token, claims.exp, CFG.jwt.jwt_exp, token_id))
 }

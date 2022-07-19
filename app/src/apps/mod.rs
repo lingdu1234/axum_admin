@@ -8,7 +8,7 @@ use reqwest::StatusCode;
 
 use tower_http::services::ServeDir;
 
-use crate::middleware_fn::auth::auth_fn_mid;
+use crate::middleware_fn::{auth::auth_fn_mid, cache::cache_fn_mid, ctx::ctx_fn_mid, oper_log::oper_log_fn_mid};
 
 pub mod system;
 pub mod test;
@@ -25,16 +25,19 @@ pub fn api() -> Router {
         // 系统管理模块
         .nest(
             "/system",
-            system::system_api().route_layer(middleware::from_fn(auth_fn_mid)), // .layer(layer_fn(|inner| middleware::OperLog { inner }))
-                                                                                // .layer(layer_fn(|inner| middleware::Cache { inner }))
-                                                                                // .layer(layer_fn(|inner| middleware::Ctx { inner })),
+            system::system_api()
+                .layer(middleware::from_fn(auth_fn_mid))
+                .layer(middleware::from_fn(oper_log_fn_mid))
+                .layer(middleware::from_fn(cache_fn_mid))
+                .layer(middleware::from_fn(ctx_fn_mid)),
         )
         //  测试模块
         .nest(
             "/test",
-            test::api::test_api().route_layer(middleware::from_fn(auth_fn_mid)),
-            //         .layer(layer_fn(|inner| middleware::OperLog { inner }))
-            //         .layer(layer_fn(|inner| middleware::Ctx { inner })),
+            test::api::test_api()
+                .route_layer(middleware::from_fn(auth_fn_mid))
+                .layer(middleware::from_fn(oper_log_fn_mid))
+                .layer(middleware::from_fn(ctx_fn_mid)),
         )
 }
 

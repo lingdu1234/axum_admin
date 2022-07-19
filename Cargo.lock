@@ -83,6 +83,7 @@ dependencies = [
  "delay_timer",
  "futures",
  "headers",
+ "hyper",
  "jsonwebtoken",
  "md5",
  "once_cell",

@@ -1,81 +1,67 @@
-use std::task::{Context, Poll};
-
 use axum::{
     body::Body,
+    extract::OriginalUri,
     http::{Request, StatusCode},
-    response::Response,
-    Error,
+    middleware::Next,
+    response::IntoResponse,
 };
 use bytes::Bytes;
-use configs::CFG;
-use db::common::ctx::{ReqCtx, UserInfo};
-use futures::future::BoxFuture;
-use tower::Service;
+use db::common::ctx::{ReqCtx};
 
-use crate::utils::jwt::Claims;
 /// req上下文注入中间件 同时进行jwt授权验证
-/// Endpoint for `Tracing` middleware.
-pub struct Ctx<E> {
-    pub inner: E,
-}
+pub async fn ctx_fn_mid(req: Request<Body>, next: Next<Body>) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // 请求信息ctx注入
 
-#[axum::async_trait]
-impl<E> Service<Request<Body>> for Ctx<E>
-where
-    E: Service<Request<Body>, Response = Response> + Clone + Send + 'static,
-    E::Future: Send + 'static,
-{
-    type Response = E::Response;
-    type Error = E::Error;
-    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
-
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.inner.poll_ready(cx)
-    }
-
-    async fn call(&mut self, mut req: Request<Body>) -> Self::Future {
-        // 请求信息ctx注入
-        let user = match Claims::from_request_without_body(&req).await {
-            Err(e) => return Err(e),
-            Ok(claims) => UserInfo {
-                id: claims.id,
-                token_id: claims.token_id,
-                name: claims.name,
-            },
-        };
-
-        let ori_uri_path = req.original_uri().path().to_string();
-        let method = req.method().to_string();
-        let path = req.original_uri().path().replacen(&(CFG.server.api_prefix.clone() + "/"), "", 1);
-        let path_params = req.uri().query().unwrap_or("").to_string();
-        let (req_parts, req_body) = req.into_parts();
-        let (bytes, body_data) = match get_body_data(req_body).await {
-            Err(e) => return Err(e),
-            Ok((x, y)) => (x, y),
-        };
-        let req_ctx = ReqCtx {
-            ori_uri: if path_params.is_empty() { ori_uri_path } else { ori_uri_path + "?" + &path_params },
-            path,
-            path_params,
-            method: method.clone(),
-            user,
-            data: body_data.clone(),
-        };
-
-        let mut req = Request::from_parts(req_parts, Body::from(bytes));
-        req.extensions_mut().insert(req_ctx);
-
-        // 开始请求数据
-        self.inner.call(req).await
-    }
-}
-
-/// 获取body数据
-async fn get_body_data(body: Body) -> Result<(Bytes, String)> {
-    let bytes = match body.into_bytes().await {
-        Ok(v) => v,
-        Err(e) => return Err(Error::from_string(e.to_string(), StatusCode::BAD_REQUEST)),
+    let ori_uri_path = if let Some(path) = req.extensions().get::<OriginalUri>() {
+        path.0.path().to_owned()
+    } else {
+        req.uri().path().to_owned()
     };
+    let path = req.uri().path().to_string();
+    let method = req.method().to_string();
+    let path_params = req.uri().query().unwrap_or("").to_string();
+
+    let (parts, req_body) = req.into_parts();
+
+    let (bytes, body_data) = match get_body_data(req_body).await {
+        Err(e) => return Err(e),
+        Ok((x, y)) => (x, y),
+    };
+
+    let req_ctx = ReqCtx {
+        ori_uri: if path_params.is_empty() { ori_uri_path } else { ori_uri_path + "?" + &path_params },
+        path,
+        path_params,
+        method: method.to_string(),
+        // user: UserInfo {
+        //     id: user.id,
+        //     token_id: user.token_id,
+        //     name: user.name,
+        // },
+        data: body_data.clone(),
+    };
+
+    let mut req = Request::from_parts(parts, Body::from(bytes));
+
+    req.extensions_mut().insert(req_ctx);
+
+    let res = next.run(req).await;
+    Ok(res)
+}
+
+//  获取body数据
+async fn get_body_data<B>(body: B) -> Result<(Bytes, String), (StatusCode, String)>
+where
+    B: axum::body::HttpBody<Data = Bytes>,
+    B::Error: std::fmt::Display,
+{
+    let bytes = match hyper::body::to_bytes(body).await {
+        Ok(bytes) => bytes,
+        Err(err) => {
+            return Err((StatusCode::BAD_REQUEST, format!("failed to read body: {}", err)));
+        }
+    };
+
     match std::str::from_utf8(&bytes) {
         Ok(x) => {
             let res_data = x.to_string();

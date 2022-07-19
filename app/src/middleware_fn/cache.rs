@@ -1,25 +1,28 @@
 use core::time::Duration;
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, HashMap},
     sync::Arc,
-    task::{Context, Poll},
     time::Instant,
 };
 
-use ahash::AHashMap as HashMap;
-use axum::{body::Body, http::Request, response::Response};
+use axum::{
+    http::Request,
+    middleware::Next,
+    response::{IntoResponse, Response},
+};
 use configs::CFG;
 use db::common::{
-    ctx::{ApiInfo, ReqCtx},
+    ctx::{ApiInfo, ReqCtx, UserInfo},
     res::ResJsonString,
 };
-use futures::future::BoxFuture;
+
+use hyper::StatusCode;
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
-use tower::Service;
 
-use crate::utils::{api_utils::ALL_APIS, jwt};
+use crate::utils::api_utils::ALL_APIS;
 
+#[allow(clippy::type_complexity)]
 pub static RES_DATA: Lazy<Arc<Mutex<HashMap<String, HashMap<String, String>>>>> = Lazy::new(|| {
     let data: HashMap<String, HashMap<String, String>> = HashMap::new();
     Arc::new(Mutex::new(data))
@@ -56,16 +59,15 @@ async fn init_loop() {
     }
 }
 
-pub async fn add_cache_data(ori_uri: &str, api_key: &str, token_id: &str, method: &str, data: String) {
+pub async fn add_cache_data(ori_uri: &str, api_key: &str, data_key: &str, data: String) {
     let mut res_bmap = RES_INDEX.lock().await;
-    let data_key = format!("{}_{}_{}", ori_uri, token_id, method);
     let index_key = format!("{}★{}", api_key, &data_key);
     res_bmap.insert(index_key.clone(), Instant::now());
     drop(res_bmap);
     let hmap: HashMap<String, String> = HashMap::new();
     let mut res_data = RES_DATA.lock().await;
     let v = res_data.entry(api_key.to_string()).or_insert(hmap);
-    v.insert(data_key.clone(), data);
+    v.insert(data_key.to_string(), data);
     drop(res_data);
     tracing::info!("add cache data,api_key: {}, data_key: {},api:{}", api_key, data_key, ori_uri);
 }
@@ -82,7 +84,7 @@ pub async fn get_cache_data(api_key: &str, data_key: &str) -> Option<String> {
         None => return None,
     };
     drop(res_data);
-    tracing::info!("get cache data success,api_key: {}, data_key: {},cache data: {:?}", api_key, data_key, res.clone());
+    tracing::info!("get cache data success,api_key: {}, data_key: {}", api_key, data_key);
     res
 }
 
@@ -122,89 +124,71 @@ pub async fn remove_cache_data(api_key: &str, related_api: Option<Vec<String>>, 
     }
 }
 
-/// Endpoint for `Tracing` middleware.
-pub struct Cache<E> {
-    pub inner: E,
-}
+//  缓存中间件
+pub async fn cache_fn_mid<B>(req: Request<B>, next: Next<B>) -> Result<Response, StatusCode> {
+    let apis = ALL_APIS.lock().await;
+    let ctx = req.extensions().get::<ReqCtx>().expect("ReqCtx not found").clone();
+    let ctx_user = req.extensions().get::<UserInfo>().expect("ReqCtxUser not found").clone();
 
-#[axum::async_trait]
-impl<E> Service<Request<Body>> for Cache<E>
-where
-    E: Service<Request<Body>, Response = Response> + Clone + Send + 'static,
-    E::Future: Send + 'static,
-{
-    type Response = E::Response;
-    type Error = E::Error;
-    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+    let api_info = match apis.get(&ctx.path) {
+        Some(x) => x.clone(),
+        None => ApiInfo {
+            name: "".to_string(),
+            data_cache_method: "0".to_string(),
+            log_method: "0".to_string(),
+            related_api: None,
+        },
+    };
+    // 释放锁
+    drop(apis);
+    let token_id = ctx_user.token_id;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.inner.poll_ready(cx)
-    }
-    async fn call(&self, req: Request<Body>) -> Self::Future {
-        let apis = ALL_APIS.lock().await;
-        let ctx = req.extensions().get::<ReqCtx>().expect("ReqCtx not found").clone();
-
-        let api_info = match apis.get(&ctx.path) {
-            Some(x) => x.clone(),
-            None => ApiInfo {
-                name: "".to_string(),
-                is_db_cache: false,
-                is_log: false,
-                related_api: None,
-            },
+    if ctx.method.as_str() != "GET" {
+        let res_end = next.run(req).await;
+        return match res_end.status() {
+            StatusCode::OK => {
+                let related_api = api_info.related_api.clone();
+                tokio::spawn(async move {
+                    remove_cache_data(&ctx.path.clone(), related_api, None).await;
+                });
+                Ok(res_end)
+            }
+            _ => Ok(res_end),
         };
-        // 释放锁
-        drop(apis);
-        let (token_id, _) = jwt::get_bear_token(&req).await?;
-
-        if ctx.method.as_str() != "GET" {
-            let res_end = self.inner.call(req).await;
-            return match res_end {
-                Ok(v) => {
-                    let related_api = api_info.related_api.clone();
-                    tokio::spawn(async move {
-                        remove_cache_data(&ctx.path.clone(), related_api, None).await;
-                    });
-                    Ok(v.into_response())
-                }
-                Err(e) => Err(e),
-            };
+    }
+    let data_key = match api_info.data_cache_method.clone().as_str() {
+        "1" => format!("{}_{}_{}", &ctx.ori_uri, &ctx.method, &token_id),
+        _ => format!("{}_{}", &ctx.ori_uri, &ctx.method),
+    };
+    // 开始请求数据
+    match api_info.data_cache_method.as_str() {
+        "0" => {
+            let res_end = next.run(req).await;
+            Ok(res_end)
         }
-        let data_key = ctx.ori_uri.clone() + "_" + &token_id + "_" + &ctx.method;
-        // 开始请求数据
-        match api_info.is_db_cache {
-            true => match get_cache_data(&ctx.path, &data_key).await {
-                Some(v) => Ok(v.into_response()),
+        _ => match get_cache_data(&ctx.path, &data_key).await {
+            Some(v) => Ok(v.into_response()),
 
-                None => {
-                    let res_end = self.inner.call(req).await;
-                    match res_end {
-                        Ok(v) => {
-                            let res = v.into_response();
-                            let res_ctx = match res.extensions().get::<ResJsonString>() {
-                                Some(x) => x.0.clone(),
-                                None => "".to_string(),
-                            };
+            None => {
+                let res_end = next.run(req).await;
+                match res_end.status() {
+                    StatusCode::OK => {
+                        let res_ctx = match res_end.extensions().get::<ResJsonString>() {
+                            Some(x) => x.0.clone(),
+                            None => "".to_string(),
+                        };
 
-                            tokio::spawn(async move {
-                                // 缓存数据
-                                add_cache_data(&ctx.ori_uri, &ctx.path, &token_id, &ctx.method, res_ctx).await;
-                            });
+                        tokio::spawn(async move {
+                            // 缓存数据
+                            add_cache_data(&ctx.ori_uri, &ctx.path, &data_key, res_ctx).await;
+                        });
 
-                            Ok(res)
-                        }
-                        Err(e) => Err(e),
+                        Ok(res_end)
                     }
-                }
-            },
-            false => {
-                let res_end = self.inner.call(req).await;
-                match res_end {
-                    Ok(v) => Ok(v.into_response()),
-                    Err(e) => Err(e),
+                    _ => Ok(res_end),
                 }
             }
-        }
+        },
     }
 }
 

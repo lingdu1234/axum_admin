@@ -21,8 +21,9 @@ jsonwebtoken = "8"
 once_cell = "1"
 
 #  axum
-axum = {version = "0.5", features = ["headers","multipart"]}
-tower = { version = "0.4"}
+axum = {version = "0.5", features = ["headers","multipart","original-uri"]}
+hyper = { version = "0.14", features = ["full"] }
+tower = { version = "0.4", features = ["util", "filter"] }
 tower-http = {version = "0.3", features = ["cors","fs"]}
 
 scru128 = "2"

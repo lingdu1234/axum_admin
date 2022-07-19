@@ -4,7 +4,7 @@ pub struct ReqCtx {
     pub path: String,
     pub path_params: String,
     pub method: String,
-    pub user: UserInfo,
+    // pub user: UserInfo,
     pub data: String,
 }
 

@@ -1,82 +1,51 @@
 use core::time::Duration;
-use std::{
-    task::{Context, Poll},
-    time::Instant,
-};
+use std::time::Instant;
 
-use axum::{body::Body, http::Request, response::Response};
+use axum::{body::Body, http::Request, middleware::Next, response::IntoResponse};
 use chrono::Local;
 use configs::CFG;
 use db::{
-    common::{ctx::ReqCtx, res::ResJsonString},
+    common::{
+        ctx::{ReqCtx, UserInfo},
+        res::ResJsonString,
+    },
     db_conn,
     system::entities::{prelude::SysOperLog, sys_oper_log},
     DB,
 };
-use futures::future::BoxFuture;
+use hyper::StatusCode;
 use sea_orm::{EntityTrait, Set};
-use tower::Service;
+
+use anyhow::Result;
 
 use crate::{apps::system::check_user_online, utils::api_utils::ALL_APIS};
 
-/// req上下文注入中间件 同时进行jwt授权验证 以及日志记录
+pub async fn oper_log_fn_mid(req: Request<Body>, next: Next<Body>) -> Result<impl IntoResponse, (StatusCode, String)> {
+    // 查询ctx
+    let req_ctx = match req.extensions().get::<ReqCtx>() {
+        Some(x) => x.clone(),
+        None => return Ok(next.run(req).await),
+    };
 
-/// Endpoint for `Tracing` middleware.
-pub struct OperLog<E> {
-    pub inner: E,
+    let ctx_user = match req.extensions().get::<UserInfo>() {
+        Some(x) => x.clone(),
+        None => return Ok(next.run(req).await),
+    };
+
+    let now = Instant::now();
+    let res_end = next.run(req).await;
+    let duration = now.elapsed();
+    let res_string = match res_end.extensions().get::<ResJsonString>() {
+        Some(x) => x.0.clone(),
+        None => "".to_string(),
+    };
+    oper_log_add(req_ctx, ctx_user, res_string, "1".to_string(), "".to_string(), duration).await;
+    Ok(res_end)
 }
 
-impl<E> Service<Request<Body>> for OperLog<E>
-where
-    E: Service<Request<Body>, Response = Response> + Clone + Send + 'static,
-    E::Future: Send + 'static,
-{
-    type Response = E::Response;
-    type Error = E::Error;
-    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
-
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.inner.poll_ready(cx)
-    }
-
-    fn call(&mut self, req: Request<Body>) -> Self::Future {
-        let req_ctx = match req.extensions().get::<ReqCtx>() {
-            Some(x) => x.clone(),
-            None => {
-                let future = self.inner.call(req);
-                Box::pin(async move {
-                    let response: Response = future.await?;
-                    Ok(response)
-                })
-            }
-        };
-        // 开始请求数据
-        let now = Instant::now();
-        let res_end = self.inner.call(req).await;
-        let duration = now.elapsed();
-        // 请求结束 记录日志
-        match res_end {
-            Ok(r) => {
-                let res = r.into_response();
-                let res_ctx = match res.extensions().get::<ResJsonString>() {
-                    Some(x) => x.0.clone(),
-                    None => "".to_string(),
-                };
-                oper_log_add(req_ctx, res_ctx, "1".to_string(), "".to_string(), duration).await;
-                Ok(res)
-            }
-            Err(e) => {
-                let ee = e.to_string();
-                oper_log_add(req_ctx, "".to_string(), "0".to_string(), ee, duration).await;
-                Err(e)
-            }
-        }
-    }
-}
-
-pub async fn oper_log_add(req: ReqCtx, res: String, status: String, err_msg: String, duration: Duration) {
+pub async fn oper_log_add(ctx: ReqCtx, ctx_user: UserInfo, res: String, status: String, err_msg: String, duration: Duration) {
     tokio::spawn(async move {
-        match oper_log_add_fn(req, res, status, err_msg, duration).await {
+        match oper_log_add_fn(ctx, ctx_user, res, status, err_msg, duration).await {
             Ok(_) => {}
             Err(e) => {
                 tracing::info!("日志添加失败：{}", e.to_string());
@@ -86,19 +55,19 @@ pub async fn oper_log_add(req: ReqCtx, res: String, status: String, err_msg: Str
 }
 
 /// add 添加
-pub async fn oper_log_add_fn(req: ReqCtx, res: String, status: String, err_msg: String, duration: Duration) -> Result<()> {
+pub async fn oper_log_add_fn(ctx: ReqCtx, ctx_user: UserInfo, res: String, status: String, err_msg: String, duration: Duration) -> Result<()> {
     if !CFG.log.enable_oper_log {
         return Ok(());
     }
     let apis = ALL_APIS.lock().await;
-    let (api_name, is_log) = match apis.get(&req.path) {
+    let (api_name, is_log) = match apis.get(&ctx.path) {
         Some(x) => (x.name.clone(), x.log_method.clone()),
         None => ("".to_string(), "0".to_string()),
     };
     drop(apis);
     let now = Local::now().naive_local();
     // 打印日志
-    let req_data = req.clone();
+    let req_data = ctx.clone();
     let res_data = res.clone();
     let err_msg_data = err_msg.clone();
     let duration_data = duration;
@@ -110,7 +79,7 @@ pub async fn oper_log_add_fn(req: ReqCtx, res: String, status: String, err_msg: 
         }
         "2" => {
             tokio::spawn(async move {
-                match db_log(duration_data, req, now, api_name, res, status, err_msg).await {
+                match db_log(duration_data, ctx, ctx_user, now, api_name, res, status, err_msg).await {
                     Ok(_) => {}
                     Err(e) => {
                         tracing::info!("日志添加失败：{}", e.to_string());
@@ -121,7 +90,7 @@ pub async fn oper_log_add_fn(req: ReqCtx, res: String, status: String, err_msg: 
         "3" => {
             tokio::spawn(async move {
                 file_log(req_data, now, duration_data, res_data, err_msg_data);
-                match db_log(duration_data, req, now, api_name, res, status, err_msg).await {
+                match db_log(duration_data, ctx, ctx_user, now, api_name, res, status, err_msg).await {
                     Ok(_) => {}
                     Err(e) => {
                         tracing::info!("日志添加失败：{}", e.to_string());
@@ -135,15 +104,15 @@ pub async fn oper_log_add_fn(req: ReqCtx, res: String, status: String, err_msg: 
     Ok(())
 }
 
-async fn db_log(duration: Duration, req: ReqCtx, now: chrono::NaiveDateTime, api_name: String, res: String, status: String, err_msg: String) -> Result<()> {
+async fn db_log(duration: Duration, ctx: ReqCtx, ctx_user: UserInfo, now: chrono::NaiveDateTime, api_name: String, res: String, status: String, err_msg: String) -> Result<()> {
     let d = duration.as_micros() as i64;
     let db = DB.get_or_init(db_conn).await;
-    let (_, m) = check_user_online(Some(db), req.user.token_id.clone()).await;
+    let (_, m) = check_user_online(Some(db), ctx_user.token_id.clone()).await;
     let user = match m {
         Some(x) => x,
         None => return Ok(()),
     };
-    let operator_type = match req.method.as_str() {
+    let operator_type = match ctx.method.as_str() {
         "GET" => "1",    // 查询
         "POST" => "2",   // 新增
         "PUT" => "3",    // 修改
@@ -155,17 +124,17 @@ async fn db_log(duration: Duration, req: ReqCtx, now: chrono::NaiveDateTime, api
         time_id: Set(now.timestamp()),
         title: Set(api_name),
         business_type: Set("".to_string()),
-        method: Set(req.path),
-        request_method: Set(req.method),
+        method: Set(ctx.path),
+        request_method: Set(ctx.method),
         operator_type: Set(operator_type.to_string()),
-        oper_name: Set(req.user.name),
+        oper_name: Set(ctx_user.name),
         dept_name: Set(user.dept_name),
-        oper_url: Set(req.ori_uri),
+        oper_url: Set(ctx.ori_uri),
         oper_ip: Set(user.ipaddr),
         oper_location: Set(user.login_location),
-        oper_param: Set(if req.data.len() > 10000 { "数据太长不保存".to_string() } else { req.data }),
+        oper_param: Set(if ctx.data.len() > 10000 { "数据太长不保存".to_string() } else { ctx.data }),
         json_result: Set(if res.len() > 100000 { "数据太长不保存".to_string() } else { res }),
-        path_param: Set(req.path_params),
+        path_param: Set(ctx.path_params),
         status: Set(status),
         error_msg: Set(err_msg),
         duration: Set(d),
