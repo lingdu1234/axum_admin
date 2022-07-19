@@ -6,6 +6,7 @@ use axum::{
     response::IntoResponse,
 };
 use bytes::Bytes;
+use configs::CFG;
 use db::common::ctx::{ReqCtx};
 
 /// req上下文注入中间件 同时进行jwt授权验证
@@ -17,7 +18,7 @@ pub async fn ctx_fn_mid(req: Request<Body>, next: Next<Body>) -> Result<impl Int
     } else {
         req.uri().path().to_owned()
     };
-    let path = req.uri().path().to_string();
+    let path = ori_uri_path.replacen(&(CFG.server.api_prefix.clone() + "/"), "", 1);
     let method = req.method().to_string();
     let path_params = req.uri().query().unwrap_or("").to_string();
 

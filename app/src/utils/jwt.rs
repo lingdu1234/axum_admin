@@ -56,13 +56,15 @@ where
     type Rejection = AuthError;
     /// 将用户信息注入request
     async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        let TypedHeader(Authorization(bearer)) = TypedHeader::<Authorization<Bearer>>::from_request(req).await.map_err(|_| AuthError::InvalidToken)?;
+        let (_, token_v) = get_bear_token(req).await?;
         // Decode the user data
 
-        let token_data = match decode::<Claims>(&bearer.token(), &KEYS.decoding, &Validation::default()) {
+        let token_data = match decode::<Claims>(&token_v, &KEYS.decoding, &Validation::default()) {
             Ok(token) => {
                 let token_id = token.claims.token_id.clone();
-                let (x, _) = check_user_online(None, token_id).await;
+                let (x, _) = check_user_online(None, token_id.clone()).await;
+                print!("================================{}",token_id);
+                print!("================================{}",x);
                 if x {
                     token
                 } else {
@@ -71,13 +73,13 @@ where
             }
             Err(err) => match *err.kind() {
                 ErrorKind::InvalidToken => {
-                    return Err(AuthError::CheckOutToken);
+                    return Err(AuthError::InvalidToken);
                 }
                 ErrorKind::ExpiredSignature => {
-                    return Err(AuthError::CheckOutToken);
+                    return Err(AuthError::MissingCredentials);
                 }
                 _ => {
-                    return Err(AuthError::CheckOutToken);
+                    return Err(AuthError::WrongCredentials);
                 }
             },
         };

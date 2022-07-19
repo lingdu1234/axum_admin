@@ -72,15 +72,13 @@ fn main() {
         //  跨域
         let cors = CorsLayer::new()
             .allow_methods(vec![Method::GET, Method::POST, Method::PUT, Method::DELETE])
-            .allow_origin(Any);
-        // 启动app  注意中间件顺序 最后的先执行，尤其AddData
+            .allow_origin(Any).allow_headers(Any);
         // 顺序不对可能会导致数据丢失，无法在某些位置获取数据
         let config = RustlsConfig::from_pem_file(&CFG.cert.cert, &CFG.cert.key).await.unwrap();
-
         let app = Router::new()
             .nest(&CFG.server.api_prefix, apps::api())
-            .nest(
-                "/",
+            //  "/" 与所有路由冲突
+            .fallback(
                 get_service(ServeDir::new("."))
                     .handle_error(|error: std::io::Error| async move { (StatusCode::INTERNAL_SERVER_ERROR, format!("Unhandled internal error: {}", error)) }),
             )

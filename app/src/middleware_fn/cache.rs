@@ -128,8 +128,10 @@ pub async fn remove_cache_data(api_key: &str, related_api: Option<Vec<String>>, 
 pub async fn cache_fn_mid<B>(req: Request<B>, next: Next<B>) -> Result<Response, StatusCode> {
     let apis = ALL_APIS.lock().await;
     let ctx = req.extensions().get::<ReqCtx>().expect("ReqCtx not found").clone();
-    let ctx_user = req.extensions().get::<UserInfo>().expect("ReqCtxUser not found").clone();
-
+    let ctx_user = match req.extensions().get::<UserInfo>() {
+        Some(v) => v.to_owned(),
+        None => return Ok(next.run(req).await),
+    };
     let api_info = match apis.get(&ctx.path) {
         Some(x) => x.clone(),
         None => ApiInfo {
