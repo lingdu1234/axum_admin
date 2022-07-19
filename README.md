@@ -6,11 +6,20 @@
 
 前端git：  [poem_vue_admin](https://github.com/lingdu1234/poem_vue_admin)   <https://github.com/lingdu1234/poem_vue_admin>
 
-后端git：  [poem_admin](https://github.com/lingdu1234/poem_admin)   <https://github.com/lingdu1234/poem_admin>
+后端git(poem)：  [poem_admin](https://github.com/lingdu1234/poem_admin)   <https://github.com/lingdu1234/poem_admin>
+               或者 分支 [poem](https://github.com/lingdu1234/poem_admin/tree/poem)
+
+后端git(axum)：  [axum_admin](https://github.com/lingdu1234/axum_admin)   <https://github.com/lingdu1234/axum_admin>
+或者 分支 [poem](https://github.com/lingdu1234/poem_admin/tree/axum)
+
 
 预览地址：
 [poem-vue-admin.vercel.app](https://poem-vue-admin.vercel.app/)
 [预览地址](https://poem.iu314.top/)
+
+##  简单说明
+
+axum 分支 花了半天写了下中间件，将poem迁移为axum，可能还有部分文件合并错误，有时间再慢慢测试核对
 
 ## 完成的功能
 
