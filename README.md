@@ -1,6 +1,6 @@
 ## 平台简介
 
-后端 使用poem 编写, 完成了基础的api，算是一个demo实例吧，
+后端 使用 axum 编写, 完成了基础的api，一个简单的 admin 面板后端，
 
 前端在  [ruoyi-vue3](https://github.com/yangzongzhuan/RuoYi-Vue3) 3.8.1上简单修改，
 
