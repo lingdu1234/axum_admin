@@ -17,7 +17,7 @@ use app::{
 };
 use tower_http::{
     cors::{Any, CorsLayer},
-    services::ServeDir,
+    services::ServeDir
 };
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 // 路由日志追踪
@@ -79,10 +79,9 @@ fn main() {
             .nest(&CFG.server.api_prefix, apps::api())
             //  "/" 与所有路由冲突
             .fallback(
-                get_service(ServeDir::new("."))
+                get_service(ServeDir::new(&CFG.web.dir))
                     .handle_error(|error: std::io::Error| async move { (StatusCode::INTERNAL_SERVER_ERROR, format!("Unhandled internal error: {}", error)) }),
             )
-            // .with(Tracing)
             .layer(cors);
 
         match CFG.server.ssl {

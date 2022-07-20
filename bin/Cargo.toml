@@ -15,9 +15,10 @@ db = {path = "../db"}
 # axum
 axum = {version = "0.5", features = ["headers"]}
 axum-server = { version = "0.4", features = ["tls-rustls"] }
+axum-extra = { version = "0.3",features = ["spa"]}
 hyper = { version = "0.14", features = ["full"] }
 tokio = {version = "1", features = ["rt-multi-thread", "macros", "parking_lot", "signal"]}
-tower-http = {version = "0.3", features = ["cors"]}
+tower-http = {version = "0.3", features = ["cors","fs"]}
 
 #
 tracing = "0.1"
