@@ -139,13 +139,14 @@ pub async fn clean(db: &DatabaseConnection, job_id: String) -> Result<String> {
     }
 }
 
-/// get_user_by_id 获取用户Id获取用户
-pub async fn get_by_id(db: &DatabaseConnection, job_log_id: String) -> Result<sys_job_log::Model> {
-    let s = SysJobLog::find().filter(sys_job_log::Column::JobLogId.eq(job_log_id)).one(db).await?;
+// /// get_user_by_id 获取用户Id获取用户
+// #[allow(dead_code)]
+// pub async fn get_by_id(db: &DatabaseConnection, job_log_id: String) -> Result<sys_job_log::Model> {
+//     let s = SysJobLog::find().filter(sys_job_log::Column::JobLogId.eq(job_log_id)).one(db).await?;
 
-    let res = match s {
-        Some(m) => m,
-        None => return Err(anyhow!("没有找到数据",)),
-    };
-    Ok(res)
-}
+//     let res = match s {
+//         Some(m) => m,
+//         None => return Err(anyhow!("没有找到数据",)),
+//     };
+//     Ok(res)
+// }

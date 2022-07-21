@@ -104,6 +104,7 @@ pub async fn oper_log_add_fn(ctx: ReqCtx, ctx_user: UserInfo, res: String, statu
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn db_log(duration: Duration, ctx: ReqCtx, ctx_user: UserInfo, now: chrono::NaiveDateTime, api_name: String, res: String, status: String, err_msg: String) -> Result<()> {
     let d = duration.as_micros() as i64;
     let db = DB.get_or_init(db_conn).await;

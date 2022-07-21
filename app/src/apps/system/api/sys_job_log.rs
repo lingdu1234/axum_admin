@@ -45,18 +45,18 @@ pub async fn clean(Json(req): Json<CleanReq>) -> Res<String> {
     }
 }
 
-/// get_user_by_id 获取用户Id获取用户
-/// db 数据库连接 使用db.0
-
-pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<sys_job_log::Model> {
-    let id = match req.job_log_id {
-        None => return Res::with_err("id不能为空"),
-        Some(x) => x,
-    };
-    let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_job_log::get_by_id(db, id).await;
-    match res {
-        Ok(x) => Res::with_data(x),
-        Err(e) => Res::with_err(&e.to_string()),
-    }
-}
+// /// get_user_by_id 获取用户Id获取用户
+// /// db 数据库连接 使用db.0
+// #[allow(dead_code)]
+// pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<sys_job_log::Model> {
+//     let id = match req.job_log_id {
+//         None => return Res::with_err("id不能为空"),
+//         Some(x) => x,
+//     };
+//     let db = DB.get_or_init(db_conn).await;
+//     let res = service::sys_job_log::get_by_id(db, id).await;
+//     match res {
+//         Ok(x) => Res::with_data(x),
+//         Err(e) => Res::with_err(&e.to_string()),
+//     }
+// }
