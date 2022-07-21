@@ -58,6 +58,7 @@ fn sys_user_api() -> Router {
         .route("/update_passwd", put(sys_user::update_passwd)) // 重置密码
         .route("/change_status", put(sys_user::change_status)) // 修改状态
         .route("/change_role", put(sys_user::change_role)) // 切换角色
+        .route("/change_dept", put(sys_user::change_dept)) // 切换部门
         .route("/fresh_token", put(sys_user::fresh_token)) // 修改状态
         .route("/update_avatar", post(sys_user::update_avatar)) // 修改头像
 }
@@ -137,7 +138,7 @@ fn sys_menu_api() -> Router {
         .route("/delete", delete(sys_menu::delete)) // 硬删除
         .route("/get_all_enabled_menu_tree", get(sys_menu::get_all_enabled_menu_tree)) // 获取全部正常的路由菜单树
         .route("/get_routers", get(sys_menu::get_routers)) // 获取用户菜单树
-      .route("/get_auth_list", get(sys_menu::get_related_api_and_db)) // 获取用户菜单树
+        .route("/get_auth_list", get(sys_menu::get_related_api_and_db)) // 获取用户菜单树
 }
 
 fn sys_login_log_api() -> Router {
