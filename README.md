@@ -1,6 +1,12 @@
-## 平台简介
+<p align="center">
+  <span size="30">Axum-Admin</span>
+  <br>
+   <a href="./README.md"><span>中文</span></a>   |    <a href="./README_EN.md"><span>english</span></a>
+</p>
 
-后端 使用 axum 编写, 完成了基础的api，一个简单的 admin 面板后端，
+## 简介
+
+一个由 axum/poem sea-orm vue3 编写的 admin 管理面板，
 
 前端在  [ruoyi-vue3](https://github.com/yangzongzhuan/RuoYi-Vue3) 3.8.1上简单修改，
 
@@ -54,14 +60,11 @@ axum 分支 花了半天写了下中间件，将poem迁移为axum，可能还有
 - [x] 操作日志：在菜单设置每个api的日志记录级别，分为文件记录，数据库记录，同时记录，不记录几种模式，根据不同api单独配置
 
 - [x] 权限管理: 由后端返回路由动态生成路由；前端按钮级权限统一由后端返回权限标志控制
-
-## 待完成
-
-- [ ] 性能优化；
+；
 
 ## 说明
 
-1. 部门切换,不知道有啥用，角色切换，数据权限，部门切换 3者组合可以实现诡异的权限组合
+1. 部门切换，角色切换，数据权限，部门切换 3者组合可以实现诡异的权限组合
 
 
 ## 数据迁移
