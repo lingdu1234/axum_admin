@@ -1,6 +1,6 @@
 /target
 /data/log
-/data/_web
+# /data/_web
 /data/_upload
 .idea
 *.http
