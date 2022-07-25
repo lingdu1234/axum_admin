@@ -17,7 +17,7 @@ use app::{
 };
 use tower_http::{
     cors::{Any, CorsLayer},
-    services::ServeDir
+    services::ServeDir, compression::CompressionLayer,
 };
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 // 路由日志追踪
@@ -72,7 +72,8 @@ fn main() {
         //  跨域
         let cors = CorsLayer::new()
             .allow_methods(vec![Method::GET, Method::POST, Method::PUT, Method::DELETE])
-            .allow_origin(Any).allow_headers(Any);
+            .allow_origin(Any)
+            .allow_headers(Any);
         // 顺序不对可能会导致数据丢失，无法在某些位置获取数据
         let config = RustlsConfig::from_pem_file(&CFG.cert.cert, &CFG.cert.key).await.unwrap();
         let app = Router::new()
@@ -81,8 +82,13 @@ fn main() {
             .fallback(
                 get_service(ServeDir::new(&CFG.web.dir))
                     .handle_error(|error: std::io::Error| async move { (StatusCode::INTERNAL_SERVER_ERROR, format!("Unhandled internal error: {}", error)) }),
-            )
-            .layer(cors);
+            );
+
+        let app = match &CFG.server.content_gzip {
+            true => app.layer(CompressionLayer::new()),
+            false => app,
+        };
+        let app = app.layer(cors);
 
         match CFG.server.ssl {
             true => axum_server::bind_rustls(addr, config).serve(app.into_make_service()).await.unwrap(),
