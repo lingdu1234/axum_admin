@@ -1,12 +1,12 @@
 <p align="center">
-  <span size="30">Axum-Admin</span>
+  <span size="30">Poem-Admin</span>
   <br>
    <a href="./README.md"><span>中文</span></a>   |    <a href="./README_EN.md"><span>english</span></a>
 </p>
 
 ## Introduction
 
-An Admin panel build with Axum/poem,sea-orm,vue3 etc，
+An Admin panel build with [axum](https://github.com/tokio-rs/axum)/[poem](https://github.com/poem-web/poem),[sea-orm](https://github.com/SeaQL/sea-orm),[vue3](https://github.com/vuejs/core) etc.
 
 front-end: modified from  [ruoyi-vue3](https://github.com/yangzongzhuan/RuoYi-Vue3);
 
@@ -24,7 +24,7 @@ OR BRANCH [axum](https://github.com/lingdu1234/poem_admin/tree/axum)
 [preview URL](https://poem.iu314.top/)
 
 
-## Completed 
+## Completed
 
 - [x] User management：The user is the operator of the system panel. This module is used to configure system users。
 
