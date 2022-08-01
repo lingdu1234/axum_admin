@@ -6,7 +6,7 @@
 
 ## 简介
 
-一个由 axum/poem sea-orm vue3 编写的 admin 管理面板，
+一个由 [axum](https://github.com/tokio-rs/axum)/[poem](https://github.com/poem-web/poem) [sea-orm](https://github.com/SeaQL/sea-orm) [vue3](https://github.com/vuejs/core) 编写的 admin 管理面板.
 
 前端在  [ruoyi-vue3](https://github.com/yangzongzhuan/RuoYi-Vue3) 3.8.1上简单修改，
 
