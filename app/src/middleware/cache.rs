@@ -1,7 +1,7 @@
 use core::time::Duration;
 use std::{collections::BTreeMap, sync::Arc, time::Instant};
+use std::collections::HashMap;
 
-use ahash::AHashMap as HashMap;
 use configs::CFG;
 use db::common::{
     ctx::{ApiInfo, ReqCtx},

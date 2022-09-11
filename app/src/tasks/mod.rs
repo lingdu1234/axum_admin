@@ -4,7 +4,7 @@ mod task_runner;
 
 use std::sync::Arc;
 
-use ahash::AHashMap as HashMap;
+use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use chrono::NaiveDateTime;
 use db::{db_conn, system::SysJobModel, DB};
