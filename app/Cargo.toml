@@ -20,6 +20,7 @@ headers = "0.3"
 jsonwebtoken = "8"
 once_cell = "1"
 poem = {version = "1", features = ["static-files", "rustls", "compression", "multipart"]}
+# poem = {git="https://github.com/poem-web/poem.git", branch = "master", features = ["static-files", "rustls", "compression", "multipart"]}
 # poem = "=1.1.1"
 # poem-derive = "=1.1.1"
 # poem-openapi = "1.1.1"

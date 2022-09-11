@@ -12,8 +12,8 @@ app = {path = "../app"}
 configs = {path = "../configs"}
 db = {path = "../db"}
 #
-# poem = {version = "1.3", features = ["static-files", "rustls", "compression", "multipart", "tokio-metrics"]}
-poem = {version = "1.3", features = ["static-files", "rustls", "compression", "multipart"]}
+poem = {version = "1", features = ["static-files", "rustls", "compression", "multipart"]}
+# poem = {git="https://github.com/poem-web/poem.git", branch = "master", features = ["static-files", "rustls", "compression", "multipart"]}
 #
 tracing = "0.1"
 tracing-appender = "0.2"
