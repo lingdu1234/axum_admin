@@ -35,7 +35,7 @@ pub struct Server {
     pub content_gzip: bool,
     /// 缓存时间
     pub cache_time: u64,
-    /// api 前缀
+    /// api 前缀 如："/api" "/ap1_v1"
     pub api_prefix: String,
 }
 
