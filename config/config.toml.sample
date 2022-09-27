@@ -1,3 +1,4 @@
+
 [server]
 name = "poem-admin"
 version = "0.1.0"
@@ -8,11 +9,14 @@ ssl = false
 # 响应数据压缩
 content_gzip = true
 # 缓存时间 单位秒
-cache_time = 10
+cache_time = 600
+# api前缀
+api_prefix = "/api"
 [web]
 dir = "data/_web"
 index = "index.html"
-upload_dir = "data/upload"
+upload_dir = "data/_upload"
+upload_url = "/upload"
 [cert]
 cert = "config/cert/cert.pem"
 key = "config/cert/key.pem"
@@ -25,14 +29,14 @@ file = "app_log"
 # 允许操作日志
 enable_oper_log = true
 # 日志级别
-log_level = "DEBUG" # DEBUG TRACE  INFO  WARN ERROR
+log_level = "DEBUG" #  TRACE DEBUG  INFO  WARN ERROR
 [system]
-super_user = ["00TV87DDOBJPU75J4TGUOC3NNG", "00TV876BOIIDCR9H7JA1KNNIGH"]
+super_user = ["00TV876BOIIDCR9H7JA1KNNIGH", "00TV87DDOBJPU75J4TGUOC3NNG"]
 user_agent_parser = "config/regexes.yaml"
 [jwt]
 # 单位 分钟
 jwt_exp = 14400 # 10天 14400
-jwt_secret = 'secret' 
+jwt_secret = 'secret'
 [database]
 db_type = 'mysql'
 # link = 'mysql://root:password@192.168.1.11:13306/db'
