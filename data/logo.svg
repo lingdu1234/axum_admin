@@ -1,0 +1,7 @@
+<svg width="256" height="256" fill='none' xmlns="http://www.w3.org/2000/svg">
+  <text font-weight="bold" stroke="#FFF" transform="matrix(0.7699577830844271,0,0,0.9892808198928833,-2.829707403210218,19.02246980845817) " xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="250" id="svg_5" y="216.529068" x="53.838344" stroke-width="0" fill="#ff0000">U</text>
+  <rect x="110" y="35" fill='#FF3565' rx="12" ry="12" width="135" height="25"/>
+  <rect x="15" y="75" fill='#FF0000' rx="15" ry="15" width="28" height="112"/>
+  <rect x="90" y="75" fill='#FF0000' rx="15" ry="15" width="32" height="112" />
+  <rect x="155" y="125" fill='#FF0000' rx="12" ry="12" width="28" height="135" transform="rotate(-14)"/>
+</svg>
