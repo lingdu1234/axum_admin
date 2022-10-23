@@ -15,7 +15,7 @@ use poem::{
         Compression,
         Cors, // ,TokioMetrics
     },
-    EndpointExt, Result, Route, Server,
+    EndpointExt, Result, Route, Server, http::HeaderValue,
 };
 use poem::listener::RustlsCertificate;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
@@ -74,7 +74,19 @@ fn main() -> Result<(), std::io::Error> {
             // .with(Tracing)
             .with_if(CFG.server.content_gzip, Compression::new())
             // .with(metrics)
-            .with(cors);
+            .with(cors)
+            .after(|res| async move {
+                match res {
+                    Ok(res) => {
+                        let mut res = res;
+                        // 添加服务器标志
+                        res.headers_mut().insert("server", HeaderValue::from_static("lingdu"));
+                        // res.headers_mut().insert("Access-Control-Allow-Origin", HeaderValue::from_static("*"));
+                        Ok(res)
+                    }
+                    Err(e) => Err(e),
+                }
+            });
 
         match CFG.server.ssl {
             true => {
