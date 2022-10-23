@@ -140,8 +140,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
         .map_err(|e| anyhow!(e.to_string(),))?;
 
     match d.rows_affected {
-        // 0 => return Err("你要删除的字典类型不存在".into()),
-        0 => Err(anyhow!("你要删除的字典类型不存在",)),
+        0 => Err(anyhow!("你要删除的任务不存在",)),
 
         i => Ok(format!("成功删除{}条数据", i)),
     }

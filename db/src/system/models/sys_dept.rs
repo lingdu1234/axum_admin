@@ -1,5 +1,6 @@
 use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
+use chrono::NaiveDateTime;
 
 #[derive(Deserialize, Debug)]
 pub struct SearchReq {
@@ -47,6 +48,7 @@ pub struct DeptResp {
     pub leader: Option<String>,
     pub phone: Option<String>,
     pub email: Option<String>,
+    pub created_at: NaiveDateTime,
     pub status: String,
 }
 

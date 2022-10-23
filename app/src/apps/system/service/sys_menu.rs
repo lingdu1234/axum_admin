@@ -139,6 +139,7 @@ where
         data_scope: Set(req.data_scope),
         data_cache_method: Set(req.data_cache_method),
         log_method: Set(req.log_method),
+        i18n:Set(req.i18n),
         is_frame: Set(req.is_frame),
         is_cache: Set(req.is_cache),
         created_at: Set(Some(now)),
@@ -204,6 +205,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
         is_frame: Set(req.is_frame),
         is_cache: Set(req.is_cache),
         log_method: Set(req.log_method),
+        i18n:Set(req.i18n),
         data_cache_method: Set(req.data_cache_method),
         updated_at: Set(Some(now)),
         ..s_r
@@ -371,6 +373,7 @@ pub fn get_menu_data(menus: Vec<MenuResp>) -> Vec<SysMenuTree> {
             hidden: menu.visible.clone() != "1",
             link: if menu.path.clone().starts_with("http") { Some(menu.path.clone()) } else { None },
             no_cache: menu.is_cache.clone() != "1",
+            i18n:menu.i18n.clone()
         };
         let user_menu = UserMenu {
             meta,

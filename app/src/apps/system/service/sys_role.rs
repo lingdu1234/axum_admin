@@ -34,10 +34,20 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
             s = s.filter(sys_role::Column::RoleId.is_in(x));
         }
     }
+    if let Some(x) = req.role_id {
+        if !x.is_empty() {
+            s = s.filter(sys_role::Column::RoleId.eq(x));
+        }
+    }
 
-    if let Some(x) = req.name {
+    if let Some(x) = req.role_name {
         if !x.is_empty() {
             s = s.filter(sys_role::Column::RoleName.contains(&x));
+        }
+    }
+    if let Some(x) = req.role_key {
+        if !x.is_empty() {
+            s = s.filter(sys_role::Column::RoleKey.contains(&x));
         }
     }
 

@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 pub struct SearchReq {
     pub role_id: Option<String>,
     pub role_ids: Option<Vec<String>>,
-    pub name: Option<String>,
+    pub role_name: Option<String>,
+    pub role_key: Option<String>,
     pub status: Option<String>,
     pub begin_time: Option<String>,
     pub end_time: Option<String>,
