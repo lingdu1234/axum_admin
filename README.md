@@ -1,27 +1,23 @@
 <p align="center">
-  <span size="30">Axum-Admin</span>
+  <img src='data/logo.svg' />
+  <br/>
+  <span size="30">Poem-Admin</span>
   <br>
    <a href="./README.md"><span>中文</span></a>   |    <a href="./README_EN.md"><span>english</span></a>
 </p>
 
 ## 简介
 
-一个由 [axum](https://github.com/tokio-rs/axum)/[poem](https://github.com/poem-web/poem) [sea-orm](https://github.com/SeaQL/sea-orm) [vue3](https://github.com/vuejs/core) 编写的 admin 管理面板.
+一个由 [axum](https://github.com/tokio-rs/axum)/[poem](https://github.com/poem-web/poem),[sea-orm](https://github.com/SeaQL/sea-orm),[vue3](https://github.com/vuejs/core) 编写的 admin 管理面板，
 
-前端在  [ruoyi-vue3](https://github.com/yangzongzhuan/RuoYi-Vue3) 3.8.1上简单修改，
+## 前端项目：   
 
-前端git：  [poem_vue_admin](https://github.com/lingdu1234/poem_vue_admin)   <https://github.com/lingdu1234/poem_vue_admin>
+https://github.com/lingdu1234/IUI314
 
-后端git(poem)：  [poem_admin](https://github.com/lingdu1234/poem_admin)   <https://github.com/lingdu1234/poem_admin>
-               或者 分支 [poem](https://github.com/lingdu1234/poem_admin/tree/poem)
+## 预览地址：
+[iui314.vercel.app](https://iui314.vercel.app/#/)
+[预览 iui314preview](https://iui314preview.iu1314.top/)
 
-后端git(axum)：  [axum_admin](https://github.com/lingdu1234/axum_admin)   <https://github.com/lingdu1234/axum_admin>
-或者 分支 [axum](https://github.com/lingdu1234/poem_admin/tree/axum)
-
-
-预览地址：
-[poem-vue-admin.vercel.app](https://poem-vue-admin.vercel.app/)
-[预览地址](https://poem.iu314.top/)
 
 ## 完成的功能
 

@@ -1,5 +1,7 @@
 <p align="center">
-  <span size="30">Axum-Admin</span>
+  <img src='data/logo.svg' />
+  <br/>
+  <span size="30">Poem-Admin</span>
   <br>
    <a href="./README.md"><span>中文</span></a>   |    <a href="./README_EN.md"><span>english</span></a>
 </p>
@@ -8,21 +10,13 @@
 
 An Admin panel build with [axum](https://github.com/tokio-rs/axum)/[poem](https://github.com/poem-web/poem),[sea-orm](https://github.com/SeaQL/sea-orm),[vue3](https://github.com/vuejs/core) etc.
 
-front-end: modified from  [ruoyi-vue3](https://github.com/yangzongzhuan/RuoYi-Vue3);
-
-front-end git：  [poem_vue_admin](https://github.com/lingdu1234/poem_vue_admin)   <https://github.com/lingdu1234/poem_vue_admin>
-
-back-end git (poem)：  [poem_admin](https://github.com/lingdu1234/poem_admin)   <https://github.com/lingdu1234/poem_admin>
-               OR BRANCH [poem](https://github.com/lingdu1234/poem_admin/tree/poem)
-
-back-end  git (axum)：  [axum_admin](https://github.com/lingdu1234/axum_admin)   <https://github.com/lingdu1234/axum_admin>
-OR BRANCH [axum](https://github.com/lingdu1234/poem_admin/tree/axum)
+## front-end:     
+https://github.com/lingdu1234/IUI314
 
 
 ## Preview：
-[poem-vue-admin.vercel.app](https://poem-vue-admin.vercel.app/)
-[preview URL](https://poem.iu314.top/)
-
+[iui314.vercel.app](https://iui314.vercel.app/#/)
+[preview iui314preview](https://iui314preview.iu1314.top/)
 
 ## Completed
 
