@@ -9,7 +9,7 @@ use crate::DATA_DIR;
 /// 创建表格
 ///
 /// e Entity
-pub async fn creat_one_table<E>(db: &dyn ConnectionTrait, builder: DatabaseBackend, schema: &Schema, e: E) -> Result<(), DbErr>
+pub async fn create_one_table<E>(db: &dyn ConnectionTrait, builder: DatabaseBackend, schema: &Schema, e: E) -> Result<(), DbErr>
 where
     E: EntityTrait,
 {
