@@ -59,7 +59,7 @@ ahash = "0"
 default-features = false
 # features = ["macros", "runtime-tokio-native-tls"]
 features = ["macros", "runtime-tokio-native-tls", "debug-print"]
-version = "0.9"
+version = "0"
 
 [features]
 # default = ["postgres", "mysql"]

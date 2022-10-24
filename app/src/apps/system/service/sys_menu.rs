@@ -26,7 +26,7 @@ use crate::utils;
 /// db 数据库连接 使用db.0
 pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_menu::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
-    let page_per_size = page_params.page_size.unwrap_or(u32::MAX as usize);
+    let page_per_size = page_params.page_size.unwrap_or(u32::MAX as u64);
     //  生成查询条件
     let mut s = SysMenu::find();
 
@@ -371,6 +371,7 @@ pub fn get_menu_data(menus: Vec<MenuResp>) -> Vec<SysMenuTree> {
             hidden: menu.visible.clone() != "1",
             link: if menu.path.clone().starts_with("http") { Some(menu.path.clone()) } else { None },
             no_cache: menu.is_cache.clone() != "1",
+            i18n:menu.i18n
         };
         let user_menu = UserMenu {
             meta,

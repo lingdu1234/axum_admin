@@ -123,6 +123,7 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
                     phone: v.phone.clone(),
                     email: v.email.clone(),
                     status: v.status.clone(),
+                    created_at:v.created_at,
                 },
             },
             None => return Err(anyhow!("{}无部门信息", m.0.user_name)),
@@ -212,6 +213,7 @@ pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserWit
                         phone: v.phone.clone(),
                         email: v.email.clone(),
                         status: v.status,
+                        created_at: v.created_at,
                     },
                 },
             }
