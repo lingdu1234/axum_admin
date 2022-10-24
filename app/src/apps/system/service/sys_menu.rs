@@ -141,6 +141,7 @@ where
         log_method: Set(req.log_method),
         is_frame: Set(req.is_frame),
         is_cache: Set(req.is_cache),
+        i18n:Set(req.i18n),
         created_at: Set(Some(now)),
         ..Default::default()
     };
@@ -205,6 +206,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
         is_cache: Set(req.is_cache),
         log_method: Set(req.log_method),
         data_cache_method: Set(req.data_cache_method),
+        i18n:Set(req.i18n),
         updated_at: Set(Some(now)),
         ..s_r
     };
