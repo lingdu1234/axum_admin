@@ -22,7 +22,7 @@ tracing = {git = "https://github.com/tokio-rs/tracing.git"}
 [dependencies.sea-orm]
 default-features = false
 features = ["macros", "runtime-tokio-native-tls","with-chrono"]
-version = "0.9"
+version = "0"
 
 [features]
 # default = ["postgres"]
