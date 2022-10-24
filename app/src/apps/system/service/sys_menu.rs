@@ -26,7 +26,7 @@ use crate::utils;
 /// db 数据库连接 使用db.0
 pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_menu::Model>> {
     let page_num = page_params.page_num.unwrap_or(1);
-    let page_per_size = page_params.page_size.unwrap_or(u32::MAX as usize);
+    let page_per_size = page_params.page_size.unwrap_or(u32::MAX as u64);
     //  生成查询条件
     let mut s = SysMenu::find();
 
