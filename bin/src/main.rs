@@ -75,7 +75,7 @@ fn main() {
             .allow_origin(Any)
             .allow_headers(Any);
         // 顺序不对可能会导致数据丢失，无法在某些位置获取数据
-        let config = RustlsConfig::from_pem_file(&CFG.cert.cert, &CFG.cert.key).await.unwrap();
+        
         let app = Router::new()
             .nest(&CFG.server.api_prefix, apps::api())
             //  "/" 与所有路由冲突
@@ -91,7 +91,10 @@ fn main() {
         let app = app.layer(cors);
 
         match CFG.server.ssl {
-            true => axum_server::bind_rustls(addr, config).serve(app.into_make_service()).await.unwrap(),
+            true => {
+                let config = RustlsConfig::from_pem_file(&CFG.cert.cert, &CFG.cert.key).await.unwrap();
+                axum_server::bind_rustls(addr, config).serve(app.into_make_service()).await.unwrap()
+            },
 
             false => axum::Server::bind(&addr).serve(app.into_make_service()).await.unwrap(),
         }
