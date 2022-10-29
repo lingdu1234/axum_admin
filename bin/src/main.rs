@@ -8,16 +8,17 @@ use app::{
 };
 use configs::CFG;
 //
+use poem::listener::RustlsCertificate;
 use poem::{
     endpoint::StaticFilesEndpoint,
+    http::HeaderValue,
     listener::{Listener, RustlsConfig, TcpListener},
     middleware::{
         Compression,
         Cors, // ,TokioMetrics
     },
-    EndpointExt, Result, Route, Server, http::HeaderValue,
+    EndpointExt, Result, Route, Server,
 };
-use poem::listener::RustlsCertificate;
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 
 // 路由日志追踪
@@ -81,7 +82,8 @@ fn main() -> Result<(), std::io::Error> {
                         let mut res = res;
                         // 添加服务器标志
                         res.headers_mut().insert("server", HeaderValue::from_static("lingdu"));
-                        // res.headers_mut().insert("Access-Control-Allow-Origin", HeaderValue::from_static("*"));
+                        // res.headers_mut().insert("Access-Control-Allow-Origin",
+                        // HeaderValue::from_static("*"));
                         Ok(res)
                     }
                     Err(e) => Err(e),

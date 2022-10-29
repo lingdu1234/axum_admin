@@ -1,8 +1,16 @@
 // 创建一张表
 use anyhow::{anyhow, Result};
+use async_std::{
+    fs::{self, File},
+    io::{prelude::BufReadExt, BufReader},
+    path::PathBuf,
+    prelude::StreamExt,
+};
 pub use sea_orm::{ConnectionTrait, DatabaseConnection, DatabaseTransaction, Schema};
-use sea_orm_migration::{prelude::*, sea_orm::{DatabaseBackend, EntityTrait, IdenStatic, Statement},};
-use async_std::{fs::{self, File}, prelude::StreamExt, path::PathBuf, io::{BufReader, prelude::BufReadExt}};
+use sea_orm_migration::{
+    prelude::*,
+    sea_orm::{DatabaseBackend, EntityTrait, IdenStatic, Statement},
+};
 
 use crate::DATA_DIR;
 

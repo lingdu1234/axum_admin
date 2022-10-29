@@ -1,4 +1,3 @@
-
 use std::fmt::Debug;
 
 use poem::{http::StatusCode, IntoResponse, Response};

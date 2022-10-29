@@ -76,7 +76,7 @@ pub struct UserWithDept {
 }
 
 #[derive(Debug, Serialize)]
-pub struct UserInfomaion {
+pub struct UserInformation {
     pub user_info: UserWithDept,
     pub post_ids: Vec<String>,
     pub role_ids: Vec<String>,

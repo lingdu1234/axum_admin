@@ -4,10 +4,7 @@ use db::{
     common::res::{ListData, PageParams},
     db_conn,
     system::{
-        entities::{
-            prelude::{SysMenu},
-            sys_api_db, sys_menu, sys_role_api,
-        },
+        entities::{prelude::SysMenu, sys_api_db, sys_menu, sys_role_api},
         models::sys_menu::{AddReq, EditReq, LogCacheEditReq, MenuRelated, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu},
     },
     DB,
@@ -139,7 +136,7 @@ where
         data_scope: Set(req.data_scope),
         data_cache_method: Set(req.data_cache_method),
         log_method: Set(req.log_method),
-        i18n:Set(req.i18n),
+        i18n: Set(req.i18n),
         is_frame: Set(req.is_frame),
         is_cache: Set(req.is_cache),
         created_at: Set(Some(now)),
@@ -205,7 +202,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
         is_frame: Set(req.is_frame),
         is_cache: Set(req.is_cache),
         log_method: Set(req.log_method),
-        i18n:Set(req.i18n),
+        i18n: Set(req.i18n),
         data_cache_method: Set(req.data_cache_method),
         updated_at: Set(Some(now)),
         ..s_r
@@ -303,8 +300,8 @@ pub async fn get_role_permissions(db: &DatabaseConnection, role_id: &str) -> Res
     // let s = SysMenu::find()
     //     .join_rev(
     //         JoinType::InnerJoin,
-    //         SysRoleApi::belongs_to(SysMenu).from(sys_role_api::Column::Api).to(sys_menu::Column::Api).into(),
-    //     )
+    //         SysRoleApi::belongs_to(SysMenu).from(sys_role_api::Column::Api).
+    // to(sys_menu::Column::Api).into(),     )
     //     .filter(sys_role_api::Column::RoleId.eq(role_id))
     //     .all(db)
     //     .await?;
@@ -373,7 +370,7 @@ pub fn get_menu_data(menus: Vec<MenuResp>) -> Vec<SysMenuTree> {
             hidden: menu.visible.clone() != "1",
             link: if menu.path.clone().starts_with("http") { Some(menu.path.clone()) } else { None },
             no_cache: menu.is_cache.clone() != "1",
-            i18n:menu.i18n.clone()
+            i18n: menu.i18n.clone(),
         };
         let user_menu = UserMenu {
             meta,

@@ -1,34 +1,7 @@
-use core::time::Duration;
-use std::sync::Arc;
-
 use db::system::models::server_info::{Cpu, CpuLoad, DiskUsage, Memory, Network, Process, Server, SysInfo};
-use once_cell::sync::Lazy;
-use tokio::sync::Mutex;
+use sysinfo::{CpuExt, NetworkExt, NetworksExt, ProcessExt, System, SystemExt};
 
-pub static SYSINFO: Lazy<Arc<Mutex<Option<SysInfo>>>> = Lazy::new(|| {
-    // let sysinfo = SysInfo { ..Default::default() };
-    tokio::spawn(async {
-        self::get_server_info().await;
-    });
-    Arc::new(Mutex::new(None))
-});
-
-use sysinfo::{NetworkExt, NetworksExt, ProcessExt, System, SystemExt, CpuExt};
-//  获取基础信息
-async fn get_server_info() {
-    loop {
-        let sysinfo = get_oper_sys_info().await;
-        let mut ser_info = SYSINFO.lock().await;
-        // ser_info.as_mut().map(|s| *s = sysinfo);
-        if let Some(s) = ser_info.as_mut() {
-            *s = sysinfo
-        }
-
-        drop(ser_info);
-        tokio::time::sleep(Duration::from_secs(10)).await;
-    }
-}
-pub async fn get_oper_sys_info() -> SysInfo {
+pub fn get_oper_sys_info() -> SysInfo {
     let mut sys = System::new_all();
     sys.refresh_all();
     let pid = sysinfo::get_current_pid().expect("failed to get PID");
@@ -41,8 +14,8 @@ pub async fn get_oper_sys_info() -> SysInfo {
     let process = match sys.process(pid) {
         Some(p) => Process {
             name: p.name().to_string(),
-            used_memory: p.memory() * 1024,
-            used_virtual_memory: p.virtual_memory() * 1024,
+            used_memory: p.memory(),
+            used_virtual_memory: p.virtual_memory(),
             cup_usage: p.cpu_usage(),
             start_time: p.start_time(),
             run_time: p.run_time(),
@@ -81,10 +54,10 @@ pub async fn get_oper_sys_info() -> SysInfo {
         fifteen: sys.load_average().fifteen,
     };
     let memory = Memory {
-        totol_memory: sys.total_memory() * 1024,
-        used_memory: sys.used_memory() * 1024,
-        totol_swap: sys.total_swap() * 1024,
-        used_swap: sys.used_swap() * 1024,
+        total_memory: sys.total_memory(),
+        used_memory: sys.used_memory(),
+        total_swap: sys.total_swap(),
+        used_swap: sys.used_swap(),
     };
 
     SysInfo {

@@ -1,6 +1,9 @@
 use core::time::Duration;
-use std::{collections::BTreeMap, sync::Arc, time::Instant};
-use std::collections::HashMap;
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::Arc,
+    time::Instant,
+};
 
 use configs::CFG;
 use db::common::{

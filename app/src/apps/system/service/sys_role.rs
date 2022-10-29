@@ -309,8 +309,8 @@ pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
 }
 
 //  获取用户角色
-// pub async fn get_all_admin_role(db: &DatabaseConnection, user_id: &str) -> Result<Vec<String>> {
-//     let s = SysUserRole::find()
+// pub async fn get_all_admin_role(db: &DatabaseConnection, user_id: &str) ->
+// Result<Vec<String>> {     let s = SysUserRole::find()
 //         .join_rev(
 //             JoinType::LeftJoin,
 //             sys_user::Entity::belongs_to(sys_user_role::Entity)

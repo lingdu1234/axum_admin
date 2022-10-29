@@ -67,7 +67,7 @@ pub struct Meta {
     pub link: Option<String>,
     pub no_cache: bool,
     pub hidden: bool,
-    pub i18n:Option<String>,
+    pub i18n: Option<String>,
 }
 
 #[derive(Serialize, Clone, Debug, Default)]
@@ -96,7 +96,7 @@ pub struct AddReq {
     pub data_scope: String,
     pub log_method: String,
     pub data_cache_method: String,
-    pub i18n:Option<String>,
+    pub i18n: Option<String>,
     pub remark: String,
 }
 
@@ -124,7 +124,7 @@ pub struct EditReq {
     pub is_cache: String,
     pub data_scope: String,
     pub log_method: String,
-    pub i18n:Option<String>,
+    pub i18n: Option<String>,
     pub data_cache_method: String,
     pub remark: String,
 }

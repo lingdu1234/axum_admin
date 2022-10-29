@@ -1,6 +1,6 @@
+use chrono::NaiveDateTime;
 use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
-use chrono::NaiveDateTime;
 
 #[derive(Deserialize, Debug)]
 pub struct SearchReq {
