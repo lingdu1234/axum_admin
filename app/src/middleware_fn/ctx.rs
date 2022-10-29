@@ -7,7 +7,7 @@ use axum::{
 };
 use bytes::Bytes;
 use configs::CFG;
-use db::common::ctx::{ReqCtx};
+use db::common::ctx::ReqCtx;
 
 /// req上下文注入中间件 同时进行jwt授权验证
 pub async fn ctx_fn_mid(req: Request<Body>, next: Next<Body>) -> Result<impl IntoResponse, (StatusCode, String)> {

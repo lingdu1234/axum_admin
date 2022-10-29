@@ -5,7 +5,6 @@ use axum::{
 };
 use configs::CFG;
 use reqwest::StatusCode;
-
 use tower_http::services::ServeDir;
 
 use crate::{
@@ -32,7 +31,7 @@ pub fn api() -> Router {
         .nest("/test", test_api())
 }
 
-//无需授权api
+// 无需授权api
 pub fn no_auth_api() -> Router {
     Router::new()
         .route("/login", post(system::SysLogin)) // 登录
@@ -58,7 +57,7 @@ fn auth_api() -> Router {
         .layer(middleware::from_extractor::<Claims>())
 }
 
-//测试api
+// 测试api
 pub fn test_api() -> Router {
     let router = test::api::test_api();
 

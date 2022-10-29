@@ -1,4 +1,4 @@
-use axum::{extract::Query, Json, response::IntoResponse};
+use axum::{extract::Query, response::IntoResponse, Json};
 use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,

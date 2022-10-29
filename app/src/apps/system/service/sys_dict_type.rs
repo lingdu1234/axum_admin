@@ -105,8 +105,8 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     //             .to(sys_dict_type::Column::DictType)
     //             .into(),
     //     )
-    //     .filter(sys_dict_type::Column::DictTypeId.is_in(delete_req.dict_type_ids.clone()))
-    //     .all(db)
+    //     .filter(sys_dict_type::Column::DictTypeId.is_in(delete_req.dict_type_ids.
+    // clone()))     .all(db)
     //     .await?;
     let count = sys_dict_data::Entity::find()
         .filter(

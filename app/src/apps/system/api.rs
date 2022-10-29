@@ -184,7 +184,9 @@ fn sys_api_db_api() -> Router {
         .route("/add", post(sys_api_db::add)) // 添加
 }
 fn sys_monitor_api() -> Router {
-    Router::new().route("/server", get(common::get_server_info)) // 服务器信息
+    Router::new()
+        .route("/server", get(common::get_server_info)) // 服务器信息
+        .route("/server-event", get(common::get_server_info_sse)) // 服务器信息
 }
 
 fn sys_update_log_api() -> Router {

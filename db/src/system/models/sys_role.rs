@@ -1,4 +1,3 @@
-
 use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 

@@ -270,9 +270,9 @@ pub async fn delete_job(task_id: i64, is_manual: bool) -> Result<()> {
             true => {
                 drop(t_builder);
                 let task_models = TASK_MODELS.lock().await;
-                let job = match task_models.get(&task_id).cloned(){
+                let job = match task_models.get(&task_id).cloned() {
                     Some(v) => v,
-                    None =>return Ok(()) //任务不存在直接返回，数据库删除任务
+                    None => return Ok(()), // 任务不存在直接返回，数据库删除任务
                 };
                 drop(task_models);
                 let db = DB.get_or_init(db_conn).await;

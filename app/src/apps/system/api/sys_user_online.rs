@@ -9,7 +9,6 @@ use db::{
     DB,
 };
 
-
 use super::super::service;
 use crate::utils::jwt::Claims;
 
@@ -23,7 +22,6 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
         Err(e) => Res::with_err(&e.to_string()),
     }
 }
-
 
 /// 删除
 pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Res<String> {

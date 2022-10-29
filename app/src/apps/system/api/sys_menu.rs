@@ -1,5 +1,4 @@
 use axum::{extract::Query, Json};
-
 use configs::CFG;
 use db::{
     common::res::{ListData, PageParams, Res},

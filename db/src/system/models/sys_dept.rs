@@ -1,14 +1,6 @@
-/*
- * @Author: lingdu waong2005@126.com
- * @Date: 2022-07-17 20:10:06
- * @LastEditors: lingdu waong2005@126.com
- * @LastEditTime: 2022-10-24 09:46:28
- * @FilePath: \axum_admin\db\src\system\models\sys_dept.rs
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- */
+use chrono::NaiveDateTime;
 use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
-use chrono::NaiveDateTime;
 
 #[derive(Deserialize, Debug)]
 pub struct SearchReq {

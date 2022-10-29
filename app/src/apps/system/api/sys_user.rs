@@ -215,7 +215,6 @@ pub async fn change_role(Json(req): Json<ChangeRoleReq>) -> Res<String> {
     }
 }
 
-
 pub async fn change_dept(Json(req): Json<ChangeDeptReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::change_dept(db, req).await;

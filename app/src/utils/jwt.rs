@@ -63,8 +63,6 @@ where
             Ok(token) => {
                 let token_id = token.claims.token_id.clone();
                 let (x, _) = check_user_online(None, token_id.clone()).await;
-                print!("================================{}",token_id);
-                print!("================================{}",x);
                 if x {
                     token
                 } else {

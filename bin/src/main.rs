@@ -2,6 +2,12 @@
 
 use std::{net::SocketAddr, str::FromStr};
 
+//
+use app::{
+    apps,
+    my_env::{self, RT},
+    tasks, utils,
+};
 use axum::{
     http::{Method, StatusCode},
     routing::get_service,
@@ -9,15 +15,10 @@ use axum::{
 };
 use axum_server::tls_rustls::RustlsConfig;
 use configs::CFG;
-//
-use app::{
-    apps,
-    my_env::{self, RT},
-    tasks, utils,
-};
 use tower_http::{
+    compression::CompressionLayer,
     cors::{Any, CorsLayer},
-    services::ServeDir, compression::CompressionLayer,
+    services::ServeDir,
 };
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 // 路由日志追踪
@@ -75,14 +76,14 @@ fn main() {
             .allow_origin(Any)
             .allow_headers(Any);
         // 顺序不对可能会导致数据丢失，无法在某些位置获取数据
-        
+
         let app = Router::new()
-            .nest(&CFG.server.api_prefix, apps::api())
             //  "/" 与所有路由冲突
             .fallback(
                 get_service(ServeDir::new(&CFG.web.dir))
                     .handle_error(|error: std::io::Error| async move { (StatusCode::INTERNAL_SERVER_ERROR, format!("Unhandled internal error: {}", error)) }),
-            );
+            )
+            .nest(&CFG.server.api_prefix, apps::api());
 
         let app = match &CFG.server.content_gzip {
             true => app.layer(CompressionLayer::new()),
@@ -94,7 +95,7 @@ fn main() {
             true => {
                 let config = RustlsConfig::from_pem_file(&CFG.cert.cert, &CFG.cert.key).await.unwrap();
                 axum_server::bind_rustls(addr, config).serve(app.into_make_service()).await.unwrap()
-            },
+            }
 
             false => axum::Server::bind(&addr).serve(app.into_make_service()).await.unwrap(),
         }

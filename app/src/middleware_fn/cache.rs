@@ -15,7 +15,6 @@ use db::common::{
     ctx::{ApiInfo, ReqCtx, UserInfo},
     res::ResJsonString,
 };
-
 use hyper::StatusCode;
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;

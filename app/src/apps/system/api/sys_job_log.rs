@@ -48,8 +48,8 @@ pub async fn clean(Json(req): Json<CleanReq>) -> Res<String> {
 // /// get_user_by_id 获取用户Id获取用户
 // /// db 数据库连接 使用db.0
 // #[allow(dead_code)]
-// pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<sys_job_log::Model> {
-//     let id = match req.job_log_id {
+// pub async fn get_by_id(Query(req): Query<SearchReq>) ->
+// Res<sys_job_log::Model> {     let id = match req.job_log_id {
 //         None => return Res::with_err("id不能为空"),
 //         Some(x) => x,
 //     };

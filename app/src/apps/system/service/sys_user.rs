@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-
 use chrono::{Local, NaiveDateTime};
 use db::{
     common::res::{ListData, PageParams},
@@ -123,7 +122,7 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
                     phone: v.phone.clone(),
                     email: v.email.clone(),
                     status: v.status.clone(),
-                    created_at:v.created_at,
+                    created_at: v.created_at,
                 },
             },
             None => return Err(anyhow!("{}无部门信息", m.0.user_name)),
@@ -581,7 +580,6 @@ pub async fn fresh_token(user: Claims) -> Result<AuthBody> {
 }
 
 pub async fn set_login_info(header: HeaderMap, u_id: String, user: String, msg: String, status: String, token_id: Option<String>, token: Option<AuthBody>) {
-  
     let u = utils::get_client_info(header).await;
     // 写入登录日志
     let u2 = u.clone();

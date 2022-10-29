@@ -1,5 +1,4 @@
 use axum::{extract::Query, Json};
-
 use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
@@ -9,7 +8,6 @@ use db::{
     },
     DB,
 };
-
 
 use super::super::service;
 

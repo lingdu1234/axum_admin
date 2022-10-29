@@ -9,9 +9,8 @@ use db::{
     DB,
 };
 
-use crate::utils::jwt::Claims;
-
 use super::super::service;
+use crate::utils::jwt::Claims;
 
 /// add 添加
 pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Res<String> {
