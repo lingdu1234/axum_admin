@@ -16,7 +16,7 @@ use axum::{
 use axum_server::tls_rustls::RustlsConfig;
 use configs::CFG;
 use tower_http::{
-    compression::CompressionLayer,
+    compression::{predicate::NotForContentType, CompressionLayer, DefaultPredicate, Predicate},
     cors::{Any, CorsLayer},
     services::ServeDir,
 };
@@ -76,17 +76,20 @@ fn main() {
             .allow_origin(Any)
             .allow_headers(Any);
         // 顺序不对可能会导致数据丢失，无法在某些位置获取数据
+        let static_files_service = get_service(ServeDir::new(&CFG.web.dir).append_index_html_on_directories(true))
+            .handle_error(|error: std::io::Error| async move { (StatusCode::INTERNAL_SERVER_ERROR, format!("Unhandled internal error: {}", error)) });
 
         let app = Router::new()
             //  "/" 与所有路由冲突
-            .fallback(
-                get_service(ServeDir::new(&CFG.web.dir))
-                    .handle_error(|error: std::io::Error| async move { (StatusCode::INTERNAL_SERVER_ERROR, format!("Unhandled internal error: {}", error)) }),
-            )
+            .fallback(static_files_service)
             .nest(&CFG.server.api_prefix, apps::api());
 
         let app = match &CFG.server.content_gzip {
-            true => app.layer(CompressionLayer::new()),
+            true => {
+                //  开启压缩后 SSE 数据无法返回  text/event-stream 单独处理不压缩
+                let predicate = DefaultPredicate::new().and(NotForContentType::new("text/event-stream"));
+                app.layer(CompressionLayer::new().compress_when(predicate))
+            }
             false => app,
         };
         let app = app.layer(cors);

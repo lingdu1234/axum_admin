@@ -46,15 +46,17 @@ fn auth_api() -> Router {
         true => router.layer(middleware::from_fn(oper_log_fn_mid)),
         false => router,
     };
+
     let router = match CFG.server.cache_time {
         0 => router,
         _ => router.layer(middleware::from_fn(cache_fn_mid)),
     };
 
-    router
+    let router = router
         .layer(middleware::from_fn(auth_fn_mid))
         .layer(middleware::from_fn(ctx_fn_mid))
-        .layer(middleware::from_extractor::<Claims>())
+        .layer(middleware::from_extractor::<Claims>());
+    router
 }
 
 // 测试api

@@ -21,14 +21,14 @@ pub async fn get_server_info() -> Res<SysInfo> {
     Res::with_data(res)
 }
 
-
 //  这个不知道为啥有问题
 pub async fn get_server_info_sse() -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     let stream = stream::repeat_with(|| {
         let sys_info = get_oper_sys_info();
         Event::default().data(serde_json::to_string(&sys_info).unwrap_or_else(|_| "0".to_string()))
-    }).map(Ok)
+    })
+    .map(Ok)
     .throttle(Duration::from_secs(1));
 
-    Sse::new(stream).keep_alive(axum::response::sse::KeepAlive::new().interval(Duration::from_secs(5)))
+    Sse::new(stream).keep_alive(axum::response::sse::KeepAlive::new().interval(Duration::from_secs(1)).text("keep-alive-text"))
 }
