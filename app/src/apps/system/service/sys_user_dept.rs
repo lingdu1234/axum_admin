@@ -14,7 +14,7 @@ where
             .clone()
             .iter()
             .map(|x| sys_user_dept::ActiveModel {
-                id: Set(scru128::scru128_string()),
+                id: Set(scru128::new_string()),
                 user_id: Set(user_id.to_string()),
                 dept_id: Set(x.to_string()),
                 created_by: Set(created_by.to_string()),

@@ -14,7 +14,6 @@ use db::{
     },
 };
 use poem::Request;
-use scru128::scru128_string;
 use sea_orm::{sea_query::Expr, ColumnTrait, DatabaseConnection, EntityTrait, JoinType, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait};
 
 use crate::utils::{
@@ -122,7 +121,7 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
                     phone: v.phone.clone(),
                     email: v.email.clone(),
                     status: v.status.clone(),
-                    created_at: v.created_at.clone(),
+                    created_at: v.created_at,
                 },
             },
             None => return Err(anyhow!("{}无部门信息", m.0.user_name)),
@@ -211,7 +210,7 @@ pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserWit
                         leader: v.leader.clone(),
                         phone: v.phone.clone(),
                         email: v.email.clone(),
-                        created_at: v.created_at.clone(),
+                        created_at: v.created_at,
                         status: v.status,
                     },
                 },
@@ -271,7 +270,7 @@ pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserWit
 
 /// add 添加
 pub async fn add(db: &DatabaseConnection, req: AddReq, c_user_id: String) -> Result<String> {
-    let uid = scru128::scru128_string();
+    let uid = scru128::new_string();
     let salt = utils::rand_s(10);
     let passwd = utils::encrypt_password(&req.user_password, &salt);
     let now: NaiveDateTime = Local::now().naive_local();
@@ -456,10 +455,10 @@ pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
     super::sys_user_dept::delete_user_dept_by_user_ids(&txn, req.user_ids).await?;
 
     txn.commit().await?;
-    return match d.rows_affected {
+    match d.rows_affected {
         0 => Err(anyhow!("用户不存在")),
         i => Ok(format!("成功删除{}条用户数据", i)),
-    };
+    }
 }
 
 // edit 修改
@@ -545,7 +544,7 @@ pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq, req: &Reque
         id: user.id.clone(),               // 用户id
         name: login_req.user_name.clone(), // 用户名
     };
-    let token_id = scru128_string();
+    let token_id = scru128::new_string();
     let token = utils::authorize(claims.clone(), token_id.clone()).await.unwrap();
     // 成功登录后
     //  写入登录日志

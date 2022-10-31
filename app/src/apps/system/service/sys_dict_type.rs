@@ -76,7 +76,7 @@ where
     if check_dict_type_is_exist(&req.dict_type, db).await? {
         return Err(anyhow!("字典类型已存在"));
     }
-    let uid = scru128::scru128_string();
+    let uid = scru128::new_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let dict_type = sys_dict_type::ActiveModel {
         dict_type_id: Set(uid.clone()),

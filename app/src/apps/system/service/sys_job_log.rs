@@ -77,7 +77,7 @@ pub async fn add<C>(db: &C, req: AddReq) -> Result<String>
 where
     C: TransactionTrait + ConnectionTrait,
 {
-    let uid = scru128::scru128_string();
+    let uid = scru128::new_string();
     let add_data = sys_job_log::ActiveModel {
         job_log_id: Set(uid.clone()),
         job_id: Set(req.job_id),

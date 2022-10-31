@@ -82,7 +82,7 @@ pub async fn get_bear_token(req: &Request) -> Result<(String, String)> {
         .map_err(|_| Error::from_string("InvalidToken", StatusCode::BAD_REQUEST))?;
     // Decode the user data
     let bearer_data = bearer.token();
-    let cut = bearer_data.len() - scru128::scru128_string().len();
+    let cut = bearer_data.len() - scru128::new_string().len();
     Ok((bearer_data[cut..].to_string(), bearer_data[0..cut].to_string()))
 }
 

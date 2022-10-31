@@ -12,7 +12,7 @@ where
         role_apis
             .iter()
             .map(|x| sys_role_api::ActiveModel {
-                id: Set(scru128::scru128_string()),
+                id: Set(scru128::new_string()),
                 role_id: Set(x.role_id.clone()),
                 api: Set(x.api.clone()),
                 method: Set(x.method.clone()),

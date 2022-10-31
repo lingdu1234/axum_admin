@@ -146,7 +146,7 @@ async fn db_log(duration: Duration, req: ReqCtx, now: chrono::NaiveDateTime, api
         _ => "0",        // 其他
     };
     let add_data = sys_oper_log::ActiveModel {
-        oper_id: Set(scru128::scru128_string()),
+        oper_id: Set(scru128::new_string()),
         time_id: Set(now.timestamp()),
         title: Set(api_name),
         business_type: Set("".to_string()),

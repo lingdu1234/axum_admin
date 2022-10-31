@@ -97,7 +97,7 @@ pub async fn log_out(db: &DatabaseConnection, token_id: String) -> Result<String
 
 pub async fn add(req: ClientInfo, u_id: String, token_id: String, token_exp: i64) {
     let db = DB.get_or_init(db_conn).await;
-    let uid = scru128::scru128().to_string();
+    let uid = scru128::new_string();
     let now = Local::now().naive_local();
     let user = super::sys_user::get_by_id(db, &u_id).await.expect("获取用户信息失败");
     let dept = super::sys_dept::get_by_id(db, &user.clone().user.dept_id).await.expect("获取部门信息失败");

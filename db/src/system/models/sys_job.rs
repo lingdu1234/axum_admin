@@ -56,7 +56,6 @@ pub struct JobId {
     pub task_id: i64,
 }
 
-
 #[derive(Deserialize, Clone, Debug)]
 pub struct ValidateReq {
     pub cron_str: String,

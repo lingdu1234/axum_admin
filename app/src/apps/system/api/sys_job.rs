@@ -92,7 +92,6 @@ pub async fn run_task_once(Json(req): Json<JobId>) -> Res<String> {
     Res::with_msg("任务开始执行")
 }
 
-
 #[handler]
 pub async fn validate_cron_str(Json(req): Json<ValidateReq>) -> Res<ValidateRes> {
     let res = service::sys_job::validate_cron_str(req.cron_str);

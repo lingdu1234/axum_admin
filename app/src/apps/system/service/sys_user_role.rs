@@ -14,7 +14,7 @@ where
             .clone()
             .iter()
             .map(|x| sys_user_role::ActiveModel {
-                id: Set(scru128::scru128_string()),
+                id: Set(scru128::new_string()),
                 user_id: Set(user_id.to_string()),
                 role_id: Set(x.to_string()),
                 created_by: Set(created_by.to_string()),
@@ -42,7 +42,7 @@ where
         user_ids
             .iter()
             .map(|x| sys_user_role::ActiveModel {
-                id: Set(scru128::scru128_string()),
+                id: Set(scru128::new_string()),
                 user_id: Set(x.to_string()),
                 role_id: Set(role_id.clone()),
                 created_by: Set(created_by.to_string()),

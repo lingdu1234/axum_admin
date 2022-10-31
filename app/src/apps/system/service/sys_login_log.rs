@@ -104,7 +104,7 @@ pub async fn clean(db: &DatabaseConnection) -> Result<String> {
 
 pub async fn add(req: ClientInfo, user: String, msg: String, status: String) {
     let db = DB.get_or_init(db_conn).await;
-    let uid = scru128::scru128().to_string();
+    let uid = scru128::new_string();
     let now = Local::now().naive_local();
     let active_model = sys_login_log::ActiveModel {
         info_id: Set(uid.clone()),
