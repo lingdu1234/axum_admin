@@ -4,7 +4,7 @@ use db::{
     db_conn,
     system::{
         entities::sys_job,
-        models::sys_job::{AddReq, DeleteReq, EditReq, JobId, SearchReq, StatusReq},
+        models::sys_job::{AddReq, DeleteReq, EditReq, JobId, SearchReq, StatusReq, ValidateReq, ValidateRes},
     },
     DB,
 };
@@ -86,4 +86,12 @@ pub async fn change_status(Json(req): Json<StatusReq>) -> Res<String> {
 pub async fn run_task_once(Json(req): Json<JobId>) -> Res<String> {
     tasks::run_once_task(req.job_id, req.task_id, true).await;
     Res::with_msg("任务开始执行")
+}
+
+pub async fn validate_cron_str(Json(req): Json<ValidateReq>) -> Res<ValidateRes> {
+    let res = service::sys_job::validate_cron_str(req.cron_str);
+    match res {
+        Ok(x) => Res::with_data(x),
+        Err(e) => Res::with_err(&e.to_string()),
+    }
 }

@@ -2,9 +2,8 @@ mod task;
 mod task_builder;
 mod task_runner;
 
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
-use ahash::AHashMap as HashMap;
 use anyhow::{anyhow, Result};
 use chrono::NaiveDateTime;
 use db::{db_conn, system::SysJobModel, DB};

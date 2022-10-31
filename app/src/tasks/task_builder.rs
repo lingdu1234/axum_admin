@@ -17,12 +17,12 @@ use crate::my_env::RT;
 
 pub static TASK_TIMER: Lazy<Arc<RwLock<DelayTimer>>> = Lazy::new(|| {
     let rt = RT.clone();
-    let t_timeer = DelayTimerBuilder::default()
+    let t_timer = DelayTimerBuilder::default()
         // .enable_status_report()
         // .tokio_runtime_by_default()
         .tokio_runtime_shared_by_custom(rt)
         .build();
-    Arc::new(RwLock::new(t_timeer))
+    Arc::new(RwLock::new(t_timer))
 });
 pub fn build_task(job_id: &str, cron_str: &str, task_name: &str, task_count: u64, task_id: u64) -> Result<Task> {
     build_task_async_task(job_id, cron_str, task_name, task_count, task_id)

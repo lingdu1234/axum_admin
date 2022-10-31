@@ -162,6 +162,7 @@ fn sys_job_api() -> Router {
         .route("/add", post(sys_job::add)) // 添加
         .route("/edit", put(sys_job::edit)) // 更新
         .route("/delete", delete(sys_job::delete)) // 硬删除
+        .route("/validate_cron_str", post(sys_job::validate_cron_str)) // 验证cron_str
 }
 
 fn sys_job_log_api() -> Router {

@@ -1,6 +1,5 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
-use ahash::AHashMap as HashMap;
 use db::{
     common::ctx::ApiInfo,
     db_conn,
