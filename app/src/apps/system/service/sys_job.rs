@@ -4,13 +4,15 @@ use db::{
     common::res::{ListData, PageParams},
     system::{
         entities::{prelude::SysJob, sys_job},
-        models::sys_job::{AddReq, DeleteReq, EditReq, SearchReq, StatusReq},
+        models::sys_job::{AddReq, DeleteReq, EditReq, SearchReq, StatusReq, ValidateRes},
     },
 };
+use delay_timer::prelude::cron_clock;
 use sea_orm::{
     sea_query::Expr, ActiveModelTrait, ActiveValue::NotSet, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set,
     TransactionTrait,
 };
+use std::str::FromStr;
 
 use crate::tasks;
 
@@ -248,4 +250,17 @@ pub async fn set_status(db: &DatabaseConnection, req: StatusReq) -> Result<Strin
         _ => return Err(anyhow!("状态值错误",)),
     };
     Ok(format!("{}修改成功", req.job_id))
+}
+
+/// 验证cron字符串
+pub fn validate_cron_str(cron_str: String) -> Result<ValidateRes> {
+    let schedule = match cron_clock::Schedule::from_str(&cron_str) {
+        Ok(v) => v,
+        Err(_) => return Ok(ValidateRes { validate: false, next_ten: None }),
+    };
+    let next_ten: Vec<NaiveDateTime> = schedule.upcoming(Local).take(12).map(|x| x.naive_local()).collect();
+    Ok(ValidateRes {
+        validate: true,
+        next_ten: Some(next_ten),
+    })
 }

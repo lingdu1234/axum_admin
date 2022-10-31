@@ -158,6 +158,7 @@ fn sys_job_api() -> Route {
         .at("/add", post(sys_job::add)) // 添加
         .at("/edit", put(sys_job::edit)) // 更新
         .at("/delete", delete(sys_job::delete)) // 硬删除
+        .at("/validate_cron_str", post(sys_job::validate_cron_str)) // 验证cron_str
 }
 
 fn sys_job_log_api() -> Route {

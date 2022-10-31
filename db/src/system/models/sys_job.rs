@@ -1,4 +1,5 @@
-use serde::Deserialize;
+use chrono::NaiveDateTime;
+use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Debug)]
 pub struct SearchReq {
     pub job_id: Option<String>,
@@ -53,4 +54,16 @@ pub struct StatusReq {
 pub struct JobId {
     pub job_id: String,
     pub task_id: i64,
+}
+
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct ValidateReq {
+    pub cron_str: String,
+}
+
+#[derive(Serialize, Clone, Debug)]
+pub struct ValidateRes {
+    pub validate: bool,
+    pub next_ten: Option<Vec<NaiveDateTime>>,
 }
