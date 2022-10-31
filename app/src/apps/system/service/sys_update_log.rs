@@ -7,7 +7,7 @@ use db::system::{
 use sea_orm::{sea_query::Expr, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order, QueryFilter, QueryOrder, Set, TransactionTrait};
 
 pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: &str) -> Result<String> {
-    let uid = scru128::scru128().to_string();
+    let uid = scru128::new_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let insert_data = sys_update_log::ActiveModel {
         id: Set(uid),

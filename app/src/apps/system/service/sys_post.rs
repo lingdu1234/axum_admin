@@ -94,7 +94,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Resul
         return Err(anyhow!("数据已存在"));
     }
 
-    let uid = scru128::scru128().to_string();
+    let uid = scru128::new_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_post::ActiveModel {
         post_id: Set(uid.clone()),

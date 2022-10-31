@@ -19,11 +19,11 @@ pub async fn auth_fn_mid<B>(req: Request<B>, next: Next<B>) -> Result<Response, 
 
     if ApiUtils::is_in(&ctx.path).await {
         if ApiUtils::check_api_permission(&ctx.path, &ctx.method, &user.id).await {
-            return Ok(next.run(req).await);
+            Ok(next.run(req).await)
         } else {
-            return Err(StatusCode::UNAUTHORIZED);
+            Err(StatusCode::UNAUTHORIZED)
         }
     } else {
-        return Ok(next.run(req).await);
+        Ok(next.run(req).await)
     }
 }

@@ -116,7 +116,7 @@ where
         return Err(anyhow!("路径或者名称重复"));
     }
     let reqq = req.clone();
-    let uid = scru128::scru128().to_string();
+    let uid = scru128::new_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let active_model = sys_menu::ActiveModel {
         id: Set(uid.clone()),
@@ -313,7 +313,7 @@ pub async fn get_role_permissions(db: &DatabaseConnection, role_id: &str) -> Res
                     Query::select()
                         .column(sys_role_api::Column::Api)
                         .from(sys_role_api::Entity)
-                        .and_where(Expr::col(sys_role_api::Column::RoleId).eq(role_id.clone()))
+                        .and_where(Expr::col(sys_role_api::Column::RoleId).eq(role_id.to_owned().clone()))
                         .to_owned(),
                 ),
             ),

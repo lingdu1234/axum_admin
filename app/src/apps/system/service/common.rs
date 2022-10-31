@@ -38,7 +38,7 @@ pub async fn upload_file(mut multipart: Multipart) -> Result<String> {
         let file_path_t = CFG.web.upload_dir.clone() + "/" + &now.format("%Y-%m").to_string();
         let url_path_t = CFG.web.upload_url.clone() + "/" + &now.format("%Y-%m").to_string();
         fs::create_dir_all(&file_path_t).await?;
-        let file_name = now.format("%d").to_string() + "-" + &scru128::scru128_string() + &file_type;
+        let file_name = now.format("%d").to_string() + "-" + &scru128::new_string() + &file_type;
         let file_path = file_path_t + "/" + &file_name;
         let url_path = url_path_t + "/" + &file_name;
         let mut file = fs::File::create(&file_path).await?;

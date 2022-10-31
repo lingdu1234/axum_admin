@@ -93,7 +93,7 @@ where
     if check_job_add_is_exist(db, &req.job_name, req.task_id).await? {
         return Err(anyhow!("任务已存在",));
     }
-    let uid = scru128::scru128_string();
+    let uid = scru128::new_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let next_time = tasks::get_next_task_run_time(req.cron_expression.to_string());
     let status = req.status.unwrap_or_else(|| "1".to_string());

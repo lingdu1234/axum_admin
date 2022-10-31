@@ -85,7 +85,7 @@ where
         return Err(anyhow!("字典类型或者字典值或者字典标签已经存在"));
     }
 
-    let uid = scru128::scru128().to_string();
+    let uid = scru128::new_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_dict_data::ActiveModel {
         dict_data_id: Set(uid.clone()),

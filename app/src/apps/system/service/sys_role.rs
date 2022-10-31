@@ -126,7 +126,7 @@ where
 
 /// 添加角色数据
 pub async fn add_role(txn: &DatabaseTransaction, req: AddReq) -> Result<String> {
-    let uid = scru128::scru128_string();
+    let uid = scru128::new_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_role::ActiveModel {
         role_id: Set(uid.clone()),
@@ -162,7 +162,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     match d.rows_affected {
         0 => Err(anyhow!("删除失败,数据不存在")),
 
-        i => return Ok(format!("成功删除{}条数据", i)),
+        i => Ok(format!("成功删除{}条数据", i)),
     }
 }
 
@@ -275,7 +275,7 @@ pub async fn set_data_scope(db: &DatabaseConnection, req: DataScopeReq) -> Resul
         SysRoleDept::insert_many(act_datas).exec(&txn).await?;
     }
     txn.commit().await?;
-    return Ok(format!("用户<{}>数据更新成功", uid));
+    Ok(format!("用户<{}>数据更新成功", uid))
 }
 
 /// get_user_by_id 获取用户Id获取用户

@@ -51,7 +51,7 @@ fn auth_api() -> Router {
         0 => router,
         _ => router.layer(middleware::from_fn(cache_fn_mid)),
     };
-
+    #[allow(clippy::let_and_return)]
     let router = router
         .layer(middleware::from_fn(auth_fn_mid))
         .layer(middleware::from_fn(ctx_fn_mid))

@@ -56,7 +56,7 @@ where
     C: TransactionTrait + ConnectionTrait,
 {
     let add_data = test_data_scope::ActiveModel {
-        id: Set(scru128::scru128_string()),
+        id: Set(scru128::new_string()),
         data_a: Set(Some(req.data_a)),
         data_b: Set(Some(req.data_b)),
         created_by: Set(Some(user_id.to_string())),

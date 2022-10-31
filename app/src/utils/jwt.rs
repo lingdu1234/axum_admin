@@ -98,7 +98,7 @@ where
     let TypedHeader(Authorization(bearer)) = TypedHeader::<Authorization<Bearer>>::from_request(req).await.map_err(|_| AuthError::InvalidToken)?;
     // Decode the user data
     let bearer_data = bearer.token();
-    let cut = bearer_data.len() - scru128::scru128_string().len();
+    let cut = bearer_data.len() - scru128::new_string().len();
     Ok((bearer_data[cut..].to_string(), bearer_data[0..cut].to_string()))
 }
 
