@@ -9,6 +9,7 @@ use db::{
 };
 use delay_timer::prelude::cron_clock;
 use sea_orm::{sea_query::Expr, ColumnTrait, EntityTrait, QueryFilter, TransactionTrait};
+use tracing::info;
 
 use super::{task, task_builder, TaskModel, TASK_MODELS};
 use crate::apps::system::{get_job_by_id, sys_job_log_add};
@@ -36,7 +37,16 @@ pub async fn run_once_task(job_id: String, task_id: i64, is_once: bool) {
         }
     };
     let cron_str = job.model.cron_expression.clone();
-    let next_time = get_next_task_run_time(cron_str).unwrap();
+    let next_time = match get_next_task_run_time(cron_str) {
+        Ok(x) => match x {
+            Some(y) => y,
+            None => return ,
+        },
+        Err(_) => {
+            info!("cron 表格式解析错误");
+            return  
+        },
+    };
     let res = task::go_run_task(job.model.job_params.clone(), job.model.invoke_target.clone()).await;
     let task_end_time = Local::now().naive_local(); // 获取结束时间
     let elapsed_time: i64 = task_end_time.signed_duration_since(begin_time).to_std().unwrap().as_millis().try_into().unwrap_or(i64::MAX); // 获取结束时间和开始时间的时间差，单位为毫秒
@@ -108,7 +118,13 @@ pub async fn update_circles_task(t: SysJobModel) -> Result<()> {
                         remark = remark.clone() + "    已运行次数:" + x.lot_count.to_string().as_str() + "\n";
                         x.model.remark = Some(remark.clone());
                         x.count = task_count;
-                        x.next_run_time = get_next_task_run_time(t.cron_expression.clone()).unwrap();
+                        x.next_run_time = match get_next_task_run_time(t.cron_expression.clone()) {
+                            Ok(x) => match x {
+                                Some(y) => y,
+                                None => Local::now().naive_local(),
+                            },
+                            Err(_) => Local::now().naive_local(),
+                        };
                         x.lot_end_time = get_task_end_time(t.cron_expression.clone(), task_count as u64).unwrap();
                     });
                     drop(task_models);
@@ -138,7 +154,13 @@ async fn init_task_model(m: SysJobModel, task_count: i64) {
     let now = Local::now().naive_local();
     let run_lot = now.timestamp();
     let job_end_time = get_task_end_time(m.cron_expression.clone(), m.task_count.try_into().unwrap()).unwrap();
-    let next_time = get_next_task_run_time(m.cron_expression.clone()).unwrap();
+    let next_time = match get_next_task_run_time(m.cron_expression.clone()) {
+        Ok(v) => match v {
+            Some(x) => x,
+            None => Local::now().naive_local(),
+        },
+        Err(_) => Local::now().naive_local(),
+    };
     let mut task_models = TASK_MODELS.lock().await;
     let mut task_model = TaskModel {
         run_lot,
@@ -241,10 +263,10 @@ async fn write_once_job_log(res: Result<String>, job: TaskModel, begin_time: Nai
     txn.commit().await.expect("事务提交失败");
 }
 
-pub fn get_next_task_run_time(cron_str: String) -> Option<NaiveDateTime> {
-    let schedule = cron_clock::Schedule::from_str(&cron_str).unwrap();
+pub fn get_next_task_run_time(cron_str: String) -> Result<Option<NaiveDateTime>> {
+    let schedule = cron_clock::Schedule::from_str(&cron_str)?;
     let next_time = schedule.upcoming(Local).next().map(|x| x.naive_local());
-    next_time
+    Ok(next_time)
 }
 
 pub fn get_task_end_time(cron_str: String, task_count: u64) -> Option<NaiveDateTime> {
