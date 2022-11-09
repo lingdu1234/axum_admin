@@ -11,14 +11,14 @@ pub struct Configs {
     pub cert: Cert,
     /// 系统配置
     pub system: System,
-    /// Casbin配置
-    // pub casbin: Casbin,
     ///  数据库 配置
     pub database: Database,
     ///  JWT 配置
     pub jwt: Jwt,
     /// 日志配置
     pub log: Log,
+    /// skytable
+    pub skytable: SkyTable,
 }
 
 /// server 配置文件
@@ -35,6 +35,8 @@ pub struct Server {
     pub content_gzip: bool,
     /// 缓存时间
     pub cache_time: u64,
+    /// 缓存方式
+    pub cache_method: u32,
     /// api 前缀  例如："/api_v1"
     pub api_prefix: String,
 }
@@ -69,15 +71,6 @@ pub struct System {
     pub user_agent_parser: String,
 }
 
-/// casbin 配置文件
-// #[derive(Debug, Deserialize)]
-// pub struct Casbin {
-//     /// modelFile
-//     pub model_file: String,
-//     /// policyFile
-//     pub policy_file: String,
-// }
-
 /// jwt 配置文件
 #[derive(Debug, Deserialize)]
 pub struct Jwt {
@@ -100,18 +93,18 @@ pub struct Log {
     pub enable_oper_log: bool,
 }
 
-// #[derive(Debug, Deserialize)]
-// pub enum DbType {
-//     MYSQL(String),
-//     POSTGRESQL,
-//     SQLITE,
-// }
-
 /// 数据库
 #[derive(Debug, Deserialize)]
 pub struct Database {
-    /// 数据库类型
-    pub db_type: String,
     /// 数据库连接
     pub link: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SkyTable {
+    /// server address
+    pub server: String,
+
+    /// server port
+    pub port: u16,
 }

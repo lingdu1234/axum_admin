@@ -8,7 +8,7 @@ use app::{
 };
 use configs::CFG;
 //
-use poem::listener::RustlsCertificate;
+use poem::{listener::RustlsCertificate, web::CompressionAlgo};
 use poem::{
     endpoint::StaticFilesEndpoint,
     http::HeaderValue,
@@ -73,7 +73,7 @@ fn main() -> Result<(), std::io::Error> {
             .nest("/", StaticFilesEndpoint::new(&CFG.web.dir).show_files_listing().index_file(&CFG.web.index))
             // .at("/mtc", metrics.exporter())
             // .with(Tracing)
-            .with_if(CFG.server.content_gzip, Compression::new())
+            .with_if(CFG.server.content_gzip, Compression::new().algorithms([CompressionAlgo::GZIP]))
             // .with(metrics)
             .with(cors)
             .after(|res| async move {

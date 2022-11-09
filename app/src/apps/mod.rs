@@ -1,5 +1,5 @@
 use configs::CFG;
-use poem::{endpoint::StaticFilesEndpoint, get, post, EndpointExt, Route};
+use poem::{endpoint::StaticFilesEndpoint, get, post, Endpoint, EndpointExt, Route};
 
 use crate::middleware;
 
@@ -12,14 +12,7 @@ pub fn api() -> Route {
         // 无需授权Api.通用模块
         .nest("/comm", no_auth_api())
         // 系统管理模块
-        .nest(
-            "/system",
-            system::system_api()
-                .with(middleware::ApiAuth)
-                .with_if(CFG.log.enable_oper_log, middleware::OperLog)
-                .with_if(CFG.server.cache_time > 0, middleware::Cache)
-                .with(middleware::Ctx),
-        )
+        .nest("/system", set_system_middleware())
         //  测试模块
         .nest(
             "/test",
@@ -28,6 +21,15 @@ pub fn api() -> Route {
                 .with_if(CFG.log.enable_oper_log, middleware::OperLog)
                 .with(middleware::Ctx),
         )
+}
+
+fn set_system_middleware() -> impl Endpoint {
+    system::system_api()
+        .with(middleware::ApiAuth)
+        .with_if(CFG.log.enable_oper_log, middleware::OperLog)
+        .with_if(CFG.server.cache_time > 0 && CFG.server.cache_method == 0, middleware::Cache)
+        .with_if(CFG.server.cache_time > 0 && CFG.server.cache_method == 1, middleware::SkyTableCache)
+        .with(middleware::Ctx)
 }
 
 //
