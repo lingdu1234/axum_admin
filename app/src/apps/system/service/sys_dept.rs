@@ -184,15 +184,15 @@ pub async fn get_dept_tree(db: &DatabaseConnection) -> Result<Vec<RespTree>> {
         let tree_item = RespTree { data: item, ..Default::default() };
         tree.push(tree_item);
     }
-    let res = creat_menu_tree(tree, "0".to_string());
+    let res = create_menu_tree(tree, "0".to_string());
     Ok(res)
 }
 
-pub fn creat_menu_tree(depts: Vec<RespTree>, pid: String) -> Vec<RespTree> {
+pub fn create_menu_tree(depts: Vec<RespTree>, pid: String) -> Vec<RespTree> {
     let mut tree: Vec<RespTree> = Vec::new();
     for mut t in depts.clone() {
         if t.data.parent_id == pid {
-            t.children = Some(creat_menu_tree(depts.clone(), t.data.dept_id.clone()));
+            t.children = Some(create_menu_tree(depts.clone(), t.data.dept_id.clone()));
             tree.push(t.clone());
         }
     }

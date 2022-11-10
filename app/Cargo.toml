@@ -19,18 +19,16 @@ chrono = {version = "0.4", features = ["serde"]}
 headers = "0.3"
 jsonwebtoken = "8"
 once_cell = "1"
-
-#  axum
-axum = {version = "0.5", features = ["headers","multipart","original-uri"]}
-hyper = { version = "0.14", features = ["full"] }
-tower = { version = "0.4", features = ["util", "filter"] }
-tower-http = {version = "0.3", features = ["cors","fs"]}
-
+poem = {version = "1", features = ["static-files", "rustls", "compression", "multipart"]}
+# poem = "=1.1.1"
+# poem-derive = "=1.1.1"
+# poem-openapi = "1.1.1"
+# 用于生成可排序的唯一id
+# lazy_static = "1.4.0"
 scru128 = "2"
 serde = {version = "1", features = ["derive"]}
 serde_json = "1"
 tokio = {version = "1", features = ["rt-multi-thread", "macros", "parking_lot", "signal", "time"]}
-tokio-stream = '0'
 #  "tracing"
 # tokio = {version = "1", features = ["full"]}
 toml = "0.5"
@@ -50,11 +48,14 @@ user-agent-parser = "0.3"
 md5 = "0.7"
 rand = "0.8"
 # 系统信息
-sysinfo = "0"
+sysinfo = "0.24.5"
 # 验证码
 captcha_rust = "0.1.3"
-# aHashMap
-# ahash = "0"
+#  hashMap
+ahash = '0'
+# skyTable  可选依赖
+skytable = {version = "0", features = ["const-gen","aio"], default-features = false, optional = true}
+
 # sea-orm
 [dependencies.sea-orm]
 default-features = false
@@ -64,7 +65,12 @@ version = "0"
 
 [features]
 # default = ["postgres", "mysql"]
-default = ["postgres", "mysql", "sqlite"]
+default = ["postgres", "mysql", "sqlite", "cache-mem", "cache-skytable"]
 mysql = ["sea-orm/sqlx-mysql"]
 postgres = ["sea-orm/sqlx-postgres"]
 sqlite = ["sea-orm/sqlx-sqlite"]
+# app features
+#  使用内存做缓存中间件
+cache-mem = []
+# 使用skytable 做缓存中间件
+cache-skytable = ["skytable"]

@@ -124,6 +124,7 @@ pub struct EditReq {
     pub is_cache: String,
     pub data_scope: String,
     pub log_method: String,
+    pub i18n: Option<String>,
     pub data_cache_method: String,
     pub i18n: Option<String>,
     pub remark: String,

@@ -3,7 +3,7 @@ use db::{system::entities::*, test::entities::*};
 pub use sea_orm::{ConnectionTrait, DatabaseConnection, DatabaseTransaction, Schema};
 use sea_orm_migration::prelude::*;
 
-use super::super::db_utils::{creat_one_table as Cot, create_table_index as Cti, drop_one_table as Dot, init_data};
+use super::super::db_utils::{create_one_table as Cot, create_table_index as Cti, drop_one_table as Dot, init_data};
 
 pub struct Migration;
 
