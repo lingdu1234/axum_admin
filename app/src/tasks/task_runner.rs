@@ -40,12 +40,12 @@ pub async fn run_once_task(job_id: String, task_id: i64, is_once: bool) {
     let next_time = match get_next_task_run_time(cron_str) {
         Ok(x) => match x {
             Some(y) => y,
-            None => return ,
+            None => return,
         },
         Err(_) => {
             info!("cron 表格式解析错误");
-            return  
-        },
+            return;
+        }
     };
     let res = task::go_run_task(job.model.job_params.clone(), job.model.invoke_target.clone()).await;
     let task_end_time = Local::now().naive_local(); // 获取结束时间

@@ -18,6 +18,5 @@ pub use auth::Auth as ApiAuth;
 pub use cache::Cache;
 #[cfg(feature = "cache-skytable")]
 pub use cache_skytable::SkyTableCache;
-
 pub use ctx::Context as Ctx;
 pub use oper_log::OperLog;

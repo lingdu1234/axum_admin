@@ -1,9 +1,6 @@
-use std::{
-    collections::{HashMap, HashSet},
-    sync::Arc,
-};
+use core::time::Duration;
+use std::{collections::BTreeMap, sync::Arc, time::Instant};
 
-use crate::utils::{api_utils::ALL_APIS, jwt};
 use configs::CFG;
 use db::common::{
     ctx::{ApiInfo, ReqCtx},
@@ -11,17 +8,25 @@ use db::common::{
 };
 use once_cell::sync::Lazy;
 use poem::{Endpoint, IntoResponse, Middleware, Request, Response, Result};
-use skytable::actions::AsyncActions;
-use skytable::pool::{AsyncPool, ConnectionManager};
+use skytable::{
+    actions::AsyncActions,
+    pool::{AsyncPool, ConnectionManager},
+};
 use tokio::sync::{Mutex, OnceCell};
+
+use crate::utils::{api_utils::ALL_APIS, jwt};
 
 static SKY: OnceCell<AsyncPool> = OnceCell::const_new();
 
 async fn set_sky() -> AsyncPool {
     let notls_manager = ConnectionManager::new_notls(&CFG.skytable.server, CFG.skytable.port);
-    let notls_pool = AsyncPool::builder().max_size(10).build(notls_manager).await.unwrap();
+    let notls_pool = AsyncPool::builder()
+        .max_size(10)
+        .build(notls_manager)
+        .await
+        .expect("skytable connect error please check it");
     //  第一次连接时，也就是程序启动时，清空数据
-    notls_pool.get().await.unwrap().flushdb().await.unwrap();
+    notls_pool.get().await.expect("skytable connect error please check it").flushdb().await.unwrap();
 
     notls_pool
 }
@@ -31,34 +36,72 @@ pub async fn get_sky_table() -> &'static AsyncPool {
     con
 }
 
-//  程序中定义一个全局hashSet 用于存储已经缓存的数据，如果数据有更新,就清除该数据中对应的键值,下次请求重新请求数据
-static INDEX_MAP: Lazy<Arc<Mutex<HashMap<String, HashSet<String>>>>> = Lazy::new(|| {
-    let data: HashMap<String, HashSet<String>> = HashMap::new();
+//  程序中定义一个全局Map
+// 用于存储已经缓存的数据，如果数据有更新,就清除该数据中对应的键值,
+// 下次请求重新请求数据
+pub static INDEX_MAP: Lazy<Arc<Mutex<BTreeMap<String, Instant>>>> = Lazy::new(|| {
+    let data: BTreeMap<String, Instant> = BTreeMap::new();
+    tokio::spawn(async { self::init().await });
     Arc::new(Mutex::new(data))
 });
+pub async fn init() {
+    tracing::info!("cache data init");
+
+    loop {
+        tokio::time::sleep(Duration::from_secs(30)).await;
+        init_loop().await;
+    }
+}
+
+async fn init_loop() {
+    let d = CFG.server.cache_time * 1000;
+    let mut index = INDEX_MAP.lock().await;
+    let mut data_keys: Vec<String> = Vec::new();
+    for (k, v) in index.clone().iter() {
+        if Instant::now().duration_since(*v).as_millis() as u64 > d {
+            let key = k.split('★').collect::<Vec<&str>>();
+            data_keys.push(key[1].to_string());
+            // 移除缓存索引
+            index.remove(k);
+        }
+    }
+    drop(index);
+    if data_keys.len() != 0 {
+        // 移除缓存数据
+        remove_cache_data(data_keys).await;
+    }
+}
 //  添加索引
 async fn add_index_map(api_key: &str, data_key: &str) {
     let mut index = INDEX_MAP.lock().await;
-    let v = index.entry(api_key.to_string()).or_insert(HashSet::new());
-    v.insert(data_key.to_string());
+    let key = get_key(api_key, data_key);
+    index.insert(key, Instant::now());
     drop(index);
 }
 //  删除索引
 async fn remove_index_map(api_keys: Option<Vec<String>>) {
     let mut index = INDEX_MAP.lock().await;
-
+    let mut data_keys: Vec<String> = Vec::new();
     if api_keys.is_some() {
         for api_key in api_keys.unwrap() {
-            index.remove(&api_key);
+            for (k, _) in index.clone().into_iter() {
+                if k.starts_with(&api_key) {
+                    index.remove(&k);
+                    let key = k.split('★').collect::<Vec<&str>>();
+                    data_keys.push(key[1].to_string())
+                }
+            }
         }
     }
+    // 在这里删除数据
+    remove_cache_data(data_keys).await;
     drop(index);
 }
 //  获取索引是否存在
 async fn get_index_map(api_key: &str, data_key: &str) -> bool {
-    let mut index = INDEX_MAP.lock().await;
-    let v = index.entry(api_key.to_string()).or_insert(HashSet::new());
-    let res = v.get(data_key).is_some();
+    let key = get_key(api_key, data_key);
+    let index = INDEX_MAP.lock().await;
+    let res = index.get(&key).is_some();
     drop(index);
     res
 }
@@ -67,20 +110,18 @@ async fn get_index_map(api_key: &str, data_key: &str) -> bool {
 fn get_key(api_key: &str, data_key: &str) -> String {
     format!("{}★{}", api_key, &data_key)
 }
-
 //  添加数据
 pub async fn add_cache_data(ori_uri: &str, api_key: &str, data_key: &str, data: String) {
     let con = get_sky_table().await;
-    let key = get_key(api_key, data_key);
 
     add_index_map(api_key, data_key).await;
 
-    match con.get().await.unwrap().get::<String>(&key).await {
-        Ok(_) => match con.get().await.unwrap().update(&key, data).await {
+    match con.get().await.unwrap().get::<String>(data_key).await {
+        Ok(_) => match con.get().await.unwrap().update(data_key, data).await {
             Ok(_) => tracing::info!("update cache data OK,api_key: {}, data_key: {},api:{}", api_key, data_key, ori_uri),
             Err(_) => tracing::info!("update cache data error,api_key: {}, data_key: {},api:{}", api_key, data_key, ori_uri),
         },
-        Err(_) => match con.get().await.unwrap().set(&key, data).await {
+        Err(_) => match con.get().await.unwrap().set(data_key, data).await {
             Ok(_) => tracing::info!("add cache data OK,api_key: {}, data_key: {},api:{}", api_key, data_key, ori_uri),
             Err(_) => tracing::info!("add cache data error,api_key: {}, data_key: {},api:{}", api_key, data_key, ori_uri),
         },
@@ -90,18 +131,26 @@ pub async fn add_cache_data(ori_uri: &str, api_key: &str, data_key: &str, data: 
 //  获取数据
 pub async fn get_cache_data(api_key: &str, data_key: &str) -> Option<String> {
     let con = get_sky_table().await;
-    let key = get_key(api_key, data_key);
 
     match get_index_map(api_key, data_key).await {
         false => None,
         true => {
-            let data: Option<String> = match con.get().await.unwrap().get::<String>(key).await {
+            let data: Option<String> = match con.get().await.unwrap().get::<String>(data_key).await {
                 Ok(v) => Some(v),
                 Err(_) => None,
             };
             tracing::info!("get cache data success,api_key: {}, data_key: {}", api_key, data_key);
             data
         }
+    }
+}
+
+//  移除数据
+pub async fn remove_cache_data(data_keys: Vec<String>) {
+    let con = get_sky_table().await;
+    match con.get().await.unwrap().del(&data_keys).await {
+        Ok(v) => tracing::info!("remove cache data success,data_keys: {:?},total:{}", &data_keys, v),
+        Err(e) => tracing::info!("remove cache data failed,data_keys: {:?},error:{}", &data_keys, e),
     }
 }
 
@@ -122,7 +171,6 @@ pub struct CacheEndpoint<E> {
 
 #[poem::async_trait]
 impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
-    // type Output = E::Output;
     type Output = Response;
 
     async fn call(&self, req: Request) -> Result<Self::Output> {
