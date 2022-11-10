@@ -181,7 +181,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
         concurrent: if let Some(x) = req.concurrent { Set(Some(x)) } else { NotSet },
         next_time: Set(next_time),
         status: Set(status.clone()),
-        remark: Set(Some(req.remark.unwrap_or_else(|| "".to_string()))),
+        remark: Set(Some(req.remark.unwrap_or_default())),
         update_by: Set(Some(user_id)),
         updated_at: Set(Some(now)),
         ..s_r

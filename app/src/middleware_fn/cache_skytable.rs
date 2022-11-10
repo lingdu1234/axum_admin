@@ -37,8 +37,7 @@ async fn set_sky() -> AsyncPool {
 }
 //  定义一个skytable 连接
 pub async fn get_sky_table() -> &'static AsyncPool {
-    let con = SKY.get_or_init(set_sky).await;
-    con
+    SKY.get_or_init(set_sky).await as _
 }
 
 //  程序中定义一个全局Map
@@ -71,7 +70,7 @@ async fn init_loop() {
         }
     }
     drop(index);
-    if data_keys.len() != 0 {
+    if !data_keys.is_empty() {
         // 移除缓存数据
         remove_cache_data(data_keys).await;
     }

@@ -102,7 +102,7 @@ pub async fn update_circles_task(t: SysJobModel) -> Result<()> {
         task_count,
         &t.cron_expression,
         &t.invoke_target,
-        &t.job_params.clone().unwrap_or_else(|| "".to_string())
+        &t.job_params.clone().unwrap_or_default()
     );
     tracing::info!("定时任务更新:{}", &remark_update_info_t);
     match task {
@@ -112,7 +112,7 @@ pub async fn update_circles_task(t: SysJobModel) -> Result<()> {
                 Ok(_) => {
                     drop(t_builder);
                     let mut task_models = TASK_MODELS.lock().await;
-                    let mut remark = t.remark.clone().unwrap_or_else(|| "".to_string()) + &remark_update_info_t;
+                    let mut remark = t.remark.clone().unwrap_or_default() + &remark_update_info_t;
                     task_models.entry(t.task_id).and_modify(|x| {
                         x.model = t.clone();
                         remark = remark.clone() + "    已运行次数:" + x.lot_count.to_string().as_str() + "\n";
@@ -193,7 +193,7 @@ async fn write_circle_job_log(res: Result<String>, job: TaskModel, begin_time: N
         Ok(x) => (Some(x), None, "1".to_string()),
         Err(e) => (None, Some(format!("{:#?}", e)), "0".to_string()),
     };
-    let job_remark_t = job.model.remark.clone().unwrap_or_else(|| "".to_string());
+    let job_remark_t = job.model.remark.clone().unwrap_or_default();
     // 获取结束时间和开始时间的时间差，单位为毫秒
 
     let (job_remark, job_status) = match job.count != 0 && job.count <= job.lot_count {
@@ -298,7 +298,7 @@ pub async fn delete_job(task_id: i64, is_manual: bool) -> Result<()> {
                 };
                 drop(task_models);
                 let db = DB.get_or_init(db_conn).await;
-                let remark = job.clone().model.remark.unwrap_or_else(|| "".to_string())
+                let remark = job.clone().model.remark.unwrap_or_default()
                     + format!("任务删除:--------    删除时间:{}\n最终运行次数:{}", Local::now().naive_local(), job.lot_count,).as_str();
                 SysJobEntity::update_many()
                     .col_expr(SysJobColumn::Status, Expr::value("0".to_string()))
