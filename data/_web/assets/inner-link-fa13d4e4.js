@@ -1,0 +1,1 @@
+const e={setup(){const e=VueRouter.useRoute().meta.link;if(""===e)return"404";let t=e;const u={height:document.documentElement.clientHeight-94.5+"px"};return()=>Vue.h("div",{style:u},Vue.h("iframe",{src:t,frameborder:"no",width:"100%",height:"100%",scrolling:"auto"}))}};export{e as default};

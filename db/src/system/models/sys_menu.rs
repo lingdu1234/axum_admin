@@ -126,7 +126,6 @@ pub struct EditReq {
     pub log_method: String,
     pub i18n: Option<String>,
     pub data_cache_method: String,
-    pub i18n: Option<String>,
     pub remark: String,
 }
 

@@ -8,7 +8,7 @@ use reqwest::StatusCode;
 use tower_http::services::ServeDir;
 
 use crate::{
-    middleware_fn::{auth::auth_fn_mid, cache::cache_fn_mid, ctx::ctx_fn_mid, oper_log::oper_log_fn_mid},
+    middleware_fn::{auth::auth_fn_mid, cache, ctx::ctx_fn_mid, oper_log::oper_log_fn_mid, cache_skytable},
     utils::jwt::Claims,
 };
 
@@ -49,7 +49,11 @@ fn auth_api() -> Router {
 
     let router = match CFG.server.cache_time {
         0 => router,
-        _ => router.layer(middleware::from_fn(cache_fn_mid)),
+        _ => if CFG.server.cache_method == 0 {
+            router.layer(middleware::from_fn(cache::cache_fn_mid))
+        }else{
+            router.layer(middleware::from_fn(cache_skytable::cache_fn_mid))
+        },
     };
     #[allow(clippy::let_and_return)]
     let router = router

@@ -1,20 +1,25 @@
 use core::time::Duration;
 use std::{collections::BTreeMap, sync::Arc, time::Instant};
 
+use axum::{
+    http::Request,
+    middleware::Next,
+    response::{IntoResponse, Response},
+};
 use configs::CFG;
 use db::common::{
-    ctx::{ApiInfo, ReqCtx},
+    ctx::{ApiInfo, ReqCtx, UserInfo},
     res::ResJsonString,
 };
+use hyper::StatusCode;
 use once_cell::sync::Lazy;
-use poem::{Endpoint, IntoResponse, Middleware, Request, Response, Result};
 use skytable::{
     actions::AsyncActions,
     pool::{AsyncPool, ConnectionManager},
 };
 use tokio::sync::{Mutex, OnceCell};
 
-use crate::utils::{api_utils::ALL_APIS, jwt};
+use crate::utils::api_utils::ALL_APIS;
 
 static SKY: OnceCell<AsyncPool> = OnceCell::const_new();
 
@@ -153,93 +158,73 @@ pub async fn remove_cache_data(data_keys: Vec<String>) {
         Err(e) => tracing::info!("remove cache data failed,data_keys: {:?},error:{}", &data_keys, e),
     }
 }
+//  缓存中间件
+pub async fn cache_fn_mid<B>(req: Request<B>, next: Next<B>) -> Result<Response, StatusCode> {
+    let apis = ALL_APIS.lock().await;
+    let ctx = req.extensions().get::<ReqCtx>().expect("ReqCtx not found").clone();
+    let ctx_user = match req.extensions().get::<UserInfo>() {
+        Some(v) => v.to_owned(),
+        None => return Ok(next.run(req).await),
+    };
+    let api_info = match apis.get(&ctx.path) {
+        Some(x) => x.clone(),
+        None => ApiInfo {
+            name: "".to_string(),
+            data_cache_method: "0".to_string(),
+            log_method: "0".to_string(),
+            related_api: None,
+        },
+    };
+    // 释放锁
+    drop(apis);
+    let token_id = ctx_user.token_id;
 
-pub struct SkyTableCache;
-
-impl<E: Endpoint> Middleware<E> for SkyTableCache {
-    type Output = CacheEndpoint<E>;
-
-    fn transform(&self, ep: E) -> Self::Output {
-        CacheEndpoint { ep }
+    if ctx.method.as_str() != "GET" {
+        let res_end = next.run(req).await;
+        return match res_end.status() {
+            StatusCode::OK => {
+                let related_api = api_info.related_api.clone();
+                tokio::spawn(async move {
+                    remove_index_map(related_api).await;
+                });
+                Ok(res_end)
+            }
+            _ => Ok(res_end),
+        };
     }
-}
-
-/// Endpoint for `Tracing` middleware.
-pub struct CacheEndpoint<E> {
-    ep: E,
-}
-
-#[poem::async_trait]
-impl<E: Endpoint> Endpoint for CacheEndpoint<E> {
-    type Output = Response;
-
-    async fn call(&self, req: Request) -> Result<Self::Output> {
-        let apis = ALL_APIS.lock().await;
-        let ctx = req.extensions().get::<ReqCtx>().expect("ReqCtx not found").clone();
-
-        let api_info = match apis.get(&ctx.path) {
-            Some(x) => x.clone(),
-            None => ApiInfo {
-                name: "".to_string(),
-                data_cache_method: "0".to_string(),
-                log_method: "0".to_string(),
-                related_api: None,
-            },
-        };
-        // 释放锁
-        drop(apis);
-        let (token_id, _) = jwt::get_bear_token(&req).await?;
-
-        if ctx.method.as_str() != "GET" {
-            let res_end = self.ep.call(req).await;
-            return match res_end {
-                Ok(v) => {
-                    let related_api = api_info.related_api.clone();
-                    tokio::spawn(async move {
-                        remove_index_map(related_api).await;
-                    });
-                    Ok(v.into_response())
-                }
-                Err(e) => Err(e),
-            };
+    let data_key = match api_info.data_cache_method.clone().as_str() {
+        "1" => format!("{}_{}_{}", &ctx.ori_uri, &ctx.method, &token_id),
+        _ => format!("{}_{}", &ctx.ori_uri, &ctx.method),
+    };
+    // 开始请求数据
+    match api_info.data_cache_method.as_str() {
+        "0" => {
+            let res_end = next.run(req).await;
+            Ok(res_end)
         }
-        let data_key = match api_info.data_cache_method.clone().as_str() {
-            "1" => format!("{}_{}_{}", &ctx.ori_uri, &ctx.method, &token_id),
-            _ => format!("{}_{}", &ctx.ori_uri, &ctx.method),
-        };
-        // 开始请求数据
-        match api_info.data_cache_method.as_str() {
-            "0" => {
-                let res_end = self.ep.call(req).await;
-                match res_end {
-                    Ok(v) => Ok(v.into_response()),
-                    Err(e) => Err(e),
+        _ => match get_cache_data(&ctx.path, &data_key).await {
+            Some(v) => Ok(v.into_response()),
+
+            None => {
+                let res_end = next.run(req).await;
+                match res_end.status() {
+                    StatusCode::OK => {
+                        let res_ctx = match res_end.extensions().get::<ResJsonString>() {
+                            Some(x) => x.0.clone(),
+                            None => "".to_string(),
+                        };
+
+                        tokio::spawn(async move {
+                            // 缓存数据
+                            add_cache_data(&ctx.ori_uri, &ctx.path, &data_key, res_ctx).await;
+                        });
+
+                        Ok(res_end)
+                    }
+                    _ => Ok(res_end),
                 }
             }
-            _ => match get_cache_data(&ctx.path, &data_key).await {
-                Some(v) => Ok(v.into_response()),
-                None => {
-                    let res_end = self.ep.call(req).await;
-                    match res_end {
-                        Ok(v) => {
-                            let res = v.into_response();
-                            let res_ctx = match res.extensions().get::<ResJsonString>() {
-                                Some(x) => x.0.clone(),
-                                None => "".to_string(),
-                            };
-
-                            tokio::spawn(async move {
-                                // 缓存数据
-                                add_cache_data(&ctx.ori_uri, &ctx.path, &data_key, res_ctx).await;
-                            });
-
-                            Ok(res)
-                        }
-                        Err(e) => Err(e),
-                    }
-                }
-            },
-        }
+        },
     }
 }
 

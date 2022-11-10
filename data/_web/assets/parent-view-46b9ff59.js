@@ -1,0 +1,1 @@
+import{_ as e}from"./_plugin-vue_export-helper-0909ef10.js";const o=e({},[["render",function(e,o){const r=Vue.resolveComponent("router-view");return Vue.openBlock(),Vue.createBlock(r)}]]);export{o as default};

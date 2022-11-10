@@ -1,0 +1,1 @@
+import{u as s}from"./index.js";const r=(...r)=>{const n=s().user.permissions;if(e(n))return!0;let i=!1;return r.forEach((s=>{const r=t(s);n.includes(r)&&(i=!0)})),i},e=s=>s.includes("*:*:*"),t=s=>s.startsWith("/")?s.replace("/",""):s;export{r as h};

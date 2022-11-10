@@ -5,5 +5,9 @@ pub mod ctx;
 
 // // 操作日志
 pub mod oper_log;
-// // 缓存中间件
+// 缓存中间件
+#[cfg(feature = "cache-mem")]
 pub mod cache;
+
+#[cfg(feature = "cache-skytable")]
+pub mod cache_skytable;

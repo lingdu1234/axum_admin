@@ -95,7 +95,10 @@ where
     }
     let uid = scru128::new_string();
     let now: NaiveDateTime = Local::now().naive_local();
-    let next_time = tasks::get_next_task_run_time(req.cron_expression.to_string());
+    let next_time = match tasks::get_next_task_run_time(req.cron_expression.to_string()) {
+        Ok(v) => v,
+        Err(_) => return Err(anyhow!("cron 表达式解析错误")),
+    };
     let status = req.status.unwrap_or_else(|| "1".to_string());
     let add_data = sys_job::ActiveModel {
         job_id: Set(uid.clone()),
@@ -159,7 +162,10 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
     let uid = req.job_id;
     let s_s = get_by_id(db, uid.clone()).await?;
     let s_r: sys_job::ActiveModel = s_s.clone().into();
-    let next_time = tasks::get_next_task_run_time(req.cron_expression.to_string());
+    let next_time = match tasks::get_next_task_run_time(req.cron_expression.to_string()) {
+        Ok(v) => v,
+        Err(_) => return Err(anyhow!("cron 表达式解析错误")),
+    };
     let status = req.status.unwrap_or_else(|| "1".to_string());
     let now: NaiveDateTime = Local::now().naive_local();
     let act = sys_job::ActiveModel {

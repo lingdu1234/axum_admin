@@ -1,0 +1,1 @@
+import{_ as e}from"./exception.vue_vue_type_script_setup_true_lang-23b1b798.js";import"./index.js";import"./svg-icon.vue_vue_type_script_name_svg-icon_setup_true_lang-e57e6f2d.js";const t=Vue.defineComponent({name:"404"}),n=Vue.defineComponent({...t,setup:t=>(t,n)=>(Vue.openBlock(),Vue.createBlock(e,{type:"404"}))});export{n as default};

@@ -8,7 +8,7 @@ use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
     system::models::sys_user::{
-        AddReq, ChangeDeptReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq, UpdateProfileReq, UpdatePwdReq, UserInfo, UserInfomaion, UserLoginReq,
+        AddReq, ChangeDeptReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq, UpdateProfileReq, UpdatePwdReq, UserInfo, UserInformation, UserLoginReq,
         UserWithDept,
     },
     DB,
@@ -33,7 +33,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 
 /// get_user_by_id 获取用户Id获取用户
 
-pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<UserInfomaion> {
+pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<UserInformation> {
     match req.user_id {
         Some(user_id) => match self::get_user_info_by_id(&user_id).await {
             Err(e) => Res::with_err(&e.to_string()),
@@ -43,14 +43,14 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<UserInfomaion> {
     }
 }
 
-pub async fn get_profile(user: Claims) -> Res<UserInfomaion> {
+pub async fn get_profile(user: Claims) -> Res<UserInformation> {
     match self::get_user_info_by_id(&user.id).await {
         Err(e) => Res::with_err(&e.to_string()),
         Ok(res) => Res::with_data(res),
     }
 }
 
-pub async fn get_user_info_by_id(id: &str) -> Result<UserInfomaion> {
+pub async fn get_user_info_by_id(id: &str) -> Result<UserInformation> {
     let db = DB.get_or_init(db_conn).await;
     match service::sys_user::get_by_id(db, id).await {
         Err(e) => Err(e),
@@ -58,7 +58,7 @@ pub async fn get_user_info_by_id(id: &str) -> Result<UserInfomaion> {
             let post_ids = service::sys_post::get_post_ids_by_user_id(db, &user.user.id).await.unwrap();
             let role_ids = service::sys_user_role::get_role_ids_by_user_id(db, &user.user.id).await.expect("角色id获取失败");
             let dept_ids = service::sys_user_dept::get_dept_ids_by_user_id(db, &user.user.id).await.expect("角色id获取失败");
-            let res = UserInfomaion {
+            let res = UserInformation {
                 user_info: user.clone(),
                 dept_id: user.user.dept_id,
                 post_ids,

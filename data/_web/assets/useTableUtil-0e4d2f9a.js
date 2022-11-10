@@ -1,0 +1,1 @@
+const e=()=>({useTableSelectChange:l}),l=()=>{const e=Vue.ref([]),l=Vue.ref([]),a=Vue.ref(!1),u=Vue.ref(!1);return{handleSelectionChangeFn:(n,t,s)=>{e.value=n.map((e=>e[t])),l.value=n.map((e=>e[s])),a.value=1===n.length,u.value=0!==n.length},ids:e,values:l,single:a,selected:u}};export{e as u};

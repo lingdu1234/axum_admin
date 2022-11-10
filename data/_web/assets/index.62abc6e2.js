@@ -1,1 +1,0 @@
-import{_ as e}from"./index.74f0e013.js";var u=e({__name:"index",setup(e){const u=VueRouter.useRoute(),r=VueRouter.useRouter(),{params:t,query:o}=u,{path:a}=t;return r.replace({path:"/"+a,query:o}),(e,u)=>(Vue.openBlock(),Vue.createElementBlock("div"))}},[["__file","E:/LingDu/rust/poem/RuoYi-Vue3/src/views/redirect/index.vue"]]);export{u as default};
