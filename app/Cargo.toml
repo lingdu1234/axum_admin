@@ -14,16 +14,15 @@ anyhow = "1"
 bytes = "1"
 futures = "0.3"
 # env_logger = "0.9"
-async-stream = "0.3"
 chrono = {version = "0.4", features = ["serde"]}
 headers = "0.3"
 jsonwebtoken = "8"
 once_cell = "1"
 #  axum
-axum = {version = "0.5", features = ["headers","multipart","original-uri"]}
-hyper = { version = "0.14", features = ["full"] }
-tower = { version = "0.4", features = ["util", "filter"] }
-tower-http = {version = "0.3", features = ["cors","fs"]}
+axum = {version = "0", features = ["headers","multipart","original-uri"]}
+hyper = { version = "0", features = ["full"] }
+tower = { version = "0", features = ["util", "filter"] }
+tower-http = {version = "0", features = ["cors","fs"]}
 # 
 scru128 = "2"
 serde = {version = "1", features = ["derive"]}
