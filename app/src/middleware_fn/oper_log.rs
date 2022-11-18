@@ -133,7 +133,7 @@ async fn db_log(duration: Duration, ctx: ReqCtx, ctx_user: UserInfo, now: chrono
         oper_ip: Set(user.ipaddr),
         oper_location: Set(user.login_location),
         oper_param: Set(if ctx.data.len() > 10000 { "数据太长不保存".to_string() } else { ctx.data }),
-        json_result: Set(if res.len() > 100000 { "数据太长不保存".to_string() } else { res }),
+        json_result: Set(if res.len() > 65535 { "数据太长不保存".to_string() } else { res }),
         path_param: Set(ctx.path_params),
         status: Set(status),
         error_msg: Set(err_msg),
