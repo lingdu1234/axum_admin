@@ -5,7 +5,7 @@ use db::{
     db_conn,
     system::{
         entities::{prelude::SysMenu, sys_api_db, sys_menu, sys_role_api},
-        models::sys_menu::{AddReq, EditReq, LogCacheEditReq, MenuRelated, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu},
+        models::sys_menu::{AddReq, EditReq, LogCacheEditReq, MenuRelated, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu, SysMenuTreeAll},
     },
     DB,
 };
@@ -253,43 +253,47 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
     Ok(res)
 }
 
-/// 获取全部菜单 或者 除开按键api级别的外的路由
-/// is_router 是否是菜单路由，用于前端生成路由
-/// is_only_api 仅获取按键，api级别的路由
-/// 不能同时为true
-/// 同时false 为获取全部路由
-pub async fn get_enabled_menus<C>(db: &C, is_router: bool, is_only_api: bool) -> Result<Vec<MenuResp>>
+/// 获取全部菜单 或者 除开按键api级别的外的路由   
+/// is_router 是否是菜单路由，用于前端生成路由   
+/// is_only_api 仅获取按键，api级别的路由   
+/// 不能同时为true   
+/// 同时false 为获取全部路由   
+/// is_only_enabled 获取启用的路由，false 为全部路由  
+pub async fn get_menus<C>(db: &C, is_router: bool, is_only_api: bool,is_only_enabled:bool) -> Result<Vec<MenuResp>>
 where
     C: TransactionTrait + ConnectionTrait,
 {
-    let mut s = SysMenu::find().filter(sys_menu::Column::DeletedAt.is_null()).filter(sys_menu::Column::Status.eq("1"));
+    let mut s = SysMenu::find().filter(sys_menu::Column::DeletedAt.is_null());
     if is_router {
         s = s.filter(sys_menu::Column::MenuType.ne("F"));
     };
     if is_only_api {
         s = s.filter(sys_menu::Column::MenuType.eq("F"));
     };
+    if is_only_enabled {
+        s = s.filter(sys_menu::Column::Status.eq("1"));
+    };
 
     let res = s.order_by(sys_menu::Column::OrderSort, Order::Asc).into_model::<MenuResp>().all(db).await?;
     Ok(res)
 }
 
-/// get_all 获取全部
+/// get_all_router_tree 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all_router_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTree>> {
-    let menus = get_enabled_menus(db, true, false).await?;
+    let menus = get_menus(db, true, false,true).await?;
     let menu_data = self::get_menu_data(menus);
     let menu_tree = self::get_menu_tree(menu_data, "0".to_string());
 
     Ok(menu_tree)
 }
 
-/// get_all 获取全部
+/// get_all_menu_tree 获取全部
 /// db 数据库连接 使用db.0
-pub async fn get_all_enabled_menu_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTree>> {
-    let menus = get_enabled_menus(db, false, false).await?;
-    let menu_data = self::get_menu_data(menus);
-    let menu_tree = self::get_menu_tree(menu_data, "0".to_string());
+pub async fn get_all_enabled_menu_tree(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<Vec<SysMenuTreeAll>> {
+    let menus = get_sort_list(db, page_params, req).await?;
+    let menu_data = self::get_menu_data2(menus.list);
+    let menu_tree = self::get_menu_tree2(menu_data, "0".to_string());
 
     Ok(menu_tree)
 }
@@ -335,7 +339,7 @@ pub async fn get_role_permissions(db: &DatabaseConnection, role_id: &str) -> Res
 pub async fn get_admin_menu_by_role_ids(db: &DatabaseConnection, role_id: &str) -> Result<Vec<SysMenuTree>> {
     let (menu_apis, _) = self::get_role_permissions(db, role_id).await?;
     //  todo 可能以后加条件判断
-    let router_all = get_enabled_menus(db, true, false).await?;
+    let router_all = get_menus(db, true, false,false).await?;
     //  生成menus
     let mut menus: Vec<MenuResp> = Vec::new();
     for ele in router_all {
@@ -348,6 +352,7 @@ pub async fn get_admin_menu_by_role_ids(db: &DatabaseConnection, role_id: &str) 
     Ok(menu_tree)
 }
 
+/// 将菜单转换为树
 pub fn get_menu_tree(user_menus: Vec<SysMenuTree>, pid: String) -> Vec<SysMenuTree> {
     let mut menu_tree: Vec<SysMenuTree> = Vec::new();
     for mut user_menu in user_menus.clone() {
@@ -357,6 +362,25 @@ pub fn get_menu_tree(user_menus: Vec<SysMenuTree>, pid: String) -> Vec<SysMenuTr
         }
     }
     menu_tree
+}
+pub fn get_menu_tree2(user_menus: Vec<SysMenuTreeAll>, pid: String) -> Vec<SysMenuTreeAll> {
+    let mut menu_tree: Vec<SysMenuTreeAll> = Vec::new();
+    for mut user_menu in user_menus.clone() {
+        if user_menu.menu.pid.trim() == pid.trim() {
+            user_menu.children = Some(get_menu_tree2(user_menus.clone(), user_menu.menu.id.clone()));
+            menu_tree.push(user_menu.clone());
+        }
+    }
+    menu_tree
+}
+// 多写个方法，少返回点数据
+pub fn get_menu_data2(menus: Vec<sys_menu::Model>) -> Vec<SysMenuTreeAll> {
+    let mut menu_res: Vec<SysMenuTreeAll> = Vec::new();
+    for  menu in menus {
+        let menu_tree = SysMenuTreeAll { menu, children: None };
+        menu_res.push(menu_tree);
+    }
+    menu_res
 }
 
 //  整理菜单数据

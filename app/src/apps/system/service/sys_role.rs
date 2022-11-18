@@ -108,7 +108,7 @@ where
     C: TransactionTrait + ConnectionTrait,
 {
     // 获取全部菜单 均为false
-    let menus = super::sys_menu::get_enabled_menus(db, false, false).await?;
+    let menus = super::sys_menu::get_menus(db, false, false,false).await?;
     let menu_map = menus.iter().map(|x| (x.id.clone(), x.clone())).collect::<HashMap<String, MenuResp>>();
     // 组装角色权限数据
     let mut res: Vec<sys_role_api::AddReq> = Vec::new();
