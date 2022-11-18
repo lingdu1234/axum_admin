@@ -11,7 +11,6 @@ use db::{
 };
 use poem::{Endpoint, IntoResponse, Middleware, Request, Response, Result};
 use sea_orm::{EntityTrait, Set};
-
 use crate::{apps::system::check_user_online, utils::api_utils::ALL_APIS};
 
 /// req上下文注入中间件 同时进行jwt授权验证 以及日志记录
@@ -159,18 +158,24 @@ async fn db_log(duration: Duration, req: ReqCtx, now: chrono::NaiveDateTime, api
         oper_ip: Set(user.ipaddr),
         oper_location: Set(user.login_location),
         oper_param: Set(if req.data.len() > 10000 { "数据太长不保存".to_string() } else { req.data }),
-        json_result: Set(if res.len() > 100000 { "数据太长不保存".to_string() } else { res }),
+        //  这个太长了，居然要crash,保险起见，设置为65535 text的长度
+        json_result: Set(if res.len() > 65535 { "数据太长不保存".to_string() } else { res.replace('\\', "") }),
         path_param: Set(req.path_params),
         status: Set(status),
         error_msg: Set(err_msg),
         duration: Set(d),
         oper_time: Set(now),
     };
-    SysOperLog::insert(add_data).exec(db).await.expect("oper_log_add error");
-    Ok(())
+   match SysOperLog::insert(add_data).exec(db).await {
+    Ok(_) => tracing::info!("日志写入数据库成功"),
+    Err(e) => tracing::error!("日志写入数据库错误,{}", e),
+};
+Ok(())
+    
 }
 
 fn file_log(req_data: ReqCtx, now: chrono::NaiveDateTime, duration_data: Duration, res_data: String, err_msg_data: String) {
+    let res = res_data.replace('\\', "");
     tracing::info!(
         "\n请求路径:{:?}\n完成时间:{:?}\n消耗时间:{:?}微秒 | {:?}毫秒\n请求数据:{:?}\n响应数据:{}\n错误信息:{:?}\n",
         req_data.path.clone(),
@@ -178,7 +183,7 @@ fn file_log(req_data: ReqCtx, now: chrono::NaiveDateTime, duration_data: Duratio
         duration_data.as_micros(),
         duration_data.as_millis(),
         req_data,
-        res_data,
+        res,
         err_msg_data,
     );
 }

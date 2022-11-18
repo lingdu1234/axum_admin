@@ -102,7 +102,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Resul
         post_sort: Set(req.post_sort),
         post_name: Set(req.post_name),
         status: Set(req.status),
-        remark: Set(Some(req.remark.unwrap_or_else(|| "".to_string()))),
+        remark: Set(Some(req.remark.unwrap_or_default())),
         created_by: Set(user_id),
         created_at: Set(Some(now)),
         ..Default::default()

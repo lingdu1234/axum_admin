@@ -14,6 +14,13 @@ pub struct SearchReq {
     pub end_time: Option<String>,
 }
 
+#[derive(Serialize, Clone, Debug)]
+pub struct SysMenuTreeAll {
+    #[serde(flatten)]
+    pub menu: sys_menu::Model,
+    pub children: Option<Vec<SysMenuTreeAll>>,
+}
+
 #[derive(Deserialize, Serialize, Debug, Clone, FromQueryResult, Default)]
 pub struct MenuResp {
     pub id: String,

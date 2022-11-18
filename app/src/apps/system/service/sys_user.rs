@@ -288,7 +288,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, c_user_id: String) -> Res
         remark: Set(req.remark),
         is_admin: Set(req.is_admin),
         phone_num: Set(req.phone_num),
-        avatar: Set(req.avatar.unwrap_or_else(|| "".to_string())),
+        avatar: Set(req.avatar.unwrap_or_default()),
         created_at: Set(now),
         ..Default::default()
     };

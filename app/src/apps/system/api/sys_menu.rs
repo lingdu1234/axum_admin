@@ -4,7 +4,7 @@ use db::{
     db_conn,
     system::{
         entities::sys_menu,
-        models::sys_menu::{AddReq, DeleteReq, EditReq, LogCacheEditReq, MenuRelated, MenuResp, SearchReq, SysMenuTree},
+        models::sys_menu::{AddReq, DeleteReq, EditReq, LogCacheEditReq, MenuRelated, MenuResp, SearchReq, SysMenuTree, SysMenuTreeAll},
     },
     DB,
 };
@@ -84,9 +84,9 @@ pub async fn update_log_cache_method(Json(edit_req): Json<LogCacheEditReq>) -> R
 
 /// get_all_menu_tree 获取全部菜单树
 #[handler]
-pub async fn get_all_enabled_menu_tree() -> Res<Vec<SysMenuTree>> {
+pub async fn get_all_enabled_menu_tree(Query(page_params): Query<PageParams>, Query(search_req): Query<SearchReq>) -> Res<Vec<SysMenuTreeAll>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_menu::get_all_enabled_menu_tree(db).await;
+    let res = service::sys_menu::get_all_enabled_menu_tree(db,page_params,search_req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
