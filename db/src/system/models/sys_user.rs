@@ -88,7 +88,7 @@ pub struct UserInformation {
 pub struct SearchReq {
     pub user_id: Option<String>,
     pub role_id: Option<String>,
-    pub user_ids: Option<Vec<String>>,
+    pub user_ids: Option<String>,
     pub user_name: Option<String>,
     pub phone_num: Option<String>,
     pub user_nickname: Option<String>,

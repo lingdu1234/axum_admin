@@ -47,6 +47,12 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
         if !x.is_empty() {
             s = s.filter(sys_menu::Column::MenuType.eq(x));
         }
+    }    
+    if let Some(x) = req.menu_types {
+        if !x.is_empty() {
+            let y:Vec<&str> = x.split(',').collect();
+            s = s.filter(sys_menu::Column::MenuType.is_in(y));
+        }
     }
     if let Some(x) = req.begin_time {
         let x = x + " 00:00:00";

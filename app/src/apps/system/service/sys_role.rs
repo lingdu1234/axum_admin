@@ -31,7 +31,8 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
 
     if let Some(x) = req.role_ids {
         if !x.is_empty() {
-            s = s.filter(sys_role::Column::RoleId.is_in(x));
+            let y:Vec<&str> = x.split(',').collect();
+            s = s.filter(sys_role::Column::RoleId.is_in(y));
         }
     }
     if let Some(x) = req.role_id {
