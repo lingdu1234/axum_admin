@@ -145,7 +145,7 @@ pub async fn get_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, Que
         Ok(x) => x,
         Err(e) => return Res::with_err(&e.to_string()),
     };
-    req.user_ids = Some(user_ids);
+    req.user_ids = Some(user_ids.join(","));
     let res = service::sys_user::get_sort_list(db, page_params, req).await;
     match res {
         Ok(x) => Res::with_data(x),
@@ -163,7 +163,7 @@ pub async fn get_un_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, 
         Ok(x) => x,
         Err(e) => return Res::with_err(&e.to_string()),
     };
-    req.user_ids = Some(user_ids);
+    req.user_ids = Some(user_ids.join(","));
     let res = service::sys_user::get_un_auth_user(db, page_params, req).await;
     match res {
         Ok(x) => Res::with_data(x),

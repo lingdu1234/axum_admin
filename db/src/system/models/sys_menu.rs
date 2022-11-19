@@ -8,6 +8,7 @@ pub struct SearchReq {
     pub id: Option<String>,
     pub menu_name: Option<String>,
     pub menu_type: Option<String>,
+    pub menu_types: Option<String>,
     pub method: Option<String>,
     pub status: Option<String>,
     pub begin_time: Option<String>,

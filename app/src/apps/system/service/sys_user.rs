@@ -46,7 +46,8 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
     }
     if let Some(x) = req.user_ids {
         if !x.is_empty() {
-            s = s.filter(sys_user::Column::Id.is_in(x));
+            let y:Vec<&str> = x.split(',').collect();
+            s = s.filter(sys_user::Column::Id.is_in(y));
         }
     }
 
@@ -148,7 +149,8 @@ pub async fn get_un_auth_user(db: &DatabaseConnection, page_params: PageParams, 
     s = s.filter(sys_user::Column::DeletedAt.is_null());
     // 查询条件
     if let Some(x) = req.user_ids {
-        s = s.filter(sys_user::Column::Id.is_not_in(x));
+        let y:Vec<&str> = x.split(',').collect();
+        s = s.filter(sys_user::Column::Id.is_not_in(y));
     }
     if let Some(x) = req.user_name {
         s = s.filter(sys_user::Column::UserName.contains(&x));
