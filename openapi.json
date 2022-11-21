@@ -1,0 +1,6949 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+      "title": "Axum Admin OpenApi",
+      "description": "一个后台管理面板,返回数据为主要数据的数据结构,一些返回数据采用了泛型,以实际返回数据为准",
+      "contact": {
+        "name": "lingdu",
+        "email": "waong2005@126.com"
+      },
+      "license": {
+        "name": "MIT apache2"
+      },
+      "version": "v0.0.1"
+    },
+    "servers": [
+      {
+        "url": "/api"
+      }
+    ],
+    "paths": {
+      "/comm/get_captcha": {
+        "get": {
+          "tags": [
+            "common"
+          ],
+          "summary": "验证码获取",
+          "description": "验证码获取\n",
+          "operationId": "get_captcha",
+          "responses": {
+            "200": {
+              "description": "获取验证码",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CaptchaImage"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false
+        }
+      },
+      "/comm/log_out": {
+        "post": {
+          "tags": [
+            "common"
+          ],
+          "summary": "用户自己退出登录，下线",
+          "description": "用户自己退出登录，下线\n",
+          "operationId": "log_out",
+          "responses": {
+            "200": {
+              "description": " 用户自己退出登录，下线",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/comm/login": {
+        "post": {
+          "tags": [
+            "common"
+          ],
+          "summary": "更新用户个人信息",
+          "description": "更新用户个人信息\n",
+          "operationId": "login",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserLoginReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "用户登录",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthBody"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false
+        }
+      },
+      "/system/api_db/add": {
+        "post": {
+          "tags": [
+            "SysApiDb"
+          ],
+          "summary": "新增api与数据库表对应关系",
+          "description": "新增api与数据库表对应关系\n",
+          "operationId": "add",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysApiDbAddEditReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "新增api与数据库表对应关系",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/api_db/get_by_id": {
+        "get": {
+          "tags": [
+            "SysApiDb"
+          ],
+          "summary": "按id获取对应关系",
+          "description": "按id获取对应关系\n",
+          "operationId": "get_by_id",
+          "parameters": [
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysApiDbSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "按id获取对应关系",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/SysApiDbModel"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dept/add": {
+        "post": {
+          "tags": [
+            "SysDept"
+          ],
+          "summary": "新增部门",
+          "description": "新增部门\n",
+          "operationId": "add",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysDeptAddReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "新增部门",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dept/delete": {
+        "delete": {
+          "tags": [
+            "SysDept"
+          ],
+          "summary": "删除部门",
+          "description": "删除部门\n",
+          "operationId": "delete",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysDeptDeleteReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "删除部门",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dept/edit": {
+        "put": {
+          "tags": [
+            "SysDept"
+          ],
+          "summary": "编辑部门",
+          "description": "编辑部门\n",
+          "operationId": "edit",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysDeptEditReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "编辑部门",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dept/get_all": {
+        "get": {
+          "tags": [
+            "SysDept"
+          ],
+          "summary": "获取全部部门",
+          "description": "获取全部部门\n",
+          "operationId": "get_all",
+          "responses": {
+            "200": {
+              "description": "获取全部部门",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/DeptResp"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dept/get_by_id": {
+        "get": {
+          "tags": [
+            "SysDept"
+          ],
+          "summary": "按id获取部门",
+          "description": "按id获取部门\n",
+          "operationId": "get_by_id",
+          "parameters": [
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysDeptSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "按id获取部门",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/DeptResp"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dept/get_dept_tree": {
+        "get": {
+          "tags": [
+            "SysDept"
+          ],
+          "summary": "获取全部部门树",
+          "description": "获取全部部门树\n",
+          "operationId": "get_dept_tree",
+          "responses": {
+            "200": {
+              "description": "获取全部部门树",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/DeptResp"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dept/list": {
+        "get": {
+          "tags": [
+            "SysDept"
+          ],
+          "summary": "获取部门列表",
+          "description": "获取部门列表\n",
+          "operationId": "get_sort_list",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysDeptSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取部门列表",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysDeptModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dict/data/add": {
+        "post": {
+          "tags": [
+            "SysDictData"
+          ],
+          "summary": "新增字典数据",
+          "description": "新增字典数据\n",
+          "operationId": "add",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysDictDataAddReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "新增字典数据",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dict/data/delete": {
+        "delete": {
+          "tags": [
+            "SysDictData"
+          ],
+          "summary": "删除字典数据",
+          "description": "删除字典数据\n",
+          "operationId": "delete",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysDictDataDeleteReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "删除字典数据",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dict/data/edit": {
+        "put": {
+          "tags": [
+            "SysDictData"
+          ],
+          "summary": "编辑字典数据",
+          "description": "编辑字典数据\n",
+          "operationId": "edit",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysDictDataEditReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "编辑字典数据",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dict/data/get_by_id": {
+        "get": {
+          "tags": [
+            "SysDictData"
+          ],
+          "summary": "按id获取字典数据",
+          "description": "按id获取字典数据\n",
+          "operationId": "get_by_id",
+          "parameters": [
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysDeptSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "按id获取字典数据",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysDictDataModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dict/data/get_by_type": {
+        "get": {
+          "tags": [
+            "SysDictData"
+          ],
+          "summary": "按type获取字典数据",
+          "description": "按type获取字典数据\n",
+          "operationId": "get_by_type",
+          "parameters": [
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysDeptSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "按id获取字典数据",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/SysDictDataModel"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dict/data/list": {
+        "get": {
+          "tags": [
+            "SysDictData"
+          ],
+          "summary": "获取字典数据列表",
+          "description": "获取字典数据列表\n",
+          "operationId": "get_sort_list",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysDictDataSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取字典数据列表",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysDictDataModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dict/type/add": {
+        "post": {
+          "tags": [
+            "SysDictType"
+          ],
+          "summary": "新增字典数据",
+          "description": "新增字典数据\n",
+          "operationId": "add",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysDictTypeAddReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "新增字典数据",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dict/type/delete": {
+        "delete": {
+          "tags": [
+            "SysDictType"
+          ],
+          "summary": "删除字典数据",
+          "description": "删除字典数据\n",
+          "operationId": "delete",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysDictTypeDeleteReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "删除字典数据",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dict/type/edit": {
+        "put": {
+          "tags": [
+            "SysDictType"
+          ],
+          "summary": "编辑字典数据",
+          "description": "编辑字典数据\n",
+          "operationId": "edit",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysDictTypeEditReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "编辑字典数据",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dict/type/get_all": {
+        "get": {
+          "tags": [
+            "SysDictType"
+          ],
+          "summary": "按id获取字典数据",
+          "description": "按id获取字典数据\n",
+          "operationId": "get_all",
+          "responses": {
+            "200": {
+              "description": "按id获取字典数据",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/SysDictTypeModel"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dict/type/get_by_id": {
+        "get": {
+          "tags": [
+            "SysDictType"
+          ],
+          "summary": "按id获取字典数据",
+          "description": "按id获取字典数据\n",
+          "operationId": "get_by_id",
+          "parameters": [
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysDeptSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "按id获取字典数据",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysDictTypeModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/dict/type/list": {
+        "get": {
+          "tags": [
+            "SysDictType"
+          ],
+          "summary": "获取字典数据列表",
+          "description": "获取字典数据列表\n",
+          "operationId": "get_sort_list",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysDictTypeSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取字典数据列表",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysDictTypeModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/job/add": {
+        "post": {
+          "tags": [
+            "SysJob"
+          ],
+          "summary": "新增定时任务",
+          "description": "新增定时任务\n",
+          "operationId": "add",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysJobAddReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "新增定时任务",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/job/change_status": {
+        "put": {
+          "tags": [
+            "SysJob"
+          ],
+          "summary": "更新定时任务状态",
+          "description": "更新定时任务状态\n",
+          "operationId": "change_status",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysJobStatusReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "更新定时任务状态",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/job/delete": {
+        "delete": {
+          "tags": [
+            "SysJob"
+          ],
+          "summary": "删除定时任务",
+          "description": "删除定时任务\n",
+          "operationId": "delete",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysJobDeleteReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "删除定时任务",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/job/edit": {
+        "put": {
+          "tags": [
+            "SysJob"
+          ],
+          "summary": "更新定时任务",
+          "description": "更新定时任务\n",
+          "operationId": "edit",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysJobEditReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "更新定时任务",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/job/get_by_id": {
+        "get": {
+          "tags": [
+            "SysJob"
+          ],
+          "summary": "按id获取任务",
+          "description": "按id获取任务\n",
+          "operationId": "get_by_id",
+          "parameters": [
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysJobSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "按id获取任务",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysJobModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/job/list": {
+        "get": {
+          "tags": [
+            "SysJob"
+          ],
+          "summary": "获取定时任务列表",
+          "description": "获取定时任务列表\n",
+          "operationId": "get_sort_list",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysJobSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取定时任务列表",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysJobModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/job/run_task_once": {
+        "put": {
+          "tags": [
+            "SysJob"
+          ],
+          "summary": "运行一次定时任务",
+          "description": "运行一次定时任务\n",
+          "operationId": "run_task_once",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobId"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "运行一次定时任务",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/job/validate_cron_str": {
+        "post": {
+          "tags": [
+            "SysJob"
+          ],
+          "summary": "验证cron表达式",
+          "description": "验证cron表达式\n",
+          "operationId": "validate_cron_str",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobId"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "验证cron表达式",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/job_log/clean": {
+        "delete": {
+          "tags": [
+            "SysJobLog"
+          ],
+          "summary": "清空定时任务日志,id为空全部清除",
+          "description": "清空定时任务日志,id为空全部清除\n",
+          "operationId": "clean",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysJobLogCleanReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "清空定时任务日志,id为空全部清除",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/job_log/delete": {
+        "delete": {
+          "tags": [
+            "SysJobLog"
+          ],
+          "summary": "删除定时任务日志",
+          "description": "删除定时任务日志\n",
+          "operationId": "delete",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysJobLogDeleteReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "删除定时任务日志",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/job_log/list": {
+        "get": {
+          "tags": [
+            "SysJobLog"
+          ],
+          "summary": "获取定时任务日志列表",
+          "description": "获取定时任务日志列表\n",
+          "operationId": "get_sort_list",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysJobLogSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取定时任务日志列表",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysJobLogModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/login-log/clean": {
+        "delete": {
+          "tags": [
+            "SysLoginLog"
+          ],
+          "summary": "清空登录日志",
+          "description": "清空登录日志\n",
+          "operationId": "clean",
+          "responses": {
+            "200": {
+              "description": "清空登录日志",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/login-log/delete": {
+        "delete": {
+          "tags": [
+            "SysLoginLog"
+          ],
+          "summary": "删除登录日志",
+          "description": "删除登录日志\n",
+          "operationId": "delete",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysLoginLogDeleteReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "删除登录日志",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/login-log/list": {
+        "get": {
+          "tags": [
+            "SysLoginLog"
+          ],
+          "summary": "获取登录日志",
+          "description": "获取登录日志\n",
+          "operationId": "get_sort_list",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysLoginLogSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取登录日志",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysLoginLogModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/menu/add": {
+        "post": {
+          "tags": [
+            "SysMenu"
+          ],
+          "summary": "新增菜单",
+          "description": "新增菜单\n",
+          "operationId": "add",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysMenuAddReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "新增菜单",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/menu/delete": {
+        "delete": {
+          "tags": [
+            "SysMenu"
+          ],
+          "summary": "删除菜单",
+          "description": "删除菜单\n",
+          "operationId": "delete",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysMenuDeleteReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "删除菜单",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/menu/edit": {
+        "put": {
+          "tags": [
+            "SysMenu"
+          ],
+          "summary": "更新菜单",
+          "description": "更新菜单\n",
+          "operationId": "edit",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysMenuEditReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "更新菜单",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/menu/get_all_enabled_menu_tree": {
+        "get": {
+          "tags": [
+            "SysMenu"
+          ],
+          "summary": "获取全部路由菜单树 懒得改名字了",
+          "description": "获取全部路由菜单树 懒得改名字了\n",
+          "operationId": "get_all_enabled_menu_tree",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysMenuSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取全部路由菜单树 懒得改名字了",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysMenuTreeAll"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/menu/get_auth_list": {
+        "get": {
+          "tags": [
+            "SysMenu"
+          ],
+          "summary": "获取api与数据库关联列表 授权列表",
+          "description": "获取api与数据库关联列表 授权列表\n",
+          "operationId": "get_related_api_and_db",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysMenuSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取api与数据库关联列表 授权列表",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/MenuRelated"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/menu/get_by_id": {
+        "get": {
+          "tags": [
+            "SysMenu"
+          ],
+          "summary": "按id获取菜单",
+          "description": "按id获取菜单\n",
+          "operationId": "get_by_id",
+          "parameters": [
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysJobSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "按id获取菜单",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/MenuResp"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/menu/get_routers": {
+        "get": {
+          "tags": [
+            "SysMenu"
+          ],
+          "summary": "获取用户路由，用于渲染菜单",
+          "description": "获取用户路由，用于渲染菜单\n",
+          "operationId": "get_routers",
+          "responses": {
+            "200": {
+              "description": "获取用户路由，用于渲染菜单",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysMenuTree"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/menu/list": {
+        "get": {
+          "tags": [
+            "SysMenu"
+          ],
+          "summary": "获取菜单列表 （弃用）",
+          "description": "获取菜单列表 （弃用）\n",
+          "operationId": "get_sort_list",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysMenuSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取菜单列表",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysMenuModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/menu/update_log_cache_method": {
+        "put": {
+          "tags": [
+            "SysMenu"
+          ],
+          "summary": "修改菜单 日志 缓存 方法",
+          "description": "修改菜单 日志 缓存 方法\n",
+          "operationId": "update_log_cache_method",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogCacheEditReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "更新菜单",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/monitor/server": {
+        "get": {
+          "tags": [
+            "SysMonitor"
+          ],
+          "summary": "获取服务器信息",
+          "description": "获取服务器信息\n",
+          "operationId": "get_server_info",
+          "responses": {
+            "200": {
+              "description": "服务器信息",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysInfo"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/monitor/server-event": {
+        "get": {
+          "tags": [
+            "SysMonitor"
+          ],
+          "summary": "获取服务器信息 SSE",
+          "description": "获取服务器信息 SSE\n",
+          "operationId": "get_server_info_sse",
+          "responses": {
+            "200": {
+              "description": "服务器信息",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/online/delete": {
+        "delete": {
+          "tags": [
+            "SysUserOnline"
+          ],
+          "summary": "强制用户下线",
+          "description": "强制用户下线\n",
+          "operationId": "delete",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysUserOnlineDeleteReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "强制用户下线",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/online/list": {
+        "get": {
+          "tags": [
+            "SysUserOnline"
+          ],
+          "summary": "获取在线用户列表",
+          "description": "获取在线用户列表\n",
+          "operationId": "get_sort_list",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysUserOnlineSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取在线用户列表",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysPostModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/oper_log/clean": {
+        "delete": {
+          "tags": [
+            "SysOperLog"
+          ],
+          "summary": "删除操作日志",
+          "description": "删除操作日志\n",
+          "operationId": "clean",
+          "responses": {
+            "200": {
+              "description": "删除操作日志",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/oper_log/delete": {
+        "delete": {
+          "tags": [
+            "SysOperLog"
+          ],
+          "summary": "删除操作日志",
+          "description": "删除操作日志\n",
+          "operationId": "delete",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysOperLogDeleteReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "删除操作日志",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/oper_log/get_by_id": {
+        "get": {
+          "tags": [
+            "SysOperLog"
+          ],
+          "summary": "按ID获取登录日志",
+          "description": "按ID获取登录日志\n",
+          "operationId": "get_by_id",
+          "parameters": [
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysOperLogSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "按ID获取登录日志",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysOperLogModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/oper_log/list": {
+        "get": {
+          "tags": [
+            "SysOperLog"
+          ],
+          "summary": "获取操作日志",
+          "description": "获取操作日志\n",
+          "operationId": "get_sort_list",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysOperLogSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取操作日志",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysOperLogModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/post/add": {
+        "post": {
+          "tags": [
+            "SysPost"
+          ],
+          "summary": "新增岗位",
+          "description": "新增岗位\n",
+          "operationId": "add",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysPostAddReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "新增岗位",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/post/delete": {
+        "delete": {
+          "tags": [
+            "SysPost"
+          ],
+          "summary": "删除岗位",
+          "description": "删除岗位\n",
+          "operationId": "delete",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysPostDeleteReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "删除岗位",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/post/edit": {
+        "put": {
+          "tags": [
+            "SysPost"
+          ],
+          "summary": "修改岗位",
+          "description": "修改岗位\n",
+          "operationId": "edit",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysPostEditReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "修改岗位",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/post/get_all": {
+        "get": {
+          "tags": [
+            "SysPost"
+          ],
+          "summary": "获取全部岗位",
+          "description": "获取全部岗位\n",
+          "operationId": "get_all",
+          "responses": {
+            "200": {
+              "description": "获取全部岗位",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysPostResp"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/post/get_by_id": {
+        "get": {
+          "tags": [
+            "SysPost"
+          ],
+          "summary": "按id获取岗位",
+          "description": "按id获取岗位\n",
+          "operationId": "get_by_id",
+          "parameters": [
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysPostSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "按id获取岗位",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysPostResp"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/post/list": {
+        "get": {
+          "tags": [
+            "SysPost"
+          ],
+          "summary": "获取岗位列表",
+          "description": "获取岗位列表\n",
+          "operationId": "get_sort_list",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysPostSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取岗位列表",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysPostModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/role/add": {
+        "post": {
+          "tags": [
+            "SysRole"
+          ],
+          "summary": "新增角色",
+          "description": "新增角色\n",
+          "operationId": "add",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysRoleAddReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "新增角色",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/role/change_status": {
+        "put": {
+          "tags": [
+            "SysRole"
+          ],
+          "summary": "修改角色状态",
+          "description": "修改角色状态\n",
+          "operationId": "change_status",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysRoleStatusReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "修改角色状态",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/role/delete": {
+        "delete": {
+          "tags": [
+            "SysRole"
+          ],
+          "summary": "删除角色",
+          "description": "删除角色\n",
+          "operationId": "delete",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysRoleDeleteReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "删除角色",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/role/edit": {
+        "put": {
+          "tags": [
+            "SysRole"
+          ],
+          "summary": "修改角色",
+          "description": "修改角色\n",
+          "operationId": "edit",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysRoleEditReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "修改角色",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/role/get_all": {
+        "get": {
+          "tags": [
+            "SysRole"
+          ],
+          "summary": "获取全部角色",
+          "description": "获取全部角色\n",
+          "operationId": "get_all",
+          "responses": {
+            "200": {
+              "description": "获取全部角色",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysRoleResp"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/role/get_by_id": {
+        "get": {
+          "tags": [
+            "SysRole"
+          ],
+          "summary": "按id获取角色",
+          "description": "按id获取角色\n",
+          "operationId": "get_by_id",
+          "parameters": [
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysRoleSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "按id获取角色",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysRoleResp"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/role/get_role_dept": {
+        "get": {
+          "tags": [
+            "SysRole"
+          ],
+          "summary": "获取角色对应的部门id",
+          "description": "获取角色对应的部门id\n",
+          "operationId": "get_role_dept",
+          "parameters": [
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysRoleSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取角色对应的部门id",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/role/get_role_menu": {
+        "get": {
+          "tags": [
+            "SysRole"
+          ],
+          "summary": "获取角色对应菜单id",
+          "description": "获取角色对应菜单id\n",
+          "operationId": "get_role_menu",
+          "parameters": [
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysRoleSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取角色对应菜单id",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/role/list": {
+        "get": {
+          "tags": [
+            "SysRole"
+          ],
+          "summary": "获取角色列表",
+          "description": "获取角色列表\n",
+          "operationId": "get_sort_list",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysRoleSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取角色列表",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/SysRoleModel"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/role/set_data_scope": {
+        "put": {
+          "tags": [
+            "SysRole"
+          ],
+          "summary": "修改角色数据权限",
+          "description": "修改角色数据权限\n",
+          "operationId": "set_data_scope",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataScopeReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "修改角色数据权限",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/update_log/add": {
+        "post": {
+          "tags": [
+            "SysUpdateLog"
+          ],
+          "summary": "新增更新日志",
+          "description": "新增更新日志\n",
+          "operationId": "add",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysUpdateLogAddReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "新增更新日志",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/update_log/delete": {
+        "delete": {
+          "tags": [
+            "SysUpdateLog"
+          ],
+          "summary": "删除更新日志",
+          "description": "删除更新日志\n",
+          "operationId": "delete",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysUpdateLogDeleteReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "删除更新日志",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/update_log/edit": {
+        "put": {
+          "tags": [
+            "SysUpdateLog"
+          ],
+          "summary": "删除更新日志",
+          "description": "删除更新日志\n",
+          "operationId": "edit",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysUpdateLogEditReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "删除更新日志",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/update_log/get_all": {
+        "get": {
+          "tags": [
+            "SysUpdateLog"
+          ],
+          "summary": "获取全部更新日志",
+          "description": "获取全部更新日志\n",
+          "operationId": "get_all",
+          "responses": {
+            "200": {
+              "description": "获取全部更新日志",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/SysUpdateLogModel"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/add": {
+        "post": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "新增用户",
+          "description": "新增用户\n",
+          "operationId": "add",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysUserAddReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "新增用户",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/change_dept": {
+        "put": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "改变用户部门",
+          "description": "改变用户部门\n",
+          "operationId": "change_dept",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeRoleReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "改变用户部门",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/change_role": {
+        "put": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "改变用户角色",
+          "description": "改变用户角色\n",
+          "operationId": "change_role",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeRoleReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "改变用户角色",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/change_status": {
+        "put": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "更新用户状态",
+          "description": "更新用户状态\n",
+          "operationId": "change_status",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeStatusReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "更新用户状态",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/delete": {
+        "delete": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "删除用户",
+          "description": "删除用户\n",
+          "operationId": "delete",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysUserDeleteReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "删除用户",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/edit": {
+        "put": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "更新用户",
+          "description": "更新用户\n",
+          "operationId": "edit",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SysUserEditReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "更新用户",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/fresh_token": {
+        "put": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "刷新token",
+          "description": "刷新token\n",
+          "operationId": "fresh_token",
+          "responses": {
+            "200": {
+              "description": "更新用户状态",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/AuthBody"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/get_by_id": {
+        "get": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "按id获取用户信息",
+          "description": "按id获取用户信息\n",
+          "operationId": "get_by_id",
+          "parameters": [
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysPostSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "按id获取用户信息",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/UserInformation"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/get_info": {
+        "get": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "获取用户完全信息",
+          "description": "获取用户完全信息\n",
+          "operationId": "get_info",
+          "responses": {
+            "200": {
+              "description": "获取用户完全信息",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/UserInfo"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/get_profile": {
+        "get": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "获取用户个人信息",
+          "description": "获取用户个人信息\n",
+          "operationId": "get_profile",
+          "responses": {
+            "200": {
+              "description": "获取用户个人信息",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/UserInformation"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/list": {
+        "get": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "获取用户列表",
+          "description": "获取用户列表\n",
+          "operationId": "get_sort_list",
+          "parameters": [
+            {
+              "name": "page_params",
+              "in": "query",
+              "description": "分页参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/PageParams"
+              }
+            },
+            {
+              "name": "params",
+              "in": "query",
+              "description": "查询参数",
+              "required": true,
+              "deprecated": false,
+              "schema": {
+                "$ref": "#/components/schemas/SysUserSearchReq"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "获取用户列表",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/UserWithDept"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/reset_passwd": {
+        "put": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "重置密码",
+          "description": "重置密码\n",
+          "operationId": "reset_passwd",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetPwdReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "重置密码",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/update_avatar": {
+        "put": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "更新头像",
+          "description": "更新头像\n",
+          "operationId": "update_avatar",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Multipart"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "更新头像",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/update_passwd": {
+        "put": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "更新密码",
+          "description": "更新密码\n",
+          "operationId": "update_passwd",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatePwdReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "更新密码",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      },
+      "/system/user/update_profile": {
+        "put": {
+          "tags": [
+            "SysUser"
+          ],
+          "summary": "更新用户个人信息",
+          "description": "更新用户个人信息\n",
+          "operationId": "update_profile",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateProfileReq"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "更新用户个人信息",
+              "content": {
+                "text/plain": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "deprecated": false,
+          "security": [
+            {
+              "authorization": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "AddOrCancelAuthRoleReq": {
+          "type": "object",
+          "required": [
+            "user_ids",
+            "role_id"
+          ],
+          "properties": {
+            "role_id": {
+              "type": "string"
+            },
+            "user_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "AuthBody": {
+          "type": "object",
+          "required": [
+            "token",
+            "token_type",
+            "exp",
+            "exp_in"
+          ],
+          "properties": {
+            "exp": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "exp_in": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "token": {
+              "type": "string"
+            },
+            "token_type": {
+              "type": "string"
+            }
+          }
+        },
+        "CaptchaImage": {
+          "type": "object",
+          "required": [
+            "captcha_on_off",
+            "uuid",
+            "img"
+          ],
+          "properties": {
+            "captcha_on_off": {
+              "type": "boolean"
+            },
+            "img": {
+              "type": "string"
+            },
+            "uuid": {
+              "type": "string"
+            }
+          }
+        },
+        "ChangeDeptReq": {
+          "type": "object",
+          "required": [
+            "user_id",
+            "dept_id"
+          ],
+          "properties": {
+            "dept_id": {
+              "type": "string"
+            },
+            "user_id": {
+              "type": "string"
+            }
+          }
+        },
+        "ChangeRoleReq": {
+          "type": "object",
+          "required": [
+            "user_id",
+            "role_id"
+          ],
+          "properties": {
+            "role_id": {
+              "type": "string"
+            },
+            "user_id": {
+              "type": "string"
+            }
+          }
+        },
+        "ChangeStatusReq": {
+          "type": "object",
+          "required": [
+            "user_id",
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "type": "string"
+            },
+            "user_id": {
+              "type": "string"
+            }
+          }
+        },
+        "Cpu": {
+          "type": "object",
+          "required": [
+            "name",
+            "arch",
+            "processors",
+            "frequency",
+            "cores",
+            "total_use"
+          ],
+          "properties": {
+            "arch": {
+              "type": "string"
+            },
+            "cores": {
+              "type": "string"
+            },
+            "frequency": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "name": {
+              "type": "string"
+            },
+            "processors": {
+              "type": "integer"
+            },
+            "total_use": {
+              "type": "number",
+              "format": "float"
+            }
+          }
+        },
+        "CpuLoad": {
+          "type": "object",
+          "required": [
+            "one",
+            "five",
+            "fifteen"
+          ],
+          "properties": {
+            "fifteen": {
+              "type": "number",
+              "format": "float"
+            },
+            "five": {
+              "type": "number",
+              "format": "float"
+            },
+            "one": {
+              "type": "number",
+              "format": "float"
+            }
+          }
+        },
+        "DataScopeReq": {
+          "type": "object",
+          "required": [
+            "role_id",
+            "data_scope",
+            "dept_ids"
+          ],
+          "properties": {
+            "data_scope": {
+              "type": "string"
+            },
+            "dept_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "role_id": {
+              "type": "string"
+            }
+          }
+        },
+        "DeptResp": {
+          "type": "object",
+          "required": [
+            "dept_id",
+            "parent_id",
+            "dept_name",
+            "order_num",
+            "created_at",
+            "status"
+          ],
+          "properties": {
+            "created_at": {
+              "$ref": "#/components/schemas/NaiveDateTime"
+            },
+            "dept_id": {
+              "type": "string"
+            },
+            "dept_name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "leader": {
+              "type": "string"
+            },
+            "order_num": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "phone": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "DiskUsage": {
+          "type": "object",
+          "required": [
+            "read_bytes",
+            "total_read_bytes",
+            "written_bytes",
+            "total_written_bytes"
+          ],
+          "properties": {
+            "read_bytes": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "total_read_bytes": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "total_written_bytes": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "written_bytes": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        "JobId": {
+          "type": "object",
+          "required": [
+            "job_id",
+            "task_id"
+          ],
+          "properties": {
+            "job_id": {
+              "type": "string"
+            },
+            "task_id": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        "LogCacheEditReq": {
+          "type": "object",
+          "required": [
+            "id",
+            "log_method",
+            "data_cache_method"
+          ],
+          "properties": {
+            "data_cache_method": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "log_method": {
+              "type": "string"
+            }
+          }
+        },
+        "Memory": {
+          "type": "object",
+          "required": [
+            "total_memory",
+            "used_memory",
+            "total_swap",
+            "used_swap"
+          ],
+          "properties": {
+            "total_memory": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "total_swap": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "used_memory": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "used_swap": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        "MenuRelated": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/sys_menu.Model"
+            },
+            {
+              "type": "object",
+              "required": [
+                "dbs",
+                "apis"
+              ],
+              "properties": {
+                "apis": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "dbs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "MenuResp": {
+          "type": "object",
+          "required": [
+            "id",
+            "pid",
+            "path",
+            "menu_name",
+            "icon",
+            "menu_type",
+            "order_sort",
+            "status",
+            "api",
+            "method",
+            "component",
+            "visible",
+            "is_frame",
+            "is_cache",
+            "data_scope",
+            "log_method",
+            "data_cache_method",
+            "remark"
+          ],
+          "properties": {
+            "api": {
+              "type": "string"
+            },
+            "component": {
+              "type": "string"
+            },
+            "data_cache_method": {
+              "type": "string"
+            },
+            "data_scope": {
+              "type": "string"
+            },
+            "i18n": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "is_cache": {
+              "type": "string"
+            },
+            "is_frame": {
+              "type": "string"
+            },
+            "log_method": {
+              "type": "string"
+            },
+            "menu_name": {
+              "type": "string"
+            },
+            "menu_type": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            },
+            "order_sort": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "path": {
+              "type": "string"
+            },
+            "pid": {
+              "type": "string"
+            },
+            "query": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "visible": {
+              "type": "string"
+            }
+          }
+        },
+        "Meta": {
+          "type": "object",
+          "required": [
+            "icon",
+            "title",
+            "no_cache",
+            "hidden"
+          ],
+          "properties": {
+            "hidden": {
+              "type": "boolean"
+            },
+            "i18n": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string"
+            },
+            "link": {
+              "type": "string"
+            },
+            "no_cache": {
+              "type": "boolean"
+            },
+            "title": {
+              "type": "string"
+            }
+          }
+        },
+        "Network": {
+          "type": "object",
+          "required": [
+            "name",
+            "received",
+            "total_received",
+            "transmitted",
+            "total_transmitted"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "received": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "total_received": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "total_transmitted": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "transmitted": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        "PageParams": {
+          "type": "object",
+          "description": "分页参数",
+          "properties": {
+            "page_num": {
+              "type": "integer",
+              "format": "int64",
+              "example": 1
+            },
+            "page_size": {
+              "type": "integer",
+              "format": "int64",
+              "example": 10
+            }
+          }
+        },
+        "Process": {
+          "type": "object",
+          "required": [
+            "name",
+            "used_memory",
+            "used_virtual_memory",
+            "cup_usage",
+            "start_time",
+            "run_time",
+            "disk_usage"
+          ],
+          "properties": {
+            "cup_usage": {
+              "type": "number",
+              "format": "float"
+            },
+            "disk_usage": {
+              "$ref": "#/components/schemas/DiskUsage"
+            },
+            "name": {
+              "type": "string"
+            },
+            "run_time": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "start_time": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "used_memory": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "used_virtual_memory": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        "ResetPwdReq": {
+          "type": "object",
+          "required": [
+            "user_id",
+            "new_passwd"
+          ],
+          "properties": {
+            "new_passwd": {
+              "type": "string"
+            },
+            "user_id": {
+              "type": "string"
+            }
+          }
+        },
+        "RespTree": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/DeptResp"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RespTree"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "Server": {
+          "type": "object",
+          "required": [
+            "oper_sys_name",
+            "host_name",
+            "system_version",
+            "system_kerne"
+          ],
+          "properties": {
+            "host_name": {
+              "type": "string"
+            },
+            "oper_sys_name": {
+              "type": "string"
+            },
+            "system_kerne": {
+              "type": "string"
+            },
+            "system_version": {
+              "type": "string"
+            }
+          }
+        },
+        "SysApiDbAddEditReq": {
+          "type": "object",
+          "required": [
+            "api_id",
+            "dbs"
+          ],
+          "properties": {
+            "api_id": {
+              "type": "string"
+            },
+            "dbs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "SysApiDbModel": {
+          "type": "object",
+          "required": [
+            "api_id",
+            "db"
+          ],
+          "properties": {
+            "api_id": {
+              "type": "string"
+            },
+            "db": {
+              "type": "string"
+            }
+          }
+        },
+        "SysApiDbSearchReq": {
+          "type": "object",
+          "required": [
+            "api_id"
+          ],
+          "properties": {
+            "api_id": {
+              "type": "string"
+            }
+          }
+        },
+        "SysDeptAddReq": {
+          "type": "object",
+          "required": [
+            "parent_id",
+            "dept_name",
+            "order_num",
+            "status"
+          ],
+          "properties": {
+            "dept_name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "leader": {
+              "type": "string"
+            },
+            "order_num": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "phone": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysDeptDeleteReq": {
+          "type": "object",
+          "required": [
+            "dept_id"
+          ],
+          "properties": {
+            "dept_id": {
+              "type": "string"
+            }
+          }
+        },
+        "SysDeptEditReq": {
+          "type": "object",
+          "required": [
+            "dept_id",
+            "parent_id",
+            "dept_name",
+            "order_num",
+            "status"
+          ],
+          "properties": {
+            "dept_id": {
+              "type": "string"
+            },
+            "dept_name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "leader": {
+              "type": "string"
+            },
+            "order_num": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "phone": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysDeptModel": {
+          "type": "object",
+          "required": [
+            "dept_id",
+            "parent_id",
+            "dept_name",
+            "order_num",
+            "status",
+            "created_by",
+            "created_at"
+          ],
+          "properties": {
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "created_by": {
+              "type": "string"
+            },
+            "deleted_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "dept_id": {
+              "type": "string"
+            },
+            "dept_name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "leader": {
+              "type": "string"
+            },
+            "order_num": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "parent_id": {
+              "type": "string"
+            },
+            "phone": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_by": {
+              "type": "string"
+            }
+          }
+        },
+        "SysDeptSearchReq": {
+          "type": "object",
+          "properties": {
+            "begin_time": {
+              "type": "string"
+            },
+            "dept_id": {
+              "type": "string"
+            },
+            "dept_name": {
+              "type": "string"
+            },
+            "end_time": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysDictDataAddReq": {
+          "type": "object",
+          "required": [
+            "dict_type",
+            "dict_label",
+            "dict_value",
+            "dict_sort",
+            "is_default",
+            "status"
+          ],
+          "properties": {
+            "css_class": {
+              "type": "string"
+            },
+            "dict_label": {
+              "type": "string"
+            },
+            "dict_sort": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "dict_type": {
+              "type": "string"
+            },
+            "dict_value": {
+              "type": "string"
+            },
+            "is_default": {
+              "type": "string"
+            },
+            "list_class": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysDictDataDeleteReq": {
+          "type": "object",
+          "required": [
+            "dict_data_ids"
+          ],
+          "properties": {
+            "dict_data_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "SysDictDataEditReq": {
+          "type": "object",
+          "required": [
+            "dict_data_id",
+            "dict_type",
+            "dict_label",
+            "dict_value",
+            "dict_sort",
+            "is_default",
+            "status"
+          ],
+          "properties": {
+            "css_class": {
+              "type": "string"
+            },
+            "dict_data_id": {
+              "type": "string"
+            },
+            "dict_label": {
+              "type": "string"
+            },
+            "dict_sort": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "dict_type": {
+              "type": "string"
+            },
+            "dict_value": {
+              "type": "string"
+            },
+            "is_default": {
+              "type": "string"
+            },
+            "list_class": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysDictDataModel": {
+          "type": "object",
+          "required": [
+            "dict_data_id",
+            "dict_sort",
+            "dict_label",
+            "dict_value",
+            "dict_type",
+            "is_default",
+            "status",
+            "create_by"
+          ],
+          "properties": {
+            "create_by": {
+              "type": "string"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "css_class": {
+              "type": "string"
+            },
+            "deleted_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "dict_data_id": {
+              "type": "string"
+            },
+            "dict_label": {
+              "type": "string"
+            },
+            "dict_sort": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "dict_type": {
+              "type": "string"
+            },
+            "dict_value": {
+              "type": "string"
+            },
+            "is_default": {
+              "type": "string"
+            },
+            "list_class": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "update_by": {
+              "type": "string"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "SysDictDataSearchReq": {
+          "type": "object",
+          "properties": {
+            "begin_time": {
+              "type": "string"
+            },
+            "dict_data_id": {
+              "type": "string"
+            },
+            "dict_label": {
+              "type": "string"
+            },
+            "dict_type": {
+              "type": "string"
+            },
+            "end_time": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysDictTypeAddReq": {
+          "type": "object",
+          "required": [
+            "dict_name",
+            "dict_type",
+            "status"
+          ],
+          "properties": {
+            "dict_name": {
+              "type": "string"
+            },
+            "dict_type": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysDictTypeDeleteReq": {
+          "type": "object",
+          "required": [
+            "dict_type_ids"
+          ],
+          "properties": {
+            "dict_type_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "SysDictTypeEditReq": {
+          "type": "object",
+          "required": [
+            "dict_type_id",
+            "dict_name",
+            "dict_type",
+            "status"
+          ],
+          "properties": {
+            "dict_name": {
+              "type": "string"
+            },
+            "dict_type": {
+              "type": "string"
+            },
+            "dict_type_id": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysDictTypeModel": {
+          "type": "object",
+          "required": [
+            "dict_type_id",
+            "dict_name",
+            "dict_type",
+            "status",
+            "create_by"
+          ],
+          "properties": {
+            "create_by": {
+              "type": "string"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "deleted_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "dict_name": {
+              "type": "string"
+            },
+            "dict_type": {
+              "type": "string"
+            },
+            "dict_type_id": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "update_by": {
+              "type": "string"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "SysDictTypeSearchReq": {
+          "type": "object",
+          "properties": {
+            "begin_time": {
+              "type": "string"
+            },
+            "dict_name": {
+              "type": "string"
+            },
+            "dict_type": {
+              "type": "string"
+            },
+            "dict_type_id": {
+              "type": "string"
+            },
+            "end_time": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysInfo": {
+          "type": "object",
+          "required": [
+            "server",
+            "cpu",
+            "cpu_load",
+            "memory",
+            "process",
+            "network"
+          ],
+          "properties": {
+            "cpu": {
+              "$ref": "#/components/schemas/Cpu"
+            },
+            "cpu_load": {
+              "$ref": "#/components/schemas/CpuLoad"
+            },
+            "memory": {
+              "$ref": "#/components/schemas/Memory"
+            },
+            "network": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Network"
+              }
+            },
+            "process": {
+              "$ref": "#/components/schemas/Process"
+            },
+            "server": {
+              "$ref": "#/components/schemas/Server"
+            }
+          }
+        },
+        "SysJobAddReq": {
+          "type": "object",
+          "required": [
+            "task_id",
+            "task_count",
+            "job_name",
+            "job_group",
+            "invoke_target",
+            "cron_expression",
+            "misfire_policy"
+          ],
+          "properties": {
+            "concurrent": {
+              "type": "string"
+            },
+            "cron_expression": {
+              "type": "string"
+            },
+            "invoke_target": {
+              "type": "string"
+            },
+            "job_group": {
+              "type": "string"
+            },
+            "job_name": {
+              "type": "string"
+            },
+            "job_params": {
+              "type": "string"
+            },
+            "misfire_policy": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "task_count": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "task_id": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        "SysJobDeleteReq": {
+          "type": "object",
+          "required": [
+            "job_ids"
+          ],
+          "properties": {
+            "job_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "SysJobEditReq": {
+          "type": "object",
+          "required": [
+            "job_id",
+            "task_id",
+            "task_count",
+            "job_name",
+            "job_group",
+            "invoke_target",
+            "cron_expression",
+            "misfire_policy"
+          ],
+          "properties": {
+            "concurrent": {
+              "type": "string"
+            },
+            "cron_expression": {
+              "type": "string"
+            },
+            "invoke_target": {
+              "type": "string"
+            },
+            "job_group": {
+              "type": "string"
+            },
+            "job_id": {
+              "type": "string"
+            },
+            "job_name": {
+              "type": "string"
+            },
+            "job_params": {
+              "type": "string"
+            },
+            "misfire_policy": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "task_count": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "task_id": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        "SysJobLogAddReq": {
+          "type": "object",
+          "required": [
+            "job_id",
+            "job_name",
+            "job_group",
+            "invoke_target",
+            "status",
+            "created_at",
+            "elapsed_time",
+            "lot_id",
+            "lot_order"
+          ],
+          "properties": {
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "elapsed_time": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "exception_info": {
+              "type": "string"
+            },
+            "invoke_target": {
+              "type": "string"
+            },
+            "is_once": {
+              "type": "string"
+            },
+            "job_group": {
+              "type": "string"
+            },
+            "job_id": {
+              "type": "string"
+            },
+            "job_message": {
+              "type": "string"
+            },
+            "job_name": {
+              "type": "string"
+            },
+            "job_params": {
+              "type": "string"
+            },
+            "lot_id": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "lot_order": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysJobLogCleanReq": {
+          "type": "object",
+          "required": [
+            "job_id"
+          ],
+          "properties": {
+            "job_id": {
+              "type": "string"
+            }
+          }
+        },
+        "SysJobLogDeleteReq": {
+          "type": "object",
+          "required": [
+            "job_log_ids"
+          ],
+          "properties": {
+            "job_log_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "SysJobLogModel": {
+          "type": "object",
+          "required": [
+            "job_log_id",
+            "job_id",
+            "lot_id",
+            "lot_order",
+            "job_name",
+            "job_group",
+            "invoke_target",
+            "status",
+            "created_at",
+            "elapsed_time"
+          ],
+          "properties": {
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "elapsed_time": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "exception_info": {
+              "type": "string"
+            },
+            "invoke_target": {
+              "type": "string"
+            },
+            "is_once": {
+              "type": "string"
+            },
+            "job_group": {
+              "type": "string"
+            },
+            "job_id": {
+              "type": "string"
+            },
+            "job_log_id": {
+              "type": "string"
+            },
+            "job_message": {
+              "type": "string"
+            },
+            "job_name": {
+              "type": "string"
+            },
+            "job_params": {
+              "type": "string"
+            },
+            "lot_id": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "lot_order": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysJobLogSearchReq": {
+          "type": "object",
+          "properties": {
+            "begin_time": {
+              "type": "string"
+            },
+            "end_time": {
+              "type": "string"
+            },
+            "is_once": {
+              "type": "string"
+            },
+            "job_group": {
+              "type": "string"
+            },
+            "job_id": {
+              "type": "string"
+            },
+            "job_log_id": {
+              "type": "string"
+            },
+            "job_name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysJobModel": {
+          "type": "object",
+          "required": [
+            "job_id",
+            "task_id",
+            "task_count",
+            "run_count",
+            "job_name",
+            "job_group",
+            "invoke_target",
+            "cron_expression",
+            "misfire_policy",
+            "status",
+            "create_by"
+          ],
+          "properties": {
+            "concurrent": {
+              "type": "string"
+            },
+            "create_by": {
+              "type": "string"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "cron_expression": {
+              "type": "string"
+            },
+            "deleted_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "end_time": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "invoke_target": {
+              "type": "string"
+            },
+            "job_group": {
+              "type": "string"
+            },
+            "job_id": {
+              "type": "string"
+            },
+            "job_name": {
+              "type": "string"
+            },
+            "job_params": {
+              "type": "string"
+            },
+            "last_time": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "misfire_policy": {
+              "type": "string"
+            },
+            "next_time": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "run_count": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "status": {
+              "type": "string"
+            },
+            "task_count": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "task_id": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "update_by": {
+              "type": "string"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "SysJobSearchReq": {
+          "type": "object",
+          "properties": {
+            "job_group": {
+              "type": "string"
+            },
+            "job_id": {
+              "type": "string"
+            },
+            "job_name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysJobStatusReq": {
+          "type": "object",
+          "required": [
+            "job_id",
+            "status"
+          ],
+          "properties": {
+            "job_id": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysLoginLogDeleteReq": {
+          "type": "object",
+          "required": [
+            "info_ids"
+          ],
+          "properties": {
+            "info_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "SysLoginLogSearchReq": {
+          "type": "object",
+          "properties": {
+            "begin_time": {
+              "type": "string"
+            },
+            "end_time": {
+              "type": "string"
+            },
+            "ip": {
+              "type": "string"
+            },
+            "is_asc": {
+              "type": "string"
+            },
+            "order_by_column": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "user_name": {
+              "type": "string"
+            }
+          }
+        },
+        "SysMenuAddReq": {
+          "type": "object",
+          "required": [
+            "pid",
+            "menu_name",
+            "menu_type",
+            "order_sort",
+            "status",
+            "api",
+            "visible",
+            "is_frame",
+            "is_cache",
+            "data_scope",
+            "log_method",
+            "data_cache_method",
+            "remark"
+          ],
+          "properties": {
+            "api": {
+              "type": "string"
+            },
+            "component": {
+              "type": "string"
+            },
+            "data_cache_method": {
+              "type": "string"
+            },
+            "data_scope": {
+              "type": "string"
+            },
+            "i18n": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string"
+            },
+            "is_cache": {
+              "type": "string"
+            },
+            "is_frame": {
+              "type": "string"
+            },
+            "log_method": {
+              "type": "string"
+            },
+            "menu_name": {
+              "type": "string"
+            },
+            "menu_type": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            },
+            "order_sort": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "path": {
+              "type": "string"
+            },
+            "pid": {
+              "type": "string"
+            },
+            "query": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "visible": {
+              "type": "string"
+            }
+          }
+        },
+        "SysMenuDeleteReq": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "SysMenuEditReq": {
+          "type": "object",
+          "required": [
+            "id",
+            "pid",
+            "path",
+            "menu_name",
+            "menu_type",
+            "order_sort",
+            "status",
+            "api",
+            "component",
+            "visible",
+            "is_frame",
+            "is_cache",
+            "data_scope",
+            "log_method",
+            "data_cache_method",
+            "remark"
+          ],
+          "properties": {
+            "api": {
+              "type": "string"
+            },
+            "component": {
+              "type": "string"
+            },
+            "data_cache_method": {
+              "type": "string"
+            },
+            "data_scope": {
+              "type": "string"
+            },
+            "i18n": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "is_cache": {
+              "type": "string"
+            },
+            "is_frame": {
+              "type": "string"
+            },
+            "log_method": {
+              "type": "string"
+            },
+            "menu_name": {
+              "type": "string"
+            },
+            "menu_type": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            },
+            "order_sort": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "path": {
+              "type": "string"
+            },
+            "pid": {
+              "type": "string"
+            },
+            "query": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "visible": {
+              "type": "string"
+            }
+          }
+        },
+        "SysMenuModel": {
+          "type": "object",
+          "required": [
+            "id",
+            "pid",
+            "path",
+            "menu_name",
+            "icon",
+            "menu_type",
+            "order_sort",
+            "status",
+            "api",
+            "method",
+            "component",
+            "visible",
+            "is_cache",
+            "log_method",
+            "data_cache_method",
+            "is_frame",
+            "data_scope",
+            "remark"
+          ],
+          "properties": {
+            "api": {
+              "type": "string"
+            },
+            "component": {
+              "type": "string"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "data_cache_method": {
+              "type": "string"
+            },
+            "data_scope": {
+              "type": "string"
+            },
+            "deleted_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "i18n": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "is_cache": {
+              "type": "string"
+            },
+            "is_frame": {
+              "type": "string"
+            },
+            "log_method": {
+              "type": "string"
+            },
+            "menu_name": {
+              "type": "string"
+            },
+            "menu_type": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            },
+            "order_sort": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "path": {
+              "type": "string"
+            },
+            "pid": {
+              "type": "string"
+            },
+            "query": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "visible": {
+              "type": "string"
+            }
+          }
+        },
+        "SysMenuSearchReq": {
+          "type": "object",
+          "properties": {
+            "begin_time": {
+              "type": "string"
+            },
+            "end_time": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "menu_name": {
+              "type": "string"
+            },
+            "menu_type": {
+              "type": "string"
+            },
+            "menu_types": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysMenuTree": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UserMenu"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SysMenuTree"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "SysMenuTreeAll": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/sys_menu.Model"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SysMenuTreeAll"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "SysOperLogDeleteReq": {
+          "type": "object",
+          "required": [
+            "oper_log_ids"
+          ],
+          "properties": {
+            "oper_log_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "SysOperLogModel": {
+          "type": "object",
+          "required": [
+            "oper_id",
+            "time_id",
+            "title",
+            "business_type",
+            "method",
+            "request_method",
+            "operator_type",
+            "oper_name",
+            "dept_name",
+            "oper_url",
+            "oper_ip",
+            "oper_location",
+            "oper_param",
+            "path_param",
+            "json_result",
+            "status",
+            "error_msg",
+            "duration",
+            "oper_time"
+          ],
+          "properties": {
+            "business_type": {
+              "type": "string"
+            },
+            "dept_name": {
+              "type": "string"
+            },
+            "duration": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "error_msg": {
+              "type": "string"
+            },
+            "json_result": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            },
+            "oper_id": {
+              "type": "string"
+            },
+            "oper_ip": {
+              "type": "string"
+            },
+            "oper_location": {
+              "type": "string"
+            },
+            "oper_name": {
+              "type": "string"
+            },
+            "oper_param": {
+              "type": "string"
+            },
+            "oper_time": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "oper_url": {
+              "type": "string"
+            },
+            "operator_type": {
+              "type": "string"
+            },
+            "path_param": {
+              "type": "string"
+            },
+            "request_method": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "time_id": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "title": {
+              "type": "string"
+            }
+          }
+        },
+        "SysOperLogSearchReq": {
+          "type": "object",
+          "properties": {
+            "begin_time": {
+              "type": "string"
+            },
+            "end_time": {
+              "type": "string"
+            },
+            "oper_id": {
+              "type": "string"
+            },
+            "oper_name": {
+              "type": "string"
+            },
+            "operator_type": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          }
+        },
+        "SysPostAddReq": {
+          "type": "object",
+          "required": [
+            "post_code",
+            "post_name",
+            "post_sort",
+            "status"
+          ],
+          "properties": {
+            "post_code": {
+              "type": "string"
+            },
+            "post_name": {
+              "type": "string"
+            },
+            "post_sort": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysPostDeleteReq": {
+          "type": "object",
+          "required": [
+            "post_ids"
+          ],
+          "properties": {
+            "post_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "SysPostEditReq": {
+          "type": "object",
+          "required": [
+            "post_id",
+            "post_code",
+            "post_name",
+            "post_sort",
+            "status"
+          ],
+          "properties": {
+            "post_code": {
+              "type": "string"
+            },
+            "post_id": {
+              "type": "string"
+            },
+            "post_name": {
+              "type": "string"
+            },
+            "post_sort": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysPostModel": {
+          "type": "object",
+          "required": [
+            "post_id",
+            "post_code",
+            "post_name",
+            "post_sort",
+            "status",
+            "created_by"
+          ],
+          "properties": {
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "created_by": {
+              "type": "string"
+            },
+            "deleted_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "post_code": {
+              "type": "string"
+            },
+            "post_id": {
+              "type": "string"
+            },
+            "post_name": {
+              "type": "string"
+            },
+            "post_sort": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_by": {
+              "type": "string"
+            }
+          }
+        },
+        "SysPostResp": {
+          "type": "object",
+          "required": [
+            "post_id",
+            "post_code",
+            "post_name",
+            "post_sort",
+            "status",
+            "remark",
+            "created_at"
+          ],
+          "properties": {
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "post_code": {
+              "type": "string"
+            },
+            "post_id": {
+              "type": "string"
+            },
+            "post_name": {
+              "type": "string"
+            },
+            "post_sort": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysPostSearchReq": {
+          "type": "object",
+          "properties": {
+            "begin_time": {
+              "type": "string"
+            },
+            "end_time": {
+              "type": "string"
+            },
+            "post_code": {
+              "type": "string"
+            },
+            "post_id": {
+              "type": "string"
+            },
+            "post_name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysRoleAddReq": {
+          "type": "object",
+          "required": [
+            "role_name",
+            "role_key",
+            "list_order",
+            "status",
+            "menu_ids"
+          ],
+          "properties": {
+            "data_scope": {
+              "type": "string"
+            },
+            "list_order": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "menu_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "remark": {
+              "type": "string"
+            },
+            "role_key": {
+              "type": "string"
+            },
+            "role_name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysRoleApiAddReq": {
+          "type": "object",
+          "required": [
+            "role_id",
+            "api"
+          ],
+          "properties": {
+            "api": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            }
+          }
+        },
+        "SysRoleApiModel": {
+          "type": "object",
+          "required": [
+            "id",
+            "role_id",
+            "api",
+            "created_by",
+            "created_at"
+          ],
+          "properties": {
+            "api": {
+              "type": "string"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "created_by": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            }
+          }
+        },
+        "SysRoleDeleteReq": {
+          "type": "object",
+          "required": [
+            "role_ids"
+          ],
+          "properties": {
+            "role_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "SysRoleDeptModel": {
+          "type": "object",
+          "required": [
+            "role_id",
+            "dept_id"
+          ],
+          "properties": {
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "dept_id": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            }
+          }
+        },
+        "SysRoleEditReq": {
+          "type": "object",
+          "required": [
+            "role_id",
+            "role_name",
+            "role_key",
+            "list_order",
+            "data_scope",
+            "status",
+            "menu_ids"
+          ],
+          "properties": {
+            "data_scope": {
+              "type": "string"
+            },
+            "list_order": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "menu_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "remark": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            },
+            "role_key": {
+              "type": "string"
+            },
+            "role_name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysRoleModel": {
+          "type": "object",
+          "required": [
+            "role_id",
+            "role_name",
+            "role_key",
+            "list_order",
+            "data_scope",
+            "status",
+            "created_at"
+          ],
+          "properties": {
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "data_scope": {
+              "type": "string"
+            },
+            "list_order": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            },
+            "role_key": {
+              "type": "string"
+            },
+            "role_name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "SysRoleResp": {
+          "type": "object",
+          "required": [
+            "role_id",
+            "role_name",
+            "role_key",
+            "status",
+            "list_order",
+            "remark",
+            "data_scope"
+          ],
+          "properties": {
+            "data_scope": {
+              "type": "string"
+            },
+            "list_order": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            },
+            "role_key": {
+              "type": "string"
+            },
+            "role_name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysRoleSearchReq": {
+          "type": "object",
+          "properties": {
+            "begin_time": {
+              "type": "string"
+            },
+            "end_time": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            },
+            "role_ids": {
+              "type": "string"
+            },
+            "role_key": {
+              "type": "string"
+            },
+            "role_name": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysRoleStatusReq": {
+          "type": "object",
+          "required": [
+            "role_id",
+            "status"
+          ],
+          "properties": {
+            "role_id": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysUpdateLogAddReq": {
+          "type": "object",
+          "required": [
+            "app_version",
+            "backend_version",
+            "title",
+            "content"
+          ],
+          "properties": {
+            "app_version": {
+              "type": "string"
+            },
+            "backend_version": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          }
+        },
+        "SysUpdateLogDeleteReq": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "SysUpdateLogEditReq": {
+          "type": "object",
+          "required": [
+            "id",
+            "app_version",
+            "backend_version",
+            "title",
+            "content"
+          ],
+          "properties": {
+            "app_version": {
+              "type": "string"
+            },
+            "backend_version": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          }
+        },
+        "SysUpdateLogModel": {
+          "type": "object",
+          "required": [
+            "id",
+            "app_version",
+            "backend_version",
+            "title",
+            "content",
+            "created_at",
+            "updated_at",
+            "updated_by"
+          ],
+          "properties": {
+            "app_version": {
+              "type": "string"
+            },
+            "backend_version": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "deleted_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_by": {
+              "type": "string"
+            }
+          }
+        },
+        "SysUserAddReq": {
+          "type": "object",
+          "required": [
+            "user_name",
+            "user_nickname",
+            "user_password",
+            "user_status",
+            "sex",
+            "is_admin",
+            "post_ids",
+            "dept_ids",
+            "dept_id",
+            "role_ids",
+            "role_id"
+          ],
+          "properties": {
+            "avatar": {
+              "type": "string"
+            },
+            "dept_id": {
+              "type": "string"
+            },
+            "dept_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "is_admin": {
+              "type": "string"
+            },
+            "phone_num": {
+              "type": "string"
+            },
+            "post_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "remark": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            },
+            "role_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "sex": {
+              "type": "string"
+            },
+            "user_email": {
+              "type": "string"
+            },
+            "user_name": {
+              "type": "string"
+            },
+            "user_nickname": {
+              "type": "string"
+            },
+            "user_password": {
+              "type": "string"
+            },
+            "user_status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysUserDeleteReq": {
+          "type": "object",
+          "required": [
+            "user_ids"
+          ],
+          "properties": {
+            "user_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "SysUserDeptModel": {
+          "type": "object",
+          "required": [
+            "id",
+            "user_id",
+            "dept_id",
+            "created_by",
+            "created_at"
+          ],
+          "properties": {
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "created_by": {
+              "type": "string"
+            },
+            "dept_id": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "user_id": {
+              "type": "string"
+            }
+          }
+        },
+        "SysUserEditReq": {
+          "type": "object",
+          "required": [
+            "id",
+            "user_name",
+            "user_nickname",
+            "user_status",
+            "sex",
+            "avatar",
+            "is_admin",
+            "post_ids",
+            "dept_ids",
+            "dept_id",
+            "role_ids",
+            "role_id"
+          ],
+          "properties": {
+            "avatar": {
+              "type": "string"
+            },
+            "dept_id": {
+              "type": "string"
+            },
+            "dept_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "id": {
+              "type": "string"
+            },
+            "is_admin": {
+              "type": "string"
+            },
+            "phone_num": {
+              "type": "string"
+            },
+            "post_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "remark": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            },
+            "role_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "sex": {
+              "type": "string"
+            },
+            "user_email": {
+              "type": "string"
+            },
+            "user_name": {
+              "type": "string"
+            },
+            "user_nickname": {
+              "type": "string"
+            },
+            "user_status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysUserModel": {
+          "type": "object",
+          "required": [
+            "id",
+            "user_name",
+            "user_nickname",
+            "user_password",
+            "user_salt",
+            "user_status",
+            "sex",
+            "avatar",
+            "role_id",
+            "dept_id",
+            "is_admin",
+            "created_at"
+          ],
+          "properties": {
+            "avatar": {
+              "type": "string"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "deleted_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "dept_id": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "is_admin": {
+              "type": "string"
+            },
+            "last_login_ip": {
+              "type": "string"
+            },
+            "last_login_time": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "phone_num": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            },
+            "sex": {
+              "type": "string"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "user_email": {
+              "type": "string"
+            },
+            "user_name": {
+              "type": "string"
+            },
+            "user_nickname": {
+              "type": "string"
+            },
+            "user_password": {
+              "type": "string"
+            },
+            "user_salt": {
+              "type": "string"
+            },
+            "user_status": {
+              "type": "string"
+            }
+          }
+        },
+        "SysUserOnlineDeleteReq": {
+          "type": "object",
+          "required": [
+            "ids"
+          ],
+          "properties": {
+            "ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "SysUserOnlineModel": {
+          "type": "object",
+          "required": [
+            "id",
+            "u_id",
+            "token_id",
+            "token_exp",
+            "login_time",
+            "user_name",
+            "dept_name",
+            "net",
+            "ipaddr",
+            "login_location",
+            "device",
+            "browser",
+            "os"
+          ],
+          "properties": {
+            "browser": {
+              "type": "string"
+            },
+            "dept_name": {
+              "type": "string"
+            },
+            "device": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "ipaddr": {
+              "type": "string"
+            },
+            "login_location": {
+              "type": "string"
+            },
+            "login_time": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "net": {
+              "type": "string"
+            },
+            "os": {
+              "type": "string"
+            },
+            "token_exp": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "token_id": {
+              "type": "string"
+            },
+            "u_id": {
+              "type": "string"
+            },
+            "user_name": {
+              "type": "string"
+            }
+          }
+        },
+        "SysUserOnlineSearchReq": {
+          "type": "object",
+          "properties": {
+            "begin_time": {
+              "type": "string"
+            },
+            "end_time": {
+              "type": "string"
+            },
+            "ipaddr": {
+              "type": "string"
+            },
+            "user_name": {
+              "type": "string"
+            }
+          }
+        },
+        "SysUserPostModel": {
+          "type": "object",
+          "required": [
+            "user_id",
+            "post_id"
+          ],
+          "properties": {
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "post_id": {
+              "type": "string"
+            },
+            "user_id": {
+              "type": "string"
+            }
+          }
+        },
+        "SysUserRoleModel": {
+          "type": "object",
+          "required": [
+            "id",
+            "user_id",
+            "role_id",
+            "created_by",
+            "created_at"
+          ],
+          "properties": {
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "created_by": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            },
+            "user_id": {
+              "type": "string"
+            }
+          }
+        },
+        "SysUserSearchReq": {
+          "type": "object",
+          "properties": {
+            "begin_time": {
+              "type": "string"
+            },
+            "dept_id": {
+              "type": "string"
+            },
+            "end_time": {
+              "type": "string"
+            },
+            "phone_num": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            },
+            "user_id": {
+              "type": "string"
+            },
+            "user_ids": {
+              "type": "string"
+            },
+            "user_name": {
+              "type": "string"
+            },
+            "user_nickname": {
+              "type": "string"
+            },
+            "user_status": {
+              "type": "string"
+            }
+          }
+        },
+        "UpdateAuthRoleReq": {
+          "type": "object",
+          "required": [
+            "user_id",
+            "role_ids"
+          ],
+          "properties": {
+            "role_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "user_id": {
+              "type": "string"
+            }
+          }
+        },
+        "UpdateProfileReq": {
+          "type": "object",
+          "required": [
+            "id",
+            "user_nickname",
+            "phone_num",
+            "user_email",
+            "sex"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "phone_num": {
+              "type": "string"
+            },
+            "sex": {
+              "type": "string"
+            },
+            "user_email": {
+              "type": "string"
+            },
+            "user_nickname": {
+              "type": "string"
+            }
+          }
+        },
+        "UpdatePwdReq": {
+          "type": "object",
+          "required": [
+            "old_passwd",
+            "new_passwd"
+          ],
+          "properties": {
+            "new_passwd": {
+              "type": "string"
+            },
+            "old_passwd": {
+              "type": "string"
+            }
+          }
+        },
+        "UserInfo": {
+          "type": "object",
+          "required": [
+            "user",
+            "roles",
+            "depts",
+            "permissions"
+          ],
+          "properties": {
+            "depts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "permissions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "roles": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "user": {
+              "$ref": "#/components/schemas/UserWithDept"
+            }
+          }
+        },
+        "UserInformation": {
+          "type": "object",
+          "required": [
+            "user_info",
+            "post_ids",
+            "role_ids",
+            "dept_ids",
+            "dept_id"
+          ],
+          "properties": {
+            "dept_id": {
+              "type": "string"
+            },
+            "dept_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "post_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "role_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "user_info": {
+              "$ref": "#/components/schemas/UserWithDept"
+            }
+          }
+        },
+        "UserLoginReq": {
+          "type": "object",
+          "description": "用户登录",
+          "required": [
+            "user_name",
+            "user_password",
+            "code",
+            "uuid"
+          ],
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "user_name": {
+              "type": "string",
+              "description": "用户名"
+            },
+            "user_password": {
+              "type": "string",
+              "description": "用户密码"
+            },
+            "uuid": {
+              "type": "string"
+            }
+          }
+        },
+        "UserMenu": {
+          "type": "object",
+          "required": [
+            "id",
+            "pid",
+            "path",
+            "name",
+            "menu_name",
+            "menu_type",
+            "component",
+            "hidden",
+            "meta"
+          ],
+          "properties": {
+            "always_show": {
+              "type": "boolean"
+            },
+            "component": {
+              "type": "string"
+            },
+            "hidden": {
+              "type": "boolean"
+            },
+            "id": {
+              "type": "string"
+            },
+            "menu_name": {
+              "type": "string"
+            },
+            "menu_type": {
+              "type": "string"
+            },
+            "meta": {
+              "$ref": "#/components/schemas/Meta"
+            },
+            "name": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "pid": {
+              "type": "string"
+            }
+          }
+        },
+        "UserResp": {
+          "type": "object",
+          "required": [
+            "id",
+            "user_name",
+            "user_nickname",
+            "user_status",
+            "sex",
+            "avatar",
+            "dept_id",
+            "is_admin",
+            "role_id"
+          ],
+          "properties": {
+            "avatar": {
+              "type": "string"
+            },
+            "created_at": {
+              "$ref": "#/components/schemas/NaiveDateTime"
+            },
+            "dept_id": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "is_admin": {
+              "type": "string"
+            },
+            "phone_num": {
+              "type": "string"
+            },
+            "remark": {
+              "type": "string"
+            },
+            "role_id": {
+              "type": "string"
+            },
+            "sex": {
+              "type": "string"
+            },
+            "user_email": {
+              "type": "string"
+            },
+            "user_name": {
+              "type": "string"
+            },
+            "user_nickname": {
+              "type": "string"
+            },
+            "user_status": {
+              "type": "string"
+            }
+          }
+        },
+        "UserWithDept": {
+          "allOf": [
+            {
+              "$ref": "#/components/schemas/UserResp"
+            },
+            {
+              "type": "object",
+              "required": [
+                "dept"
+              ],
+              "properties": {
+                "dept": {
+                  "$ref": "#/components/schemas/DeptResp"
+                }
+              }
+            }
+          ]
+        },
+        "ValidateReq": {
+          "type": "object",
+          "required": [
+            "cron_str"
+          ],
+          "properties": {
+            "cron_str": {
+              "type": "string"
+            }
+          }
+        },
+        "ValidateRes": {
+          "type": "object",
+          "required": [
+            "validate"
+          ],
+          "properties": {
+            "next_ten": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/NaiveDateTime"
+              }
+            },
+            "validate": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "securitySchemes": {
+        "authorization": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "Bearer"
+        }
+      }
+    },
+    "tags": [
+      {
+        "name": "common",
+        "description": "通用api"
+      },
+      {
+        "name": "SysApiDb",
+        "description": "系统-Api Db对应关系"
+      },
+      {
+        "name": "SysDept",
+        "description": "系统-部门"
+      },
+      {
+        "name": "SysDictData",
+        "description": "系统-字典数据"
+      },
+      {
+        "name": "SysDictType",
+        "description": "系统-字典类型"
+      },
+      {
+        "name": "SysJob",
+        "description": "系统-定时任务"
+      },
+      {
+        "name": "SysJobLog",
+        "description": "系统-任务日志"
+      },
+      {
+        "name": "SysLoginLog",
+        "description": "系统-任务日志"
+      },
+      {
+        "name": "SysMenu",
+        "description": "系统-菜单管理"
+      },
+      {
+        "name": "SysOperLog",
+        "description": "系统-操作日志"
+      },
+      {
+        "name": "SysPost",
+        "description": "系统-岗位管理"
+      },
+      {
+        "name": "SysRole",
+        "description": "系统-角色管理"
+      },
+      {
+        "name": "SysUpdateLog",
+        "description": "系统-更新日志"
+      },
+      {
+        "name": "SysUserOnline",
+        "description": "系统-在线用户"
+      },
+      {
+        "name": "SysUser",
+        "description": "系统-用户"
+      },
+      {
+        "name": "SysMonitor",
+        "description": "系统-服务器信息"
+      }
+    ]
+  }
+  

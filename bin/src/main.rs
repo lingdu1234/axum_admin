@@ -91,7 +91,7 @@ fn main() {
             .fallback(static_files_service)
             .nest(&CFG.server.api_prefix, apps::api())
             .merge(SwaggerUi::new("/ui/*tail").url(Url::new("api", "/api-doc/openapi.json"), OpenApiDoc::openapi()));
-        println!("{}", OpenApiDoc::openapi().to_pretty_json().unwrap());
+        tracing::info!("{}", OpenApiDoc::openapi().to_pretty_json().unwrap());
         let app = match &CFG.server.content_gzip {
             true => {
                 //  开启压缩后 SSE 数据无法返回  text/event-stream 单独处理不压缩
