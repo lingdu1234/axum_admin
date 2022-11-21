@@ -8,7 +8,8 @@ use db::{
     db_conn,
     system::{
         entities::{prelude::SysUserOnline, sys_user_online},
-        models::sys_user_online::{DeleteReq, SearchReq},
+        models::sys_user_online::{SysUserOnlineDeleteReq, SysUserOnlineSearchReq},
+        prelude::SysUserOnlineModel,
     },
     DB,
 };
@@ -16,7 +17,7 @@ use sea_orm::{sea_query::Expr, ColumnTrait, DatabaseConnection, EntityTrait, Pag
 
 /// get_list 获取列表
 /// page_params 分页参数
-pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_user_online::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SysUserOnlineSearchReq) -> Result<ListData<SysUserOnlineModel>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -64,7 +65,7 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
+pub async fn delete(db: &DatabaseConnection, delete_req: SysUserOnlineDeleteReq) -> Result<String> {
     let mut s = SysUserOnline::delete_many();
 
     s = s.filter(sys_user_online::Column::Id.is_in(delete_req.ids));
@@ -78,7 +79,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
     }
 }
 
-pub async fn check_online(db: Option<&DatabaseConnection>, id: String) -> (bool, Option<sys_user_online::Model>) {
+pub async fn check_online(db: Option<&DatabaseConnection>, id: String) -> (bool, Option<SysUserOnlineModel>) {
     let db = match db {
         Some(x) => x,
         None => DB.get_or_init(db_conn).await,

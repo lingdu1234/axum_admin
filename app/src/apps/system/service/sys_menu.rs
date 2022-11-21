@@ -5,7 +5,8 @@ use db::{
     db_conn,
     system::{
         entities::{prelude::SysMenu, sys_api_db, sys_menu, sys_role_api},
-        models::sys_menu::{AddReq, EditReq, LogCacheEditReq, MenuRelated, MenuResp, Meta, SearchReq, SysMenuTree, UserMenu, SysMenuTreeAll},
+        models::sys_menu::{LogCacheEditReq, MenuRelated, MenuResp, Meta, SysMenuAddReq, SysMenuEditReq, SysMenuSearchReq, SysMenuTree, SysMenuTreeAll, UserMenu},
+        prelude::SysMenuModel,
     },
     DB,
 };
@@ -21,7 +22,7 @@ use crate::utils;
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_menu::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SysMenuSearchReq) -> Result<ListData<SysMenuModel>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(u32::MAX as u64);
     //  生成查询条件
@@ -47,10 +48,10 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
         if !x.is_empty() {
             s = s.filter(sys_menu::Column::MenuType.eq(x));
         }
-    }    
+    }
     if let Some(x) = req.menu_types {
         if !x.is_empty() {
-            let y:Vec<&str> = x.split(',').collect();
+            let y: Vec<&str> = x.split(',').collect();
             s = s.filter(sys_menu::Column::MenuType.is_in(y));
         }
     }
@@ -80,7 +81,7 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
     Ok(res)
 }
 
-pub async fn check_router_is_exist_update(db: &DatabaseConnection, req: EditReq) -> Result<bool> {
+pub async fn check_router_is_exist_update(db: &DatabaseConnection, req: SysMenuEditReq) -> Result<bool> {
     let s1 = SysMenu::find()
         .filter(sys_menu::Column::Path.eq(req.path.clone()))
         .filter(sys_menu::Column::Pid.eq(req.pid.clone()))
@@ -96,7 +97,7 @@ pub async fn check_router_is_exist_update(db: &DatabaseConnection, req: EditReq)
     Ok(count1 > 0 || count2 > 0)
 }
 
-pub async fn check_router_is_exist_add<C>(db: &C, req: AddReq) -> Result<bool>
+pub async fn check_router_is_exist_add<C>(db: &C, req: SysMenuAddReq) -> Result<bool>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -113,7 +114,7 @@ where
 }
 
 /// add 添加
-pub async fn add<C>(db: &C, req: AddReq) -> Result<String>
+pub async fn add<C>(db: &C, req: SysMenuAddReq) -> Result<String>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -176,7 +177,7 @@ pub async fn delete(db: &DatabaseConnection, id: &str) -> Result<String> {
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, req: EditReq) -> Result<String> {
+pub async fn edit(db: &DatabaseConnection, req: SysMenuEditReq) -> Result<String> {
     //  检查数据是否存在
     if check_router_is_exist_update(db, req.clone()).await? {
         return Err(anyhow!("路径或者名称重复"));
@@ -241,7 +242,7 @@ pub async fn update_log_cache_method(db: &DatabaseConnection, req: LogCacheEditR
 }
 
 /// get_user_by_id 获取用户Id获取用户
-pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<MenuResp> {
+pub async fn get_by_id(db: &DatabaseConnection, search_req: SysMenuSearchReq) -> Result<MenuResp> {
     let mut s = SysMenu::find();
     s = s.filter(sys_menu::Column::DeletedAt.is_null());
     //
@@ -265,7 +266,7 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
 /// 不能同时为true   
 /// 同时false 为获取全部路由   
 /// is_only_enabled 获取启用的路由，false 为全部路由  
-pub async fn get_menus<C>(db: &C, is_router: bool, is_only_api: bool,is_only_enabled:bool) -> Result<Vec<MenuResp>>
+pub async fn get_menus<C>(db: &C, is_router: bool, is_only_api: bool, is_only_enabled: bool) -> Result<Vec<MenuResp>>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -287,7 +288,7 @@ where
 /// get_all_router_tree 获取全部
 /// db 数据库连接 使用db.0
 pub async fn get_all_router_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuTree>> {
-    let menus = get_menus(db, true, false,true).await?;
+    let menus = get_menus(db, true, false, true).await?;
     let menu_data = self::get_menu_data(menus);
     let menu_tree = self::get_menu_tree(menu_data, "0".to_string());
 
@@ -296,7 +297,7 @@ pub async fn get_all_router_tree(db: &DatabaseConnection) -> Result<Vec<SysMenuT
 
 /// get_all_menu_tree 获取全部
 /// db 数据库连接 使用db.0
-pub async fn get_all_enabled_menu_tree(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<Vec<SysMenuTreeAll>> {
+pub async fn get_all_enabled_menu_tree(db: &DatabaseConnection, page_params: PageParams, req: SysMenuSearchReq) -> Result<Vec<SysMenuTreeAll>> {
     let menus = get_sort_list(db, page_params, req).await?;
     let menu_data = self::get_menu_data2(menus.list);
     let menu_tree = self::get_menu_tree2(menu_data, "0".to_string());
@@ -345,7 +346,7 @@ pub async fn get_role_permissions(db: &DatabaseConnection, role_id: &str) -> Res
 pub async fn get_admin_menu_by_role_ids(db: &DatabaseConnection, role_id: &str) -> Result<Vec<SysMenuTree>> {
     let (menu_apis, _) = self::get_role_permissions(db, role_id).await?;
     //  todo 可能以后加条件判断
-    let router_all = get_menus(db, true, false,false).await?;
+    let router_all = get_menus(db, true, false, false).await?;
     //  生成menus
     let mut menus: Vec<MenuResp> = Vec::new();
     for ele in router_all {
@@ -380,9 +381,9 @@ pub fn get_menu_tree2(user_menus: Vec<SysMenuTreeAll>, pid: String) -> Vec<SysMe
     menu_tree
 }
 // 多写个方法，少返回点数据
-pub fn get_menu_data2(menus: Vec<sys_menu::Model>) -> Vec<SysMenuTreeAll> {
+pub fn get_menu_data2(menus: Vec<SysMenuModel>) -> Vec<SysMenuTreeAll> {
     let mut menu_res: Vec<SysMenuTreeAll> = Vec::new();
-    for  menu in menus {
+    for menu in menus {
         let menu_tree = SysMenuTreeAll { menu, children: None };
         menu_res.push(menu_tree);
     }
@@ -454,7 +455,7 @@ where
     Ok(res)
 }
 
-pub async fn get_related_api_and_db(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<MenuRelated>> {
+pub async fn get_related_api_and_db(db: &DatabaseConnection, page_params: PageParams, req: SysMenuSearchReq) -> Result<ListData<MenuRelated>> {
     let menus = self::get_sort_list(db, page_params, req).await?;
     let mut res: Vec<MenuRelated> = Vec::new();
     for item in menus.list {

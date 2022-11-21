@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Default)]
-pub struct SearchReq {
+pub struct SysLoginLogSearchReq {
     pub ip: Option<String>,
     pub user_name: Option<String>,
     pub status: Option<String>,
@@ -12,6 +12,6 @@ pub struct SearchReq {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct DeleteReq {
+pub struct SysLoginLogDeleteReq {
     pub info_ids: Vec<String>,
 }

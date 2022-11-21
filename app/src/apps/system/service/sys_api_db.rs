@@ -1,13 +1,14 @@
 use anyhow::Result;
 use db::system::{
     entities::{prelude::SysApiDb, sys_api_db},
-    models::sys_api_db::AddEditReq,
+    models::sys_api_db::SysApiDbAddEditReq,
+    prelude::SysApiDbModel,
 };
 use sea_orm::{ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set, TransactionTrait};
 
 /// add 添加
 
-pub async fn add(db: &DatabaseConnection, req: AddEditReq) -> Result<String> {
+pub async fn add(db: &DatabaseConnection, req: SysApiDbAddEditReq) -> Result<String> {
     let txn = db.begin().await?;
     // 先删除原来的记录
     sys_api_db::Entity::delete_many()
@@ -31,7 +32,7 @@ pub async fn add(db: &DatabaseConnection, req: AddEditReq) -> Result<String> {
 
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, api_id: &str) -> Result<Vec<sys_api_db::Model>> {
+pub async fn get_by_id(db: &DatabaseConnection, api_id: &str) -> Result<Vec<SysApiDbModel>> {
     let s = SysApiDb::find().filter(sys_api_db::Column::ApiId.eq(api_id)).all(db).await?;
     Ok(s)
 }

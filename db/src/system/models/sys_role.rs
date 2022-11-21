@@ -2,7 +2,7 @@ use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
-pub struct SearchReq {
+pub struct SysRoleSearchReq {
     pub role_id: Option<String>,
     pub role_ids: Option<String>,
     pub role_name: Option<String>,
@@ -13,7 +13,7 @@ pub struct SearchReq {
 }
 
 #[derive(Deserialize, Clone, Debug)]
-pub struct AddReq {
+pub struct SysRoleAddReq {
     pub role_name: String,
     pub role_key: String,
     pub list_order: i32,
@@ -24,7 +24,7 @@ pub struct AddReq {
 }
 
 #[derive(Deserialize)]
-pub struct DeleteReq {
+pub struct SysRoleDeleteReq {
     pub role_ids: Vec<String>,
 }
 #[derive(Deserialize)]
@@ -35,7 +35,7 @@ pub struct DataScopeReq {
 }
 
 #[derive(Deserialize, Clone, Debug)]
-pub struct EditReq {
+pub struct SysRoleEditReq {
     pub role_id: String,
     pub role_name: String,
     pub role_key: String,
@@ -46,7 +46,7 @@ pub struct EditReq {
     pub menu_ids: Vec<String>,
 }
 #[derive(Deserialize, Clone)]
-pub struct StatusReq {
+pub struct SysRoleStatusReq {
     pub role_id: String,
     pub status: String,
 }
@@ -63,7 +63,7 @@ pub struct AddOrCancelAuthRoleReq {
 }
 
 #[derive(Debug, Serialize, FromQueryResult, Clone)]
-pub struct Resp {
+pub struct SysRoleResp {
     pub role_id: String,
     pub role_name: String,
     pub role_key: String,

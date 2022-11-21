@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::system::entities::sys_menu;
 
 #[derive(Deserialize, Clone)]
-pub struct SearchReq {
+pub struct SysMenuSearchReq {
     pub id: Option<String>,
     pub menu_name: Option<String>,
     pub menu_type: Option<String>,
@@ -86,7 +86,7 @@ pub struct SysMenuTree {
 }
 
 #[derive(Deserialize, Clone, Debug)]
-pub struct AddReq {
+pub struct SysMenuAddReq {
     pub pid: String,
     pub path: Option<String>,
     pub menu_name: String,
@@ -109,12 +109,12 @@ pub struct AddReq {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct DeleteReq {
+pub struct SysMenuDeleteReq {
     pub id: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct EditReq {
+pub struct SysMenuEditReq {
     pub id: String,
     pub pid: String,
     pub path: String,

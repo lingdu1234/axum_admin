@@ -6,7 +6,7 @@ use axum::{
     Json,
 };
 use chrono::{Duration, Local};
-use db::common::ctx::UserInfo;
+use db::common::ctx::UserInfoCtx;
 use jsonwebtoken::{decode, encode, errors::ErrorKind, DecodingKey, EncodingKey, Header, Validation};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
@@ -82,7 +82,7 @@ where
             },
         };
         let user = token_data.claims;
-        req.extensions_mut().insert(UserInfo {
+        req.extensions_mut().insert(UserInfoCtx {
             id: user.id.clone(),
             token_id: user.token_id.clone(),
             name: user.name.clone(),

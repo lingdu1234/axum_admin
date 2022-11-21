@@ -2,11 +2,12 @@ use anyhow::{anyhow, Result};
 use chrono::{Local, NaiveDateTime};
 use db::system::{
     entities::sys_update_log,
-    models::sys_update_log::{AddReq, EditReq},
+    models::sys_update_log::{SysUpdateLogAddReq, SysUpdateLogEditReq},
+    prelude::SysUpdateLogModel,
 };
 use sea_orm::{sea_query::Expr, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order, QueryFilter, QueryOrder, Set, TransactionTrait};
 
-pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: &str) -> Result<String> {
+pub async fn add(db: &DatabaseConnection, req: SysUpdateLogAddReq, user_id: &str) -> Result<String> {
     let uid = scru128::new_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let insert_data = sys_update_log::ActiveModel {
@@ -29,7 +30,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: &str) -> Result<
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: &str) -> Result<String> {
+pub async fn edit(db: &DatabaseConnection, req: SysUpdateLogEditReq, user_id: &str) -> Result<String> {
     //  检查字典类型是否存在
 
     let txn = db.begin().await?;
@@ -65,7 +66,7 @@ where
     }
 }
 
-pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<sys_update_log::Model>> {
+pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<SysUpdateLogModel>> {
     let s = sys_update_log::Entity::find()
         .filter(sys_update_log::Column::DeletedAt.is_null())
         .order_by(sys_update_log::Column::CreatedAt, Order::Desc)

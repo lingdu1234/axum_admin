@@ -1,9 +1,9 @@
 use anyhow::Result;
 use chrono::Local;
-use db::system::{entities::sys_role_api, models::sys_role_api::AddReq};
+use db::system::{entities::sys_role_api, models::sys_role_api::SysRoleApiAddReq};
 use sea_orm::{sea_query::Expr, ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter, Set, TransactionTrait, UpdateResult};
 // 添加修改用户角色
-pub async fn add_role_api<C>(db: &C, role_apis: Vec<AddReq>, created_by: &str) -> Result<()>
+pub async fn add_role_api<C>(db: &C, role_apis: Vec<SysRoleApiAddReq>, created_by: &str) -> Result<()>
 where
     C: TransactionTrait + ConnectionTrait,
 {

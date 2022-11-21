@@ -3,8 +3,8 @@ use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
     system::{
-        entities::sys_job_log,
-        models::sys_job_log::{CleanReq, DeleteReq, SearchReq},
+        models::sys_job_log::{SysJobLogCleanReq, SysJobLogDeleteReq, SysJobLogSearchReq},
+        prelude::SysJobLogModel,
     },
     DB,
 };
@@ -15,7 +15,7 @@ use super::super::service;
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
 
-pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<sys_job_log::Model>> {
+pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysJobLogSearchReq>) -> Res<ListData<SysJobLogModel>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_job_log::get_sort_list(db, page_params, req).await;
     match res {
@@ -26,7 +26,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 
 /// delete 完全删除
 
-pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
+pub async fn delete(Json(req): Json<SysJobLogDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_job_log::delete(db, req).await;
     match res {
@@ -35,7 +35,7 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
     }
 }
 
-pub async fn clean(Json(req): Json<CleanReq>) -> Res<String> {
+pub async fn clean(Json(req): Json<SysJobLogCleanReq>) -> Res<String> {
     //  数据验证
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_job_log::clean(db, req.job_id).await;
@@ -44,19 +44,3 @@ pub async fn clean(Json(req): Json<CleanReq>) -> Res<String> {
         Err(e) => Res::with_err(&e.to_string()),
     }
 }
-
-// /// get_user_by_id 获取用户Id获取用户
-// /// db 数据库连接 使用db.0
-// #[allow(dead_code)]
-// pub async fn get_by_id(Query(req): Query<SearchReq>) ->
-// Res<sys_job_log::Model> {     let id = match req.job_log_id {
-//         None => return Res::with_err("id不能为空"),
-//         Some(x) => x,
-//     };
-//     let db = DB.get_or_init(db_conn).await;
-//     let res = service::sys_job_log::get_by_id(db, id).await;
-//     match res {
-//         Ok(x) => Res::with_data(x),
-//         Err(e) => Res::with_err(&e.to_string()),
-//     }
-// }

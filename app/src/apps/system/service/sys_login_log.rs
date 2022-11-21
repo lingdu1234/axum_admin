@@ -8,7 +8,8 @@ use db::{
     db_conn,
     system::{
         entities::{prelude::SysLoginLog, sys_login_log},
-        models::sys_login_log::{DeleteReq, SearchReq},
+        models::sys_login_log::{SysLoginLogDeleteReq, SysLoginLogSearchReq},
+        prelude::SysLoginLogModel,
     },
     DB,
 };
@@ -17,7 +18,7 @@ use sea_orm::{sea_query::Table, ColumnTrait, ConnectionTrait, DatabaseConnection
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_login_log::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SysLoginLogSearchReq) -> Result<ListData<SysLoginLogModel>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -81,7 +82,7 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
+pub async fn delete(db: &DatabaseConnection, delete_req: SysLoginLogDeleteReq) -> Result<String> {
     let mut s = SysLoginLog::delete_many();
 
     s = s.filter(sys_login_log::Column::InfoId.is_in(delete_req.info_ids));

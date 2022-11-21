@@ -4,6 +4,7 @@ use db::{
     test::{
         entities::{prelude::TestDataScope, test_data_scope},
         models::test_data_scope::{AddReq, DeleteReq, SearchReq},
+        prelude::TestDataScopeModel,
     },
 };
 use sea_orm::{ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
@@ -13,7 +14,7 @@ use crate::utils;
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, search_req: SearchReq, user_id: &str) -> Result<ListData<test_data_scope::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, search_req: SearchReq, user_id: &str) -> Result<ListData<TestDataScopeModel>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件

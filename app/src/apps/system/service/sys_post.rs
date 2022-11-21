@@ -4,7 +4,8 @@ use db::{
     common::res::{ListData, PageParams},
     system::{
         entities::{prelude::*, sys_post, sys_user_post},
-        models::sys_post::{AddReq, DeleteReq, EditReq, Resp, SearchReq},
+        models::sys_post::{SysPostAddReq, SysPostDeleteReq, SysPostEditReq, SysPostResp, SysPostSearchReq},
+        prelude::SysPostModel,
     },
 };
 use sea_orm::{sea_query::Expr, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
@@ -12,7 +13,7 @@ use sea_orm::{sea_query::Expr, ColumnTrait, ConnectionTrait, DatabaseConnection,
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_post::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SysPostSearchReq) -> Result<ListData<SysPostModel>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -88,7 +89,7 @@ pub async fn eidt_check_data_is_exist(post_id: String, post_code: String, post_n
 
 /// add 添加
 
-pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Result<String> {
+pub async fn add(db: &DatabaseConnection, req: SysPostAddReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
     if check_data_is_exist(req.clone().post_code, req.clone().post_name, db).await? {
         return Err(anyhow!("数据已存在"));
@@ -114,7 +115,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Resul
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
+pub async fn delete(db: &DatabaseConnection, delete_req: SysPostDeleteReq) -> Result<String> {
     let mut s = SysPost::delete_many();
 
     s = s.filter(sys_post::Column::PostId.is_in(delete_req.post_ids));
@@ -129,7 +130,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Result<String> {
+pub async fn edit(db: &DatabaseConnection, req: SysPostEditReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
     if eidt_check_data_is_exist(req.post_id.clone(), req.post_code.clone(), req.post_name.clone(), db).await? {
         return Err(anyhow!("数据已存在"));
@@ -151,7 +152,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
 
 /// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<Resp> {
+pub async fn get_by_id(db: &DatabaseConnection, search_req: SysPostSearchReq) -> Result<SysPostResp> {
     let mut s = SysPost::find();
     s = s.filter(sys_post::Column::DeletedAt.is_null());
     //
@@ -161,7 +162,7 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
         return Err(anyhow!("请求参数错误"));
     }
 
-    let res = match s.into_model::<Resp>().one(db).await? {
+    let res = match s.into_model::<SysPostResp>().one(db).await? {
         Some(m) => m,
         None => return Err(anyhow!("数据不存在")),
     };
@@ -187,12 +188,12 @@ pub async fn get_post_ids_by_user_id(db: &DatabaseConnection, user_id: &str) -> 
 
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
-pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
+pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<SysPostResp>> {
     let s = SysPost::find()
         .filter(sys_post::Column::DeletedAt.is_null())
         .filter(sys_post::Column::Status.eq("1"))
         .order_by(sys_post::Column::PostId, Order::Asc)
-        .into_model::<Resp>()
+        .into_model::<SysPostResp>()
         .all(db)
         .await?;
     Ok(s)

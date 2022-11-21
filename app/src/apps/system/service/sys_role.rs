@@ -11,9 +11,10 @@ use db::{
         },
         models::{
             sys_menu::MenuResp,
-            sys_role::{AddOrCancelAuthRoleReq, AddReq, DataScopeReq, DeleteReq, EditReq, Resp, SearchReq, StatusReq},
+            sys_role::{AddOrCancelAuthRoleReq, DataScopeReq, SysRoleAddReq, SysRoleDeleteReq, SysRoleEditReq, SysRoleResp, SysRoleSearchReq, SysRoleStatusReq},
             sys_role_api,
         },
+        prelude::SysRoleModel,
     },
 };
 use sea_orm::{
@@ -23,7 +24,7 @@ use sea_orm::{
 
 /// get_list 获取列表
 /// page_params 分页参数
-pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_role::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SysRoleSearchReq) -> Result<ListData<SysRoleModel>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -31,7 +32,7 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
 
     if let Some(x) = req.role_ids {
         if !x.is_empty() {
-            let y:Vec<&str> = x.split(',').collect();
+            let y: Vec<&str> = x.split(',').collect();
             s = s.filter(sys_role::Column::RoleId.is_in(y));
         }
     }
@@ -84,7 +85,7 @@ pub async fn check_data_is_exist(role_name: String, db: &DatabaseConnection) -> 
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: &str) -> Result<String> {
+pub async fn add(db: &DatabaseConnection, req: SysRoleAddReq, user_id: &str) -> Result<String> {
     //  检查字典类型是否存在
     if check_data_is_exist(req.clone().role_name, db).await? {
         return Err(anyhow!("数据已存在，请检查后重试"));
@@ -104,18 +105,18 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: &str) -> Result<
 }
 
 // 组合角色数据
-pub async fn get_permissions_data<C>(db: &C, role_id: String, menu_ids: Vec<String>) -> Result<Vec<sys_role_api::AddReq>>
+pub async fn get_permissions_data<C>(db: &C, role_id: String, menu_ids: Vec<String>) -> Result<Vec<sys_role_api::SysRoleApiAddReq>>
 where
     C: TransactionTrait + ConnectionTrait,
 {
     // 获取全部菜单 均为false
-    let menus = super::sys_menu::get_menus(db, false, false,false).await?;
+    let menus = super::sys_menu::get_menus(db, false, false, false).await?;
     let menu_map = menus.iter().map(|x| (x.id.clone(), x.clone())).collect::<HashMap<String, MenuResp>>();
     // 组装角色权限数据
-    let mut res: Vec<sys_role_api::AddReq> = Vec::new();
+    let mut res: Vec<sys_role_api::SysRoleApiAddReq> = Vec::new();
     for menu_id in menu_ids {
         if let Some(menu) = menu_map.get(&menu_id) {
-            res.push(sys_role_api::AddReq {
+            res.push(sys_role_api::SysRoleApiAddReq {
                 role_id: role_id.clone(),
                 api: menu.api.clone(),
                 method: Some(menu.method.clone()),
@@ -126,7 +127,7 @@ where
 }
 
 /// 添加角色数据
-pub async fn add_role(txn: &DatabaseTransaction, req: AddReq) -> Result<String> {
+pub async fn add_role(txn: &DatabaseTransaction, req: SysRoleAddReq) -> Result<String> {
     let uid = scru128::new_string();
     let now: NaiveDateTime = Local::now().naive_local();
     let user = sys_role::ActiveModel {
@@ -145,7 +146,7 @@ pub async fn add_role(txn: &DatabaseTransaction, req: AddReq) -> Result<String> 
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
+pub async fn delete(db: &DatabaseConnection, delete_req: SysRoleDeleteReq) -> Result<String> {
     let txn = db.begin().await?;
     let mut s = SysRole::delete_many();
     s = s.filter(sys_role::Column::RoleId.is_in(delete_req.role_ids.clone()));
@@ -183,7 +184,7 @@ pub async fn eidt_check_data_is_exist(db: &DatabaseConnection, role_id: String, 
 }
 
 // 编辑用户角色
-pub async fn edit(db: &DatabaseConnection, req: EditReq, created_by: &str) -> Result<String> {
+pub async fn edit(db: &DatabaseConnection, req: SysRoleEditReq, created_by: &str) -> Result<String> {
     //  检查字典类型是否存在
     if eidt_check_data_is_exist(db, req.clone().role_id, req.clone().role_name, req.clone().role_key).await? {
         return Err(anyhow!("数据已存在"));
@@ -224,7 +225,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, created_by: &str) -> Re
 }
 
 // set_status 状态修改
-pub async fn set_status(db: &DatabaseConnection, status_req: StatusReq) -> Result<String> {
+pub async fn set_status(db: &DatabaseConnection, status_req: SysRoleStatusReq) -> Result<String> {
     // 开启事务
     let txn = db.begin().await?;
     // 修改数据
@@ -281,7 +282,7 @@ pub async fn set_data_scope(db: &DatabaseConnection, req: DataScopeReq) -> Resul
 
 /// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
-pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> {
+pub async fn get_by_id(db: &DatabaseConnection, req: SysRoleSearchReq) -> Result<SysRoleResp> {
     let mut s = SysRole::find();
     //
     if let Some(x) = req.role_id {
@@ -290,7 +291,7 @@ pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> 
         return Err(anyhow!("id不能为空"));
     }
 
-    let res = match s.into_model::<Resp>().one(db).await? {
+    let res = match s.into_model::<SysRoleResp>().one(db).await? {
         Some(m) => m,
         None => return Err(anyhow!("数据不存在")),
     };
@@ -300,11 +301,11 @@ pub async fn get_by_id(db: &DatabaseConnection, req: SearchReq) -> Result<Resp> 
 
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
-pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<Resp>> {
+pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<SysRoleResp>> {
     let s = SysRole::find()
         .order_by_asc(sys_role::Column::ListOrder)
         .order_by_asc(sys_role::Column::RoleId)
-        .into_model::<Resp>()
+        .into_model::<SysRoleResp>()
         .all(db)
         .await?;
     Ok(s)

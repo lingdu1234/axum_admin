@@ -3,8 +3,8 @@ use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
     system::{
-        entities::sys_user_online,
-        models::sys_user_online::{DeleteReq, SearchReq},
+        models::sys_user_online::{SysUserOnlineDeleteReq, SysUserOnlineSearchReq},
+        prelude::SysUserOnlineModel,
     },
     DB,
 };
@@ -14,7 +14,7 @@ use crate::utils::jwt::Claims;
 
 /// get_list 获取列表
 /// page_params 分页参数
-pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<sys_user_online::Model>> {
+pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysUserOnlineSearchReq>) -> Res<ListData<SysUserOnlineModel>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user_online::get_sort_list(db, page_params, req).await;
     match res {
@@ -24,7 +24,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 }
 
 /// 删除
-pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Res<String> {
+pub async fn delete(Json(delete_req): Json<SysUserOnlineDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user_online::delete(db, delete_req).await;
     match res {

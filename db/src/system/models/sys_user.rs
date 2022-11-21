@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use super::sys_dept::DeptResp;
 
 #[derive(Deserialize, Debug)]
-pub struct AddReq {
+pub struct SysUserAddReq {
     pub user_name: String,
     pub user_nickname: String,
     pub user_password: String,
@@ -24,7 +24,7 @@ pub struct AddReq {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct EditReq {
+pub struct SysUserEditReq {
     pub id: String,
     pub user_name: String,
     pub user_nickname: String,
@@ -85,7 +85,7 @@ pub struct UserInformation {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct SearchReq {
+pub struct SysUserSearchReq {
     pub user_id: Option<String>,
     pub role_id: Option<String>,
     pub user_ids: Option<String>,
@@ -99,7 +99,7 @@ pub struct SearchReq {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct DeleteReq {
+pub struct SysUserDeleteReq {
     pub user_ids: Vec<String>,
 }
 

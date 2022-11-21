@@ -3,8 +3,8 @@ use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
     system::{
-        entities::sys_oper_log,
-        models::sys_oper_log::{DeleteReq, SearchReq},
+        models::sys_oper_log::{SysOperLogDeleteReq, SysOperLogSearchReq},
+        prelude::SysOperLogModel,
     },
     DB,
 };
@@ -14,7 +14,7 @@ use super::super::service;
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
 
-pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<sys_oper_log::Model>> {
+pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysOperLogSearchReq>) -> Res<ListData<SysOperLogModel>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_oper_log::get_sort_list(db, page_params, req).await;
     match res {
@@ -25,7 +25,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 
 /// delete 完全删除
 
-pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
+pub async fn delete(Json(req): Json<SysOperLogDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_oper_log::delete(db, req).await;
     match res {
@@ -47,7 +47,7 @@ pub async fn clean() -> Res<String> {
 /// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
 
-pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<sys_oper_log::Model> {
+pub async fn get_by_id(Query(req): Query<SysOperLogSearchReq>) -> Res<SysOperLogModel> {
     let id = match req.oper_id {
         None => return Res::with_err("id不能为空"),
         Some(x) => x,

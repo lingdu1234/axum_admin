@@ -4,7 +4,8 @@ use db::{
     common::res::{ListData, PageParams},
     system::{
         entities::{prelude::SysDictData, sys_dict_data},
-        models::sys_dict_data::{AddReq, DeleteReq, EditReq, SearchReq},
+        models::sys_dict_data::{SysDictDataAddReq, SysDictDataDeleteReq, SysDictDataEditReq, SysDictDataSearchReq},
+        prelude::SysDictDataModel,
     },
 };
 // use poem::{error::BadRequest, http::StatusCode, Error, Result};
@@ -13,7 +14,7 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_dict_data::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SysDictDataSearchReq) -> Result<ListData<SysDictDataModel>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -65,7 +66,7 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
     Ok(res)
 }
 
-pub async fn check_dict_data_is_exist<C>(req: AddReq, db: &C) -> Result<bool>
+pub async fn check_dict_data_is_exist<C>(req: SysDictDataAddReq, db: &C) -> Result<bool>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -76,7 +77,7 @@ where
 }
 
 /// add 添加
-pub async fn add<C>(db: &C, add_req: AddReq, user_id: String) -> Result<String>
+pub async fn add<C>(db: &C, add_req: SysDictDataAddReq, user_id: String) -> Result<String>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -111,7 +112,7 @@ where
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
+pub async fn delete(db: &DatabaseConnection, delete_req: SysDictDataDeleteReq) -> Result<String> {
     let mut s = SysDictData::delete_many();
 
     s = s.filter(sys_dict_data::Column::DictDataId.is_in(delete_req.dict_data_ids));
@@ -126,7 +127,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Result<String> {
+pub async fn edit(db: &DatabaseConnection, req: SysDictDataEditReq, user_id: String) -> Result<String> {
     let uid = req.dict_data_id;
     let s_s = SysDictData::find_by_id(uid.clone()).one(db).await?;
     let s_r: sys_dict_data::ActiveModel = s_s.unwrap().into();
@@ -154,7 +155,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
 /// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
 
-pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result<sys_dict_data::Model> {
+pub async fn get_by_id(db: &DatabaseConnection, search_req: SysDictDataSearchReq) -> Result<SysDictDataModel> {
     let mut s = SysDictData::find();
     if let Some(x) = search_req.dict_data_id {
         s = s.filter(sys_dict_data::Column::DictDataId.eq(x));
@@ -170,7 +171,7 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SearchReq) -> Result
     Ok(res)
 }
 
-pub async fn get_by_type(db: &DatabaseConnection, search_req: SearchReq) -> Result<Vec<sys_dict_data::Model>> {
+pub async fn get_by_type(db: &DatabaseConnection, search_req: SysDictDataSearchReq) -> Result<Vec<SysDictDataModel>> {
     let mut s = SysDictData::find();
     if let Some(x) = search_req.dict_type {
         s = s.filter(sys_dict_data::Column::DictType.eq(x));
@@ -184,7 +185,7 @@ pub async fn get_by_type(db: &DatabaseConnection, search_req: SearchReq) -> Resu
 
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
-pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<sys_dict_data::Model>> {
+pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<SysDictDataModel>> {
     let s = SysDictData::find()
         .filter(sys_dict_data::Column::DeletedAt.is_null())
         .filter(sys_dict_data::Column::Status.eq("1"))
