@@ -1,4 +1,4 @@
-mod api;
+pub mod api;
 mod service;
 
 // 重新导出

@@ -2,8 +2,8 @@ use axum::{
     routing::{delete, get, post, put},
     Router,
 };
-mod common;
-mod sys_api_db;
+pub mod common;
+pub mod sys_api_db;
 mod sys_dept;
 mod sys_dict_data;
 mod sys_dict_type;

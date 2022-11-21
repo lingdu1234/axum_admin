@@ -11,8 +11,17 @@ use db::{
 
 use super::super::service;
 
-/// add 添加
-
+#[utoipa::path(
+    get,
+    path = "/system/api_db/add",
+    tag = "SysApiDb",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "新增api与数据库表对应关系", body = String)
+    ),
+    request_body = AddEditReq,
+)]
+/// 新增api与数据库表对应关系
 pub async fn add(Json(req): Json<AddEditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_api_db::add(db, req).await;
@@ -22,9 +31,19 @@ pub async fn add(Json(req): Json<AddEditReq>) -> Res<String> {
     }
 }
 
-/// 按id获取
-/// db 数据库连接
-
+#[utoipa::path(
+    get,
+    path = "/system/api_db/get_by_id",
+    tag = "SysApiDb",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "按id获取对应关系", body = [sys_api_db::Model])
+    ),
+    params(
+        ("params" = SearchReq, Query, description = "查询参数")
+    ),
+)]
+/// 按id获取对应关系
 pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<Vec<sys_api_db::Model>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_api_db::get_by_id(db, &req.api_id).await;
