@@ -10,10 +10,22 @@ use db::{
 };
 
 use super::super::service;
-/// get_list 获取列表
-/// page_params 分页参数
-/// db 数据库连接 使用db.0
 
+
+#[utoipa::path(
+    get,
+    path = "/system/oper_log/list",
+    tag = "SysOperLog",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "获取操作日志", body = SysOperLogModel),
+    ),
+    params(
+        ("page_params" = PageParams, Query, description = "分页参数"),
+        ("params" = SysOperLogSearchReq, Query, description = "查询参数"),
+    ),
+)]
+/// 获取操作日志
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysOperLogSearchReq>) -> Res<ListData<SysOperLogModel>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_oper_log::get_sort_list(db, page_params, req).await;
@@ -23,8 +35,17 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
     }
 }
 
-/// delete 完全删除
-
+#[utoipa::path(
+    delete,
+    path = "/system/oper_log/delete",
+    tag = "SysOperLog",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "删除操作日志", body = String),
+    ),
+    request_body = SysOperLogDeleteReq,
+)]
+/// 删除操作日志
 pub async fn delete(Json(req): Json<SysOperLogDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_oper_log::delete(db, req).await;
@@ -34,6 +55,16 @@ pub async fn delete(Json(req): Json<SysOperLogDeleteReq>) -> Res<String> {
     }
 }
 
+#[utoipa::path(
+    delete,
+    path = "/system/oper_log/clean",
+    tag = "SysOperLog",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "删除操作日志", body = String),
+    ),
+)]
+/// 删除操作日志
 pub async fn clean() -> Res<String> {
     //  数据验证
     let db = DB.get_or_init(db_conn).await;
@@ -44,9 +75,20 @@ pub async fn clean() -> Res<String> {
     }
 }
 
-/// get_user_by_id 获取用户Id获取用户
-/// db 数据库连接 使用db.0
 
+#[utoipa::path(
+    get,
+    path = "/system/oper_log/get_by_id",
+    tag = "SysOperLog",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "按ID获取登录日志", body = SysOperLogModel),
+    ),
+    params(
+        ("params" = SysOperLogSearchReq, Query, description = "查询参数"),
+    ),
+)]
+/// 按ID获取登录日志
 pub async fn get_by_id(Query(req): Query<SysOperLogSearchReq>) -> Res<SysOperLogModel> {
     let id = match req.oper_id {
         None => return Res::with_err("id不能为空"),

@@ -13,8 +13,20 @@ use db::{
 use super::super::service;
 use crate::utils::jwt::Claims;
 
-/// get_all_menu_tree 获取全部菜单
-
+#[utoipa::path(
+    get,
+    path = "/system/menu/list",
+    tag = "SysMenu",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "获取菜单列表", body = SysMenuModel),
+    ),
+    params(
+        ("page_params" = PageParams, Query, description = "分页参数"),
+        ("params" = SysMenuSearchReq, Query, description = "查询参数"),
+    ),
+)]
+/// 获取菜单列表 （弃用）
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(search_req): Query<SysMenuSearchReq>) -> Res<ListData<SysMenuModel>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_sort_list(db, page_params, search_req).await;
@@ -24,9 +36,19 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(search_r
     }
 }
 
-/// get_user_by_id 获取用户Id获取用户
-/// db 数据库连接 使用db.0
-
+#[utoipa::path(
+    get,
+    path = "/system/menu/get_by_id",
+    tag = "SysMenu",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "按id获取菜单", body = MenuResp),
+    ),
+    params(
+        ("params" = SysJobSearchReq, Query, description = "查询参数"),
+    ),
+)]
+/// 按id获取菜单
 pub async fn get_by_id(Query(search_req): Query<SysMenuSearchReq>) -> Res<MenuResp> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_by_id(db, search_req).await;
@@ -36,8 +58,17 @@ pub async fn get_by_id(Query(search_req): Query<SysMenuSearchReq>) -> Res<MenuRe
     }
 }
 
-/// add 添加
-
+#[utoipa::path(
+    post,
+    path = "/system/menu/add",
+    tag = "SysMenu",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "新增菜单", body = String),
+    ),
+    request_body = SysMenuAddReq,
+)]
+/// 新增菜单
 pub async fn add(Json(req): Json<SysMenuAddReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::add(db, req).await;
@@ -47,8 +78,17 @@ pub async fn add(Json(req): Json<SysMenuAddReq>) -> Res<String> {
     }
 }
 
-/// delete 完全删除
-
+#[utoipa::path(
+    delete,
+    path = "/system/menu/delete",
+    tag = "SysMenu",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "删除菜单", body = String),
+    ),
+    request_body = SysMenuDeleteReq,
+)]
+/// 删除菜单
 pub async fn delete(Json(req): Json<SysMenuDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::delete(db, &req.id).await;
@@ -58,8 +98,17 @@ pub async fn delete(Json(req): Json<SysMenuDeleteReq>) -> Res<String> {
     }
 }
 
-// edit 修改
-
+#[utoipa::path(
+    put,
+    path = "/system/menu/edit",
+    tag = "SysMenu",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "更新菜单", body = String),
+    ),
+    request_body = SysMenuEditReq,
+)]
+/// 更新菜单
 pub async fn edit(Json(edit_req): Json<SysMenuEditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::edit(db, edit_req).await;
@@ -68,7 +117,18 @@ pub async fn edit(Json(edit_req): Json<SysMenuEditReq>) -> Res<String> {
         Err(e) => Res::with_err(&e.to_string()),
     }
 }
-// update_log_cache_method 修改菜单日志缓存方法
+
+#[utoipa::path(
+    put,
+    path = "/system/menu/update_log_cache_method",
+    tag = "SysMenu",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "更新菜单", body = String),
+    ),
+    request_body = LogCacheEditReq,
+)]
+/// 修改菜单 日志 缓存 方法
 pub async fn update_log_cache_method(Json(edit_req): Json<LogCacheEditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::update_log_cache_method(db, edit_req).await;
@@ -78,8 +138,20 @@ pub async fn update_log_cache_method(Json(edit_req): Json<LogCacheEditReq>) -> R
     }
 }
 
-/// get_all_menu_tree 获取全部菜单树
-
+#[utoipa::path(
+    get,
+    path = "/system/menu/get_all_enabled_menu_tree",
+    tag = "SysMenu",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "获取全部路由菜单树 懒得改名字了", body = SysMenuTreeAll),
+    ),
+    params(
+        ("page_params" = PageParams, Query, description = "分页参数"),
+        ("params" = SysMenuSearchReq, Query, description = "查询参数"),
+    ),
+)]
+/// 获取全部路由菜单树 懒得改名字了
 pub async fn get_all_enabled_menu_tree(Query(page_params): Query<PageParams>, Query(search_req): Query<SysMenuSearchReq>) -> Res<Vec<SysMenuTreeAll>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_all_enabled_menu_tree(db, page_params, search_req).await;
@@ -89,7 +161,20 @@ pub async fn get_all_enabled_menu_tree(Query(page_params): Query<PageParams>, Qu
     }
 }
 
-/// get_related_api_and_db 获取全部菜单树
+#[utoipa::path(
+    get,
+    path = "/system/menu/get_auth_list",
+    tag = "SysMenu",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "获取api与数据库关联列表 授权列表", body = MenuRelated),
+    ),
+    params(
+        ("page_params" = PageParams, Query, description = "分页参数"),
+        ("params" = SysMenuSearchReq, Query, description = "查询参数"),
+    ),
+)]
+/// 获取api与数据库关联列表 授权列表
 pub async fn get_related_api_and_db(Query(page_params): Query<PageParams>, Query(search_req): Query<SysMenuSearchReq>) -> Res<ListData<MenuRelated>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_menu::get_related_api_and_db(db, page_params, search_req).await;
@@ -99,7 +184,16 @@ pub async fn get_related_api_and_db(Query(page_params): Query<PageParams>, Query
     }
 }
 
-/// 获取用户路由
+#[utoipa::path(
+    get,
+    path = "/system/menu/get_routers",
+    tag = "SysMenu",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "获取用户路由，用于渲染菜单", body = SysMenuTree),
+    )
+)]
+/// 获取用户路由，用于渲染菜单
 pub async fn get_routers(user: Claims) -> Res<Vec<SysMenuTree>> {
     let db = DB.get_or_init(db_conn).await;
     //  获取 用户角色

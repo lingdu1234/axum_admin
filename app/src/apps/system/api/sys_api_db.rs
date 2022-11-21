@@ -19,10 +19,10 @@ use super::super::service;
     responses(
         (status = 200, description = "新增api与数据库表对应关系", body = String)
     ),
-    request_body = AddEditReq,
+    request_body = SysApiDbAddEditReq,
 )]
 /// 新增api与数据库表对应关系
-pub async fn add(Json(req): Json<AddEditReq>) -> Res<String> {
+pub async fn add(Json(req): Json<SysApiDbAddEditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_api_db::add(db, req).await;
     match res {
@@ -40,7 +40,7 @@ pub async fn add(Json(req): Json<AddEditReq>) -> Res<String> {
         (status = 200, description = "按id获取对应关系", body = [SysApiDbModel])
     ),
     params(
-        ("params" = SearchReq, Query, description = "查询参数")
+        ("params" = SysApiDbSearchReq, Query, description = "查询参数")
     ),
 )]
 /// 按id获取对应关系

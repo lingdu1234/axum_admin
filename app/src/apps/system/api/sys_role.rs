@@ -15,9 +15,20 @@ use db::{
 use super::super::service;
 use crate::utils::jwt::Claims;
 
-/// get_list 获取列表
-/// page_params 分页参数
-
+#[utoipa::path(
+    get,
+    path = "/system/role/list",
+    tag = "SysRole",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "获取角色列表", body = SysRoleModel),
+    ),
+    params(
+        ("page_params" = PageParams, Query, description = "分页参数"),
+        ("params" = SysRoleSearchReq, Query, description = "查询参数"),
+    ),
+)]
+/// 获取角色列表
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysRoleSearchReq>) -> Res<ListData<SysRoleModel>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::get_sort_list(db, page_params, req).await;
@@ -27,8 +38,17 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
     }
 }
 
-/// add 添加
-
+#[utoipa::path(
+    post,
+    path = "/system/role/add",
+    tag = "SysRole",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "新增角色", body = String)
+    ),
+    request_body = SysRoleAddReq,
+)]
+/// 新增角色
 pub async fn add(Json(req): Json<SysRoleAddReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::add(db, req, &user.id).await;
@@ -38,8 +58,17 @@ pub async fn add(Json(req): Json<SysRoleAddReq>, user: Claims) -> Res<String> {
     }
 }
 
-/// delete 完全删除
-
+#[utoipa::path(
+    delete,
+    path = "/system/role/delete",
+    tag = "SysRole",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "删除角色", body = String)
+    ),
+    request_body = SysRoleDeleteReq,
+)]
+/// 删除角色
 pub async fn delete(Json(delete_req): Json<SysRoleDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::delete(db, delete_req).await;
@@ -49,8 +78,17 @@ pub async fn delete(Json(delete_req): Json<SysRoleDeleteReq>) -> Res<String> {
     }
 }
 
-// edit 修改
-
+#[utoipa::path(
+    put,
+    path = "/system/role/edit",
+    tag = "SysRole",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "修改角色", body = String)
+    ),
+    request_body = SysRoleEditReq,
+)]
+/// 修改角色
 pub async fn edit(Json(edit_req): Json<SysRoleEditReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::edit(db, edit_req, &user.id).await;
@@ -60,8 +98,17 @@ pub async fn edit(Json(edit_req): Json<SysRoleEditReq>, user: Claims) -> Res<Str
     }
 }
 
-// set_status 修改状态
-
+#[utoipa::path(
+    put,
+    path = "/system/role/change_status",
+    tag = "SysRole",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "修改角色状态", body = String)
+    ),
+    request_body = SysRoleStatusReq,
+)]
+/// 修改角色状态
 pub async fn change_status(Json(req): Json<SysRoleStatusReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::set_status(db, req).await;
@@ -70,8 +117,19 @@ pub async fn change_status(Json(req): Json<SysRoleStatusReq>) -> Res<String> {
         Err(e) => Res::with_err(&e.to_string()),
     }
 }
-// set_data_scope 修改数据权限范围
 
+
+#[utoipa::path(
+    put,
+    path = "/system/role/set_data_scope",
+    tag = "SysRole",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "修改角色数据权限", body = String)
+    ),
+    request_body = DataScopeReq,
+)]
+/// 修改角色数据权限
 pub async fn set_data_scope(Json(req): Json<DataScopeReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::set_data_scope(db, req).await;
@@ -81,8 +139,19 @@ pub async fn set_data_scope(Json(req): Json<DataScopeReq>) -> Res<String> {
     }
 }
 
-/// get_user_by_id 获取用户Id获取用户
-
+#[utoipa::path(
+    get,
+    path = "/system/role/get_by_id",
+    tag = "SysRole",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "按id获取角色", body = SysRoleResp),
+    ),
+    params(
+        ("params" = SysRoleSearchReq, Query, description = "查询参数"),
+    ),
+)]
+/// 按id获取角色
 pub async fn get_by_id(Query(req): Query<SysRoleSearchReq>) -> Res<SysRoleResp> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::get_by_id(db, req).await;
@@ -92,8 +161,16 @@ pub async fn get_by_id(Query(req): Query<SysRoleSearchReq>) -> Res<SysRoleResp> 
     }
 }
 
-/// get_all 获取全部
-
+#[utoipa::path(
+    get,
+    path = "/system/role/get_all",
+    tag = "SysRole",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "获取全部角色", body = SysRoleResp),
+    )
+)]
+/// 获取全部角色
 pub async fn get_all() -> Res<Vec<SysRoleResp>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::get_all(db).await;
@@ -103,8 +180,19 @@ pub async fn get_all() -> Res<Vec<SysRoleResp>> {
     }
 }
 
-/// get_role_menu 获取角色授权菜单id数组
-
+#[utoipa::path(
+    get,
+    path = "/system/role/get_role_menu",
+    tag = "SysRole",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "获取角色对应菜单id", body = [String]),
+    ),
+    params(
+        ("params" = SysRoleSearchReq, Query, description = "查询参数"),
+    ),
+)]
+/// 获取角色对应菜单id
 pub async fn get_role_menu(Query(req): Query<SysRoleSearchReq>) -> Res<Vec<String>> {
     let db = DB.get_or_init(db_conn).await;
     match req.role_id {
@@ -119,8 +207,19 @@ pub async fn get_role_menu(Query(req): Query<SysRoleSearchReq>) -> Res<Vec<Strin
     }
 }
 
-/// get_role_dept 获取角色授权部门id数组
-
+#[utoipa::path(
+    get,
+    path = "/system/role/get_role_dept",
+    tag = "SysRole",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "获取角色对应的部门id", body = [String]),
+    ),
+    params(
+        ("params" = SysRoleSearchReq, Query, description = "查询参数"),
+    ),
+)]
+/// 获取角色对应的部门id
 pub async fn get_role_dept(Query(req): Query<SysRoleSearchReq>) -> Res<Vec<String>> {
     match req.role_id {
         None => Res::with_msg("role_id不能为空"),
@@ -135,6 +234,8 @@ pub async fn get_role_dept(Query(req): Query<SysRoleSearchReq>) -> Res<Vec<Strin
     }
 }
 
+
+/// 获取角色对应的部门id (弃用)
 pub async fn get_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, Query(page_params): Query<PageParams>) -> Res<ListData<UserWithDept>> {
     let db = DB.get_or_init(db_conn).await;
     let role_id = match req.role_id.clone() {
@@ -153,6 +254,7 @@ pub async fn get_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, Que
     }
 }
 
+// (弃用)
 pub async fn get_un_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, Query(page_params): Query<PageParams>) -> Res<ListData<UserResp>> {
     let db = DB.get_or_init(db_conn).await;
     let role_id = match req.role_id.clone() {
@@ -171,8 +273,7 @@ pub async fn get_un_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, 
     }
 }
 
-// edit 修改
-
+// (弃用)
 pub async fn update_auth_role(Json(req): Json<UpdateAuthRoleReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     match service::sys_role::add_role_by_user_id(db, &req.user_id, req.role_ids, user.id).await {
@@ -181,6 +282,7 @@ pub async fn update_auth_role(Json(req): Json<UpdateAuthRoleReq>, user: Claims) 
     }
 }
 
+// (弃用)
 pub async fn add_auth_user(Json(req): Json<AddOrCancelAuthRoleReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::add_role_with_user_ids(db, req.clone().user_ids, req.role_id, user.id).await;
@@ -190,6 +292,7 @@ pub async fn add_auth_user(Json(req): Json<AddOrCancelAuthRoleReq>, user: Claims
     }
 }
 
+// (弃用)
 pub async fn cancel_auth_user(Json(req): Json<AddOrCancelAuthRoleReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_role::cancel_auth_user(db, req).await;

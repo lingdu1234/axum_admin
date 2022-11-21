@@ -1,7 +1,8 @@
 use sea_orm::entity::prelude::DateTime;
 use serde::Deserialize;
+use utoipa::ToSchema;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug,ToSchema)]
 pub struct SysJobLogSearchReq {
     pub job_log_id: Option<String>,
     pub job_id: Option<String>,
@@ -13,7 +14,7 @@ pub struct SysJobLogSearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug,ToSchema)]
 pub struct SysJobLogAddReq {
     pub job_id: String,
     pub job_name: String,
@@ -30,12 +31,12 @@ pub struct SysJobLogAddReq {
     pub is_once: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize,ToSchema)]
 pub struct SysJobLogDeleteReq {
     pub job_log_ids: Vec<String>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug,ToSchema)]
 pub struct SysJobLogCleanReq {
     pub job_id: String,
 }

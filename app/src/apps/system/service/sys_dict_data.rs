@@ -9,7 +9,7 @@ use db::{
     },
 };
 // use poem::{error::BadRequest, http::StatusCode, Error, Result};
-use sea_orm::{ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
+use sea_orm::{ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
 
 /// get_list 获取列表
 /// page_params 分页参数
@@ -183,14 +183,14 @@ pub async fn get_by_type(db: &DatabaseConnection, search_req: SysDictDataSearchR
     Ok(res)
 }
 
-/// get_all 获取全部
-/// db 数据库连接 使用db.0
-pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<SysDictDataModel>> {
-    let s = SysDictData::find()
-        .filter(sys_dict_data::Column::DeletedAt.is_null())
-        .filter(sys_dict_data::Column::Status.eq("1"))
-        .order_by(sys_dict_data::Column::DictDataId, Order::Asc)
-        .all(db)
-        .await?;
-    Ok(s)
-}
+// /// get_all 获取全部
+// /// db 数据库连接 使用db.0
+// pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<SysDictDataModel>> {
+//     let s = SysDictData::find()
+//         .filter(sys_dict_data::Column::DeletedAt.is_null())
+//         .filter(sys_dict_data::Column::Status.eq("1"))
+//         .order_by(sys_dict_data::Column::DictDataId, Order::Asc)
+//         .all(db)
+//         .await?;
+//     Ok(s)
+// }

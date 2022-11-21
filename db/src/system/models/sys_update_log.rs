@@ -1,6 +1,7 @@
 use serde::Deserialize;
+use utoipa::ToSchema;
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug,ToSchema)]
 pub struct SysUpdateLogAddReq {
     pub app_version: String,
     pub backend_version: String,
@@ -8,7 +9,7 @@ pub struct SysUpdateLogAddReq {
     pub content: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug,ToSchema)]
 pub struct SysUpdateLogEditReq {
     pub id: String,
     pub app_version: String,
@@ -17,7 +18,7 @@ pub struct SysUpdateLogEditReq {
     pub content: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize,ToSchema)]
 pub struct SysUpdateLogDeleteReq {
     pub id: String,
 }

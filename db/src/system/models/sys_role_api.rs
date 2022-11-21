@@ -1,6 +1,7 @@
 use serde::Deserialize;
+use utoipa::ToSchema;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug,ToSchema)]
 pub struct SysRoleApiAddReq {
     pub role_id: String,
     pub api: String,

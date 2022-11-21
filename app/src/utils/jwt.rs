@@ -11,6 +11,7 @@ use jsonwebtoken::{decode, encode, errors::ErrorKind, DecodingKey, EncodingKey, 
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use utoipa::ToSchema;
 
 use crate::apps::system::check_user_online;
 
@@ -144,7 +145,7 @@ impl IntoResponse for AuthError {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone,ToSchema)]
 pub struct AuthBody {
     token: String,
     token_type: String,

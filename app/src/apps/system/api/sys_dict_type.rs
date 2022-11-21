@@ -12,10 +12,20 @@ use db::{
 use super::super::service;
 use crate::utils::jwt::Claims;
 
-/// get_list 获取列表
-/// page_params 分页参数
-/// db 数据库连接 使用db.0
-
+#[utoipa::path(
+    get,
+    path = "/system/dict/type/list",
+    tag = "SysDictType",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "获取字典数据列表", body = SysDictTypeModel),
+    ),
+    params(
+        ("page_params" = PageParams, Query, description = "分页参数"),
+        ("params" = SysDictTypeSearchReq, Query, description = "查询参数"),
+    ),
+)]
+/// 获取字典数据列表
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysDictTypeSearchReq>) -> Res<ListData<SysDictTypeModel>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_type::get_sort_list(db, page_params, req).await;
@@ -24,8 +34,18 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
         Err(e) => Res::with_err(&e.to_string()),
     }
 }
-/// add 添加
 
+#[utoipa::path(
+    post,
+    path = "/system/dict/type/add",
+    tag = "SysDictType",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "新增字典数据", body = String)
+    ),
+    request_body = SysDictTypeAddReq,
+)]
+/// 新增字典数据
 pub async fn add(Json(req): Json<SysDictTypeAddReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_type::add(db, req, user.id).await;
@@ -35,8 +55,17 @@ pub async fn add(Json(req): Json<SysDictTypeAddReq>, user: Claims) -> Res<String
     }
 }
 
-/// delete 完全删除
-
+#[utoipa::path(
+    delete,
+    path = "/system/dict/type/delete",
+    tag = "SysDictType",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "删除字典数据", body = String)
+    ),
+    request_body = SysDictTypeDeleteReq,
+)]
+/// 删除字典数据
 pub async fn delete(Json(req): Json<SysDictTypeDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_type::delete(db, req).await;
@@ -46,8 +75,17 @@ pub async fn delete(Json(req): Json<SysDictTypeDeleteReq>) -> Res<String> {
     }
 }
 
-// edit 修改
-
+#[utoipa::path(
+    put,
+    path = "/system/dict/type/edit",
+    tag = "SysDictType",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "编辑字典数据", body = String)
+    ),
+    request_body = SysDictTypeEditReq,
+)]
+/// 编辑字典数据
 pub async fn edit(Json(edit_req): Json<SysDictTypeEditReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_type::edit(db, edit_req, user.id).await;
@@ -57,9 +95,19 @@ pub async fn edit(Json(edit_req): Json<SysDictTypeEditReq>, user: Claims) -> Res
     }
 }
 
-/// get_user_by_id 获取用户Id获取用户
-/// db 数据库连接 使用db.0
-
+#[utoipa::path(
+    get,
+    path = "/system/dict/type/get_by_id",
+    tag = "SysDictType",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "按id获取字典数据", body = SysDictTypeModel)
+    ),
+    params(
+        ("params" = SysDeptSearchReq, Query, description = "查询参数")
+    ),
+)]
+/// 按id获取字典数据
 pub async fn get_by_id(Query(req): Query<SysDictTypeSearchReq>) -> impl IntoResponse {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_type::get_by_id(db, req).await;
@@ -69,9 +117,16 @@ pub async fn get_by_id(Query(req): Query<SysDictTypeSearchReq>) -> impl IntoResp
     }
 }
 
-/// get_all 获取全部
-/// db 数据库连接 使用db.0
-
+#[utoipa::path(
+    get,
+    path = "/system/dict/type/get_all",
+    tag = "SysDictType",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "按id获取字典数据", body = [SysDictTypeModel])
+    )
+)]
+/// 按id获取字典数据
 pub async fn get_all() -> impl IntoResponse {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dict_type::get_all(db).await;

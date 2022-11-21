@@ -12,10 +12,20 @@ use db::{
 use super::super::service;
 use crate::{tasks, utils::jwt::Claims};
 
-/// get_list 获取列表
-/// page_params 分页参数
-/// db 数据库连接 使用db.0
-
+#[utoipa::path(
+    get,
+    path = "/system/job/list",
+    tag = "SysJob",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "获取定时任务列表", body = SysJobModel),
+    ),
+    params(
+        ("page_params" = PageParams, Query, description = "分页参数"),
+        ("params" = SysJobSearchReq, Query, description = "查询参数"),
+    ),
+)]
+/// 获取定时任务列表
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysJobSearchReq>) -> Res<ListData<SysJobModel>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_job::get_sort_list(db, page_params, req).await;
@@ -24,8 +34,19 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
         Err(e) => Res::with_err(&e.to_string()),
     }
 }
-/// add 添加
 
+
+#[utoipa::path(
+    post,
+    path = "/system/job/add",
+    tag = "SysJob",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "新增定时任务", body = String),
+    ),
+    request_body = SysJobAddReq,
+)]
+/// 新增定时任务
 pub async fn add(Json(req): Json<SysJobAddReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_job::add(db, req, user.id).await;
@@ -35,8 +56,17 @@ pub async fn add(Json(req): Json<SysJobAddReq>, user: Claims) -> Res<String> {
     }
 }
 
-/// delete 完全删除
-
+#[utoipa::path(
+    delete,
+    path = "/system/job/delete",
+    tag = "SysJob",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "删除定时任务", body = String),
+    ),
+    request_body = SysJobDeleteReq,
+)]
+/// 删除定时任务
 pub async fn delete(Json(req): Json<SysJobDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_job::delete(db, req).await;
@@ -46,8 +76,17 @@ pub async fn delete(Json(req): Json<SysJobDeleteReq>) -> Res<String> {
     }
 }
 
-// edit 修改
-
+#[utoipa::path(
+    put,
+    path = "/system/job/edit",
+    tag = "SysJob",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "更新定时任务", body = String),
+    ),
+    request_body = SysJobEditReq,
+)]
+/// 更新定时任务
 pub async fn edit(Json(edit_req): Json<SysJobEditReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_job::edit(db, edit_req, user.id).await;
@@ -57,9 +96,19 @@ pub async fn edit(Json(edit_req): Json<SysJobEditReq>, user: Claims) -> Res<Stri
     }
 }
 
-/// get_user_by_id 获取用户Id获取用户
-/// db 数据库连接 使用db.0
-
+#[utoipa::path(
+    get,
+    path = "/system/job/get_by_id",
+    tag = "SysJob",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "按id获取任务", body = SysJobModel),
+    ),
+    params(
+        ("params" = SysJobSearchReq, Query, description = "查询参数"),
+    ),
+)]
+/// 按id获取任务
 pub async fn get_by_id(Query(req): Query<SysJobSearchReq>) -> Res<SysJobModel> {
     let id = match req.job_id {
         None => return Res::with_err("id不能为空"),
@@ -73,6 +122,17 @@ pub async fn get_by_id(Query(req): Query<SysJobSearchReq>) -> Res<SysJobModel> {
     }
 }
 
+#[utoipa::path(
+    put,
+    path = "/system/job/change_status",
+    tag = "SysJob",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "更新定时任务状态", body = String),
+    ),
+    request_body = SysJobStatusReq,
+)]
+/// 更新定时任务状态
 pub async fn change_status(Json(req): Json<SysJobStatusReq>) -> Res<String> {
     //  数据验证
     let db = DB.get_or_init(db_conn).await;
@@ -83,11 +143,33 @@ pub async fn change_status(Json(req): Json<SysJobStatusReq>) -> Res<String> {
     }
 }
 
+#[utoipa::path(
+    put,
+    path = "/system/job/run_task_once",
+    tag = "SysJob",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "运行一次定时任务", body = String),
+    ),
+    request_body = JobId,
+)]
+/// 运行一次定时任务
 pub async fn run_task_once(Json(req): Json<JobId>) -> Res<String> {
     tasks::run_once_task(req.job_id, req.task_id, true).await;
     Res::with_msg("任务开始执行")
 }
 
+#[utoipa::path(
+    post,
+    path = "/system/job/validate_cron_str",
+    tag = "SysJob",
+    security(("authorization" = [])),
+    responses(
+        (status = 200, description = "验证cron表达式", body = String),
+    ),
+    request_body = JobId,
+)]
+/// 验证cron表达式
 pub async fn validate_cron_str(Json(req): Json<ValidateReq>) -> Res<ValidateRes> {
     let res = service::sys_job::validate_cron_str(req.cron_str);
     match res {

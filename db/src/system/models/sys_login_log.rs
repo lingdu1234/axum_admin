@@ -1,6 +1,7 @@
 use serde::Deserialize;
+use utoipa::ToSchema;
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Debug, Default,ToSchema)]
 pub struct SysLoginLogSearchReq {
     pub ip: Option<String>,
     pub user_name: Option<String>,
@@ -11,7 +12,7 @@ pub struct SysLoginLogSearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize,ToSchema)]
 pub struct SysLoginLogDeleteReq {
     pub info_ids: Vec<String>,
 }

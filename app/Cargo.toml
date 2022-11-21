@@ -19,7 +19,7 @@ anyhow = {workspace = true}
 bytes = {workspace = true}
 futures = {workspace = true}
 #
-chrono = {version = "0.4", features = ["serde"]}
+chrono = {workspace = true, features = ["serde"]}
 headers = {workspace = true}
 jsonwebtoken = {workspace = true}
 once_cell = {workspace = true}

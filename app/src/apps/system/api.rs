@@ -77,7 +77,7 @@ fn sys_dict_type_api() -> Router {
 fn sys_dict_data_api() -> Router {
     Router::new()
         .route("/list", get(sys_dict_data::get_sort_list)) // 获取筛选分页
-        .route("/get_all", get(sys_dict_data::get_all)) // 获取筛选分页
+        // .route("/get_all", get(sys_dict_data::get_all)) 
         .route("/get_by_id", get(sys_dict_data::get_by_id)) // 按id获取
         .route("/get_by_type", get(sys_dict_data::get_by_type)) // 按id获取
         .route("/add", post(sys_dict_data::add)) // 添加

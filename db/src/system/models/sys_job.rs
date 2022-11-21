@@ -1,6 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-#[derive(Deserialize, Debug)]
+use utoipa::ToSchema;
+#[derive(Deserialize, Debug,ToSchema)]
 pub struct SysJobSearchReq {
     pub job_id: Option<String>,
     pub job_name: Option<String>,
@@ -8,7 +9,7 @@ pub struct SysJobSearchReq {
     pub status: Option<String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone,ToSchema)]
 pub struct SysJobAddReq {
     pub task_id: i64,
     pub task_count: i64,
@@ -23,12 +24,12 @@ pub struct SysJobAddReq {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize,ToSchema)]
 pub struct SysJobDeleteReq {
     pub job_ids: Vec<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug,ToSchema)]
 pub struct SysJobEditReq {
     pub job_id: String,
     pub task_id: i64,
@@ -44,24 +45,24 @@ pub struct SysJobEditReq {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug,ToSchema)]
 pub struct SysJobStatusReq {
     pub job_id: String,
     pub status: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug,ToSchema)]
 pub struct JobId {
     pub job_id: String,
     pub task_id: i64,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug,ToSchema)]
 pub struct ValidateReq {
     pub cron_str: String,
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug,ToSchema)]
 pub struct ValidateRes {
     pub validate: bool,
     pub next_ten: Option<Vec<NaiveDateTime>>,

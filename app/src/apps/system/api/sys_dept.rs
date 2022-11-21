@@ -3,8 +3,7 @@ use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
     system::{
-        entities::sys_dept,
-        models::sys_dept::{AddReq, DeleteReq, DeptResp, EditReq, RespTree, SearchReq},
+        models::sys_dept::{SysDeptAddReq, SysDeptDeleteReq, DeptResp, SysDeptEditReq, RespTree, SysDeptSearchReq}, prelude::SysDeptModel,
     },
     DB,
 };
@@ -18,15 +17,15 @@ use crate::utils::jwt::Claims;
     tag = "SysDept",
     security(("authorization" = [])),
     responses(
-        (status = 200, description = "获取部门列表", body = sys_dept::Model)
+        (status = 200, description = "获取部门列表", body = SysDeptModel),
     ),
     params(
         ("page_params" = PageParams, Query, description = "分页参数"),
-        ("params" = SearchReq, Query, description = "查询参数"),
+        ("params" = SysDeptSearchReq, Query, description = "查询参数"),
     ),
 )]
 /// 获取部门列表
-pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<sys_dept::Model>> {
+pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysDeptSearchReq>) -> Res<ListData<SysDeptModel>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dept::get_sort_list(db, page_params, req).await;
     match res {
@@ -43,10 +42,10 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
     responses(
         (status = 200, description = "新增部门", body = String)
     ),
-    request_body = AddReq,
+    request_body = SysDeptAddReq,
 )]
 /// 新增部门
-pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Res<String> {
+pub async fn add(Json(req): Json<SysDeptAddReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dept::add(db, req, user.id).await;
     match res {
@@ -63,10 +62,10 @@ pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Res<String> {
     responses(
         (status = 200, description = "删除部门", body = String)
     ),
-    request_body = DeleteReq,
+    request_body = SysDeptDeleteReq,
 )]
 /// 删除部门
-pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
+pub async fn delete(Json(req): Json<SysDeptDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dept::delete(db, req).await;
     match res {
@@ -83,10 +82,10 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
     responses(
         (status = 200, description = "编辑部门", body = String)
     ),
-    request_body = EditReq,
+    request_body = SysDeptEditReq,
 )]
 /// 编辑部门
-pub async fn edit(Json(req): Json<EditReq>, user: Claims) -> Res<String> {
+pub async fn edit(Json(req): Json<SysDeptEditReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_dept::edit(db, req, user.id).await;
     match res {
@@ -104,11 +103,11 @@ pub async fn edit(Json(req): Json<EditReq>, user: Claims) -> Res<String> {
         (status = 200, description = "按id获取部门", body = DeptResp)
     ),
     params(
-        ("params" = SearchReq, Query, description = "查询参数")
+        ("params" = SysDeptSearchReq, Query, description = "查询参数")
     ),
 )]
 /// 按id获取部门
-pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<DeptResp> {
+pub async fn get_by_id(Query(req): Query<SysDeptSearchReq>) -> Res<DeptResp> {
     let db = DB.get_or_init(db_conn).await;
     if let Some(x) = req.dept_id {
         let res = service::sys_dept::get_by_id(db, &x).await;

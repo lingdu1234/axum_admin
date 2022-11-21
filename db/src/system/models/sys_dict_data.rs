@@ -1,6 +1,7 @@
 use serde::Deserialize;
+use utoipa::ToSchema;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug,ToSchema)]
 pub struct SysDictDataSearchReq {
     pub dict_data_id: Option<String>,
     pub dict_type: Option<String>,
@@ -10,7 +11,7 @@ pub struct SysDictDataSearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Default, Deserialize, Clone, Debug)]
+#[derive(Default, Deserialize, Clone, Debug,ToSchema)]
 pub struct SysDictDataAddReq {
     pub dict_type: String,
     pub dict_label: String,
@@ -23,12 +24,12 @@ pub struct SysDictDataAddReq {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize,ToSchema)]
 pub struct SysDictDataDeleteReq {
     pub dict_data_ids: Vec<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug,ToSchema)]
 pub struct SysDictDataEditReq {
     pub dict_data_id: String,
     pub dict_type: String,
