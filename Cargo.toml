@@ -19,7 +19,7 @@ publish = false
 repository = ""
 
 [workspace.dependencies]
-# axum 
+# axum
 axum = "0"
 hyper = "0"
 tower = "0"

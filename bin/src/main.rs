@@ -16,6 +16,7 @@ use axum::{
 };
 use axum_server::tls_rustls::RustlsConfig;
 use configs::CFG;
+use tokio::signal;
 use tower_http::{
     compression::{predicate::NotForContentType, CompressionLayer, DefaultPredicate, Predicate},
     cors::{Any, CorsLayer},
@@ -86,13 +87,9 @@ fn main() {
         let app = Router::new()
             //  "/" 与所有路由冲突
             .fallback(static_files_service)
-            .nest(
-                &CFG.server.api_prefix,
-                apps::api(),
-            )
-            .merge(SwaggerUi::new("/ui/*tail").url(Url::new("api", "/api-doc/openapi.json"), OpenApiDoc::openapi()))
-            ;
-            println!("{}", OpenApiDoc::openapi().to_pretty_json().unwrap());
+            .nest(&CFG.server.api_prefix, apps::api())
+            .merge(SwaggerUi::new("/ui/*tail").url(Url::new("api", "/api-doc/openapi.json"), OpenApiDoc::openapi()));
+        println!("{}", OpenApiDoc::openapi().to_pretty_json().unwrap());
         let app = match &CFG.server.content_gzip {
             true => {
                 //  开启压缩后 SSE 数据无法返回  text/event-stream 单独处理不压缩
@@ -109,7 +106,35 @@ fn main() {
                 axum_server::bind_rustls(addr, config).serve(app.into_make_service()).await.unwrap()
             }
 
-            false => axum::Server::bind(&addr).serve(app.into_make_service()).await.unwrap(),
+            false => axum::Server::bind(&addr)
+                .serve(app.into_make_service())
+                .with_graceful_shutdown(shutdown_signal())
+                .await
+                .unwrap(),
         }
     })
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    println!("signal received, starting graceful shutdown");
 }
