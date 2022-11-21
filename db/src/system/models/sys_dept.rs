@@ -3,7 +3,7 @@ use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
-pub struct SearchReq {
+pub struct SysDeptSearchReq {
     pub dept_id: Option<String>,
     pub dept_name: Option<String>,
     pub status: Option<String>,
@@ -12,7 +12,7 @@ pub struct SearchReq {
 }
 
 #[derive(Deserialize, Clone, Debug)]
-pub struct AddReq {
+pub struct SysDeptAddReq {
     pub parent_id: String,
     pub dept_name: String,
     pub order_num: i32,
@@ -23,12 +23,12 @@ pub struct AddReq {
 }
 
 #[derive(Deserialize)]
-pub struct DeleteReq {
+pub struct SysDeptDeleteReq {
     pub dept_id: String,
 }
 
 #[derive(Deserialize, Clone, Debug)]
-pub struct EditReq {
+pub struct SysDeptEditReq {
     pub dept_id: String,
     pub parent_id: String,
     pub dept_name: String,

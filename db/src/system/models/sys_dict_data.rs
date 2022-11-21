@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
-pub struct SearchReq {
+pub struct SysDictDataSearchReq {
     pub dict_data_id: Option<String>,
     pub dict_type: Option<String>,
     pub dict_label: Option<String>,
@@ -11,7 +11,7 @@ pub struct SearchReq {
 }
 
 #[derive(Default, Deserialize, Clone, Debug)]
-pub struct AddReq {
+pub struct SysDictDataAddReq {
     pub dict_type: String,
     pub dict_label: String,
     pub dict_value: String,
@@ -24,12 +24,12 @@ pub struct AddReq {
 }
 
 #[derive(Deserialize)]
-pub struct DeleteReq {
+pub struct SysDictDataDeleteReq {
     pub dict_data_ids: Vec<String>,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct EditReq {
+pub struct SysDictDataEditReq {
     pub dict_data_id: String,
     pub dict_type: String,
     pub dict_label: String,

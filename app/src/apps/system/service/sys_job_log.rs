@@ -4,14 +4,15 @@ use db::{
     common::res::{ListData, PageParams},
     system::{
         entities::{prelude::SysJobLog, sys_job_log},
-        models::sys_job_log::{AddReq, DeleteReq, SearchReq},
+        models::sys_job_log::{SysJobLogAddReq, SysJobLogDeleteReq, SysJobLogSearchReq},
+        prelude::SysJobLogModel,
     },
 };
 use sea_orm::{sea_query::Table, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_job_log::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SysJobLogSearchReq) -> Result<ListData<SysJobLogModel>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -73,7 +74,7 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
 }
 
 /// add 添加
-pub async fn add<C>(db: &C, req: AddReq) -> Result<String>
+pub async fn add<C>(db: &C, req: SysJobLogAddReq) -> Result<String>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -102,7 +103,7 @@ where
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
+pub async fn delete(db: &DatabaseConnection, delete_req: SysJobLogDeleteReq) -> Result<String> {
     let mut s = SysJobLog::delete_many();
 
     s = s.filter(sys_job_log::Column::JobLogId.is_in(delete_req.job_log_ids));
@@ -138,17 +139,3 @@ pub async fn clean(db: &DatabaseConnection, job_id: String) -> Result<String> {
         }
     }
 }
-
-// /// get_user_by_id 获取用户Id获取用户
-// #[allow(dead_code)]
-// pub async fn get_by_id(db: &DatabaseConnection, job_log_id: String) ->
-// Result<sys_job_log::Model> {     let s =
-// SysJobLog::find().filter(sys_job_log::Column::JobLogId.eq(job_log_id)).
-// one(db).await?;
-
-//     let res = match s {
-//         Some(m) => m,
-//         None => return Err(anyhow!("没有找到数据",)),
-//     };
-//     Ok(res)
-// }

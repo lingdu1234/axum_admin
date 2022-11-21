@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Debug)]
-pub struct SearchReq {
+pub struct SysJobSearchReq {
     pub job_id: Option<String>,
     pub job_name: Option<String>,
     pub job_group: Option<String>,
@@ -9,7 +9,7 @@ pub struct SearchReq {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-pub struct AddReq {
+pub struct SysJobAddReq {
     pub task_id: i64,
     pub task_count: i64,
     pub job_name: String,
@@ -24,12 +24,12 @@ pub struct AddReq {
 }
 
 #[derive(Deserialize)]
-pub struct DeleteReq {
+pub struct SysJobDeleteReq {
     pub job_ids: Vec<String>,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct EditReq {
+pub struct SysJobEditReq {
     pub job_id: String,
     pub task_id: i64,
     pub task_count: i64,
@@ -45,7 +45,7 @@ pub struct EditReq {
 }
 
 #[derive(Deserialize, Clone, Debug)]
-pub struct StatusReq {
+pub struct SysJobStatusReq {
     pub job_id: String,
     pub status: String,
 }

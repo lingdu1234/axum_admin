@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 #[derive(Deserialize, Clone, Debug)]
-pub struct AddReq {
+pub struct SysUpdateLogAddReq {
     pub app_version: String,
     pub backend_version: String,
     pub title: String,
@@ -9,7 +9,7 @@ pub struct AddReq {
 }
 
 #[derive(Deserialize, Clone, Debug)]
-pub struct EditReq {
+pub struct SysUpdateLogEditReq {
     pub id: String,
     pub app_version: String,
     pub backend_version: String,
@@ -18,6 +18,6 @@ pub struct EditReq {
 }
 
 #[derive(Deserialize)]
-pub struct DeleteReq {
+pub struct SysUpdateLogDeleteReq {
     pub id: String,
 }

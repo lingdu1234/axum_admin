@@ -31,7 +31,7 @@ pub async fn re_init_all_api() {
 
 async fn api_init_func() {
     let db = DB.get_or_init(db_conn).await;
-    let res = system::get_all_sys_menu(db, false, true,true).await;
+    let res = system::get_all_sys_menu(db, false, true, true).await;
     match res {
         Ok(menus) => {
             for menu in menus {

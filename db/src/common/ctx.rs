@@ -9,7 +9,7 @@ pub struct ReqCtx {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct UserInfo {
+pub struct UserInfoCtx {
     pub id: String,
     pub token_id: String,
     pub name: String,

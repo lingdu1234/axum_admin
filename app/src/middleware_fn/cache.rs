@@ -12,7 +12,7 @@ use axum::{
 };
 use configs::CFG;
 use db::common::{
-    ctx::{ApiInfo, ReqCtx, UserInfo},
+    ctx::{ApiInfo, ReqCtx, UserInfoCtx},
     res::ResJsonString,
 };
 use hyper::StatusCode;
@@ -127,7 +127,7 @@ pub async fn remove_cache_data(api_key: &str, related_api: Option<Vec<String>>, 
 pub async fn cache_fn_mid<B>(req: Request<B>, next: Next<B>) -> Result<Response, StatusCode> {
     let apis = ALL_APIS.lock().await;
     let ctx = req.extensions().get::<ReqCtx>().expect("ReqCtx not found").clone();
-    let ctx_user = match req.extensions().get::<UserInfo>() {
+    let ctx_user = match req.extensions().get::<UserInfoCtx>() {
         Some(v) => v.to_owned(),
         None => return Ok(next.run(req).await),
     };

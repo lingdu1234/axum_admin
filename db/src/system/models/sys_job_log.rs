@@ -2,7 +2,7 @@ use sea_orm::entity::prelude::DateTime;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
-pub struct SearchReq {
+pub struct SysJobLogSearchReq {
     pub job_log_id: Option<String>,
     pub job_id: Option<String>,
     pub job_name: Option<String>,
@@ -14,7 +14,7 @@ pub struct SearchReq {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct AddReq {
+pub struct SysJobLogAddReq {
     pub job_id: String,
     pub job_name: String,
     pub job_group: String,
@@ -31,11 +31,11 @@ pub struct AddReq {
 }
 
 #[derive(Deserialize)]
-pub struct DeleteReq {
+pub struct SysJobLogDeleteReq {
     pub job_log_ids: Vec<String>,
 }
 
 #[derive(Deserialize, Clone, Debug)]
-pub struct CleanReq {
+pub struct SysJobLogCleanReq {
     pub job_id: String,
 }

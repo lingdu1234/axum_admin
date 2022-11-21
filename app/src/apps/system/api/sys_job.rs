@@ -3,8 +3,8 @@ use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
     system::{
-        entities::sys_job,
-        models::sys_job::{AddReq, DeleteReq, EditReq, JobId, SearchReq, StatusReq, ValidateReq, ValidateRes},
+        models::sys_job::{JobId, SysJobAddReq, SysJobDeleteReq, SysJobEditReq, SysJobSearchReq, SysJobStatusReq, ValidateReq, ValidateRes},
+        SysJobModel,
     },
     DB,
 };
@@ -16,7 +16,7 @@ use crate::{tasks, utils::jwt::Claims};
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
 
-pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<sys_job::Model>> {
+pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysJobSearchReq>) -> Res<ListData<SysJobModel>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_job::get_sort_list(db, page_params, req).await;
     match res {
@@ -26,7 +26,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 }
 /// add 添加
 
-pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Res<String> {
+pub async fn add(Json(req): Json<SysJobAddReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_job::add(db, req, user.id).await;
     match res {
@@ -37,7 +37,7 @@ pub async fn add(Json(req): Json<AddReq>, user: Claims) -> Res<String> {
 
 /// delete 完全删除
 
-pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
+pub async fn delete(Json(req): Json<SysJobDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_job::delete(db, req).await;
     match res {
@@ -48,7 +48,7 @@ pub async fn delete(Json(req): Json<DeleteReq>) -> Res<String> {
 
 // edit 修改
 
-pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
+pub async fn edit(Json(edit_req): Json<SysJobEditReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_job::edit(db, edit_req, user.id).await;
     match res {
@@ -60,7 +60,7 @@ pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
 /// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
 
-pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<sys_job::Model> {
+pub async fn get_by_id(Query(req): Query<SysJobSearchReq>) -> Res<SysJobModel> {
     let id = match req.job_id {
         None => return Res::with_err("id不能为空"),
         Some(x) => x,
@@ -73,7 +73,7 @@ pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<sys_job::Model> {
     }
 }
 
-pub async fn change_status(Json(req): Json<StatusReq>) -> Res<String> {
+pub async fn change_status(Json(req): Json<SysJobStatusReq>) -> Res<String> {
     //  数据验证
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_job::set_status(db, req).await;

@@ -7,8 +7,8 @@ use db::{
         models::{
             sys_dept::DeptResp,
             sys_user::{
-                AddReq, ChangeDeptReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq, UpdateProfileReq, UpdatePwdReq, UserLoginReq, UserResp,
-                UserWithDept,
+                ChangeDeptReq, ChangeRoleReq, ChangeStatusReq, ResetPwdReq, SysUserAddReq, SysUserDeleteReq, SysUserEditReq, SysUserSearchReq, UpdateProfileReq, UpdatePwdReq,
+                UserLoginReq, UserResp, UserWithDept,
             },
         },
     },
@@ -23,7 +23,7 @@ use crate::utils::{
 
 /// get_user_list 获取用户列表
 /// page_params 分页参数
-pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<UserWithDept>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SysUserSearchReq) -> Result<ListData<UserWithDept>> {
     let txn = db.begin().await?;
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
@@ -46,7 +46,7 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
     }
     if let Some(x) = req.user_ids {
         if !x.is_empty() {
-            let y:Vec<&str> = x.split(',').collect();
+            let y: Vec<&str> = x.split(',').collect();
             s = s.filter(sys_user::Column::Id.is_in(y));
         }
     }
@@ -141,7 +141,7 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
     Ok(res)
 }
 
-pub async fn get_un_auth_user(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<UserResp>> {
+pub async fn get_un_auth_user(db: &DatabaseConnection, page_params: PageParams, req: SysUserSearchReq) -> Result<ListData<UserResp>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     let mut s = SysUser::find();
@@ -149,7 +149,7 @@ pub async fn get_un_auth_user(db: &DatabaseConnection, page_params: PageParams, 
     s = s.filter(sys_user::Column::DeletedAt.is_null());
     // 查询条件
     if let Some(x) = req.user_ids {
-        let y:Vec<&str> = x.split(',').collect();
+        let y: Vec<&str> = x.split(',').collect();
         s = s.filter(sys_user::Column::Id.is_not_in(y));
     }
     if let Some(x) = req.user_name {
@@ -271,7 +271,7 @@ pub async fn get_by_id(db: &DatabaseConnection, user_id: &str) -> Result<UserWit
 }
 
 /// add 添加
-pub async fn add(db: &DatabaseConnection, req: AddReq, c_user_id: String) -> Result<String> {
+pub async fn add(db: &DatabaseConnection, req: SysUserAddReq, c_user_id: String) -> Result<String> {
     let uid = scru128::new_string();
     let salt = utils::rand_s(10);
     let passwd = utils::encrypt_password(&req.user_password, &salt);
@@ -440,7 +440,7 @@ pub async fn update_avatar(db: &DatabaseConnection, img: &str, user_id: &str) ->
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
+pub async fn delete(db: &DatabaseConnection, req: SysUserDeleteReq) -> Result<String> {
     let mut s = SysUser::delete_many();
 
     s = s.filter(sys_user::Column::Id.is_in(req.clone().user_ids));
@@ -464,7 +464,7 @@ pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, req: EditReq, c_user_id: String) -> Result<String> {
+pub async fn edit(db: &DatabaseConnection, req: SysUserEditReq, c_user_id: String) -> Result<String> {
     let uid = req.id;
     // 更新
     let txn = db.begin().await?;

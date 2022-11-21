@@ -7,7 +7,8 @@ use db::{
             prelude::{SysDept, SysRoleDept},
             sys_dept, sys_role_dept,
         },
-        models::sys_dept::{AddReq, DeleteReq, DeptResp, EditReq, RespTree, SearchReq},
+        models::sys_dept::{DeptResp, RespTree, SysDeptAddReq, SysDeptDeleteReq, SysDeptEditReq, SysDeptSearchReq},
+        prelude::SysDeptModel,
     },
 };
 use sea_orm::{ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Order, PaginatorTrait, QueryFilter, QueryOrder, Set, TransactionTrait};
@@ -15,7 +16,7 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SearchReq) -> Result<ListData<sys_dept::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req: SysDeptSearchReq) -> Result<ListData<SysDeptModel>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -75,7 +76,7 @@ pub async fn check_data_is_exist(dept_name: String, db: &DatabaseConnection) -> 
 
 /// add 添加
 
-pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Result<String> {
+pub async fn add(db: &DatabaseConnection, req: SysDeptAddReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
     if check_data_is_exist(req.clone().dept_name, db).await? {
         return Err(anyhow!("数据已存在",));
@@ -106,7 +107,7 @@ pub async fn add(db: &DatabaseConnection, req: AddReq, user_id: String) -> Resul
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
+pub async fn delete(db: &DatabaseConnection, req: SysDeptDeleteReq) -> Result<String> {
     let d = SysDept::delete_many().filter(sys_dept::Column::DeptId.eq(req.dept_id)).exec(db).await?;
 
     match d.rows_affected {
@@ -116,7 +117,7 @@ pub async fn delete(db: &DatabaseConnection, req: DeleteReq) -> Result<String> {
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Result<String> {
+pub async fn edit(db: &DatabaseConnection, req: SysDeptEditReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
     let s1 = SysDept::find()
         .filter(sys_dept::Column::DeptName.eq(req.clone().dept_name))

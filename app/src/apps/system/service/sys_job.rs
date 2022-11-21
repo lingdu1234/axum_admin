@@ -6,7 +6,8 @@ use db::{
     common::res::{ListData, PageParams},
     system::{
         entities::{prelude::SysJob, sys_job},
-        models::sys_job::{AddReq, DeleteReq, EditReq, SearchReq, StatusReq, ValidateRes},
+        models::sys_job::{SysJobAddReq, SysJobDeleteReq, SysJobEditReq, SysJobSearchReq, SysJobStatusReq, ValidateRes},
+        SysJobModel,
     },
 };
 use delay_timer::cron_clock;
@@ -20,7 +21,7 @@ use crate::tasks;
 /// get_list 获取列表
 /// page_params 分页参数
 /// db 数据库连接 使用db.0
-pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, search_req: SearchReq) -> Result<ListData<sys_job::Model>> {
+pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, search_req: SysJobSearchReq) -> Result<ListData<SysJobModel>> {
     let page_num = page_params.page_num.unwrap_or(1);
     let page_per_size = page_params.page_size.unwrap_or(10);
     //  生成查询条件
@@ -85,7 +86,7 @@ where
 }
 
 /// add 添加
-pub async fn add<C>(db: &C, req: AddReq, user_id: String) -> Result<String>
+pub async fn add<C>(db: &C, req: SysJobAddReq, user_id: String) -> Result<String>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -130,7 +131,7 @@ where
 }
 
 /// delete 完全删除
-pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<String> {
+pub async fn delete(db: &DatabaseConnection, delete_req: SysJobDeleteReq) -> Result<String> {
     let job_ids = delete_req.job_ids.clone();
     // 删除任务
     for job_id in job_ids.clone() {
@@ -154,7 +155,7 @@ pub async fn delete(db: &DatabaseConnection, delete_req: DeleteReq) -> Result<St
 }
 
 // edit 修改
-pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Result<String> {
+pub async fn edit(db: &DatabaseConnection, req: SysJobEditReq, user_id: String) -> Result<String> {
     //  检查字典类型是否存在
     if check_job_edit_is_exist(db, &req.job_name, req.task_id, &req.job_id).await? {
         return Err(anyhow!("任务已存在",));
@@ -215,7 +216,7 @@ pub async fn edit(db: &DatabaseConnection, req: EditReq, user_id: String) -> Res
 
 /// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
-pub async fn get_by_id<C>(db: &C, job_id: String) -> Result<sys_job::Model>
+pub async fn get_by_id<C>(db: &C, job_id: String) -> Result<SysJobModel>
 where
     C: TransactionTrait + ConnectionTrait,
 {
@@ -230,7 +231,7 @@ where
 
 /// get_all 获取全部
 /// db 数据库连接 使用db.0
-pub async fn get_active_job(db: &DatabaseConnection) -> Result<Vec<sys_job::Model>> {
+pub async fn get_active_job(db: &DatabaseConnection) -> Result<Vec<SysJobModel>> {
     let s = SysJob::find()
         // .filter(sys_job::Column::DeletedAt.is_null())
         .filter(sys_job::Column::Status.eq("1".to_string()))
@@ -241,7 +242,7 @@ pub async fn get_active_job(db: &DatabaseConnection) -> Result<Vec<sys_job::Mode
 }
 
 /// delete 完全删除
-pub async fn set_status(db: &DatabaseConnection, req: StatusReq) -> Result<String> {
+pub async fn set_status(db: &DatabaseConnection, req: SysJobStatusReq) -> Result<String> {
     let job = get_by_id(db, req.job_id.clone()).await?;
     sys_job::Entity::update_many()
         .col_expr(sys_job::Column::Status, Expr::value(req.status.clone()))

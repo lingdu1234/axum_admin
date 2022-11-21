@@ -15,7 +15,7 @@ pub struct ListData<T> {
     pub page_num: u64,
 }
 /// 分页参数
-#[derive(Deserialize,Clone, Debug, Serialize, Default)]
+#[derive(Deserialize, Clone, Debug, Serialize, Default)]
 pub struct PageParams {
     pub page_num: Option<u64>,
     pub page_size: Option<u64>,

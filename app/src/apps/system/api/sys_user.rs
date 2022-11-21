@@ -8,8 +8,8 @@ use db::{
     common::res::{ListData, PageParams, Res},
     db_conn,
     system::models::sys_user::{
-        AddReq, ChangeDeptReq, ChangeRoleReq, ChangeStatusReq, DeleteReq, EditReq, ResetPwdReq, SearchReq, UpdateProfileReq, UpdatePwdReq, UserInfo, UserInformation, UserLoginReq,
-        UserWithDept,
+        ChangeDeptReq, ChangeRoleReq, ChangeStatusReq, ResetPwdReq, SysUserAddReq, SysUserDeleteReq, SysUserEditReq, SysUserSearchReq, UpdateProfileReq, UpdatePwdReq, UserInfo,
+        UserInformation, UserLoginReq, UserWithDept,
     },
     DB,
 };
@@ -22,7 +22,7 @@ use crate::utils::jwt::{AuthBody, Claims};
 /// get_user_list 获取用户列表
 /// page_params 分页参数
 
-pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SearchReq>) -> Res<ListData<UserWithDept>> {
+pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysUserSearchReq>) -> Res<ListData<UserWithDept>> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::get_sort_list(db, page_params, req).await;
     match res {
@@ -33,7 +33,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 
 /// get_user_by_id 获取用户Id获取用户
 
-pub async fn get_by_id(Query(req): Query<SearchReq>) -> Res<UserInformation> {
+pub async fn get_by_id(Query(req): Query<SysUserSearchReq>) -> Res<UserInformation> {
     match req.user_id {
         Some(user_id) => match self::get_user_info_by_id(&user_id).await {
             Err(e) => Res::with_err(&e.to_string()),
@@ -72,7 +72,7 @@ pub async fn get_user_info_by_id(id: &str) -> Result<UserInformation> {
 
 /// add 添加
 
-pub async fn add(Json(add_req): Json<AddReq>, user: Claims) -> Res<String> {
+pub async fn add(Json(add_req): Json<SysUserAddReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::add(db, add_req, user.id).await;
     match res {
@@ -83,7 +83,7 @@ pub async fn add(Json(add_req): Json<AddReq>, user: Claims) -> Res<String> {
 
 /// delete 完全删除
 
-pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Res<String> {
+pub async fn delete(Json(delete_req): Json<SysUserDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::delete(db, delete_req).await;
     match res {
@@ -94,7 +94,7 @@ pub async fn delete(Json(delete_req): Json<DeleteReq>) -> Res<String> {
 
 // edit 修改
 
-pub async fn edit(Json(edit_req): Json<EditReq>, user: Claims) -> Res<String> {
+pub async fn edit(Json(edit_req): Json<SysUserEditReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = service::sys_user::edit(db, edit_req, user.id).await;
     match res {

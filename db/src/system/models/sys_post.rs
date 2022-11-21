@@ -2,7 +2,7 @@ use sea_orm::{entity::prelude::DateTime, FromQueryResult};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
-pub struct SearchReq {
+pub struct SysPostSearchReq {
     pub post_id: Option<String>,
     pub post_code: Option<String>,
     pub post_name: Option<String>,
@@ -12,7 +12,7 @@ pub struct SearchReq {
 }
 
 #[derive(Deserialize, Clone, Debug)]
-pub struct AddReq {
+pub struct SysPostAddReq {
     pub post_code: String,
     pub post_name: String,
     pub post_sort: i32,
@@ -21,12 +21,12 @@ pub struct AddReq {
 }
 
 #[derive(Deserialize)]
-pub struct DeleteReq {
+pub struct SysPostDeleteReq {
     pub post_ids: Vec<String>,
 }
 
 #[derive(Deserialize, Clone, Debug)]
-pub struct EditReq {
+pub struct SysPostEditReq {
     pub post_id: String,
     pub post_code: String,
     pub post_name: String,
@@ -36,7 +36,7 @@ pub struct EditReq {
 }
 
 #[derive(Debug, Serialize, FromQueryResult)]
-pub struct Resp {
+pub struct SysPostResp {
     pub post_id: String,
     pub post_code: String,
     pub post_name: String,

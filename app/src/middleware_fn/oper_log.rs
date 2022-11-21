@@ -7,7 +7,7 @@ use chrono::Local;
 use configs::CFG;
 use db::{
     common::{
-        ctx::{ReqCtx, UserInfo},
+        ctx::{ReqCtx, UserInfoCtx},
         res::ResJsonString,
     },
     db_conn,
@@ -26,7 +26,7 @@ pub async fn oper_log_fn_mid(req: Request<Body>, next: Next<Body>) -> Result<imp
         None => return Ok(next.run(req).await),
     };
 
-    let ctx_user = match req.extensions().get::<UserInfo>() {
+    let ctx_user = match req.extensions().get::<UserInfoCtx>() {
         Some(x) => x.clone(),
         None => return Ok(next.run(req).await),
     };
@@ -42,7 +42,7 @@ pub async fn oper_log_fn_mid(req: Request<Body>, next: Next<Body>) -> Result<imp
     Ok(res_end)
 }
 
-pub async fn oper_log_add(ctx: ReqCtx, ctx_user: UserInfo, res: String, status: String, err_msg: String, duration: Duration) {
+pub async fn oper_log_add(ctx: ReqCtx, ctx_user: UserInfoCtx, res: String, status: String, err_msg: String, duration: Duration) {
     tokio::spawn(async move {
         match oper_log_add_fn(ctx, ctx_user, res, status, err_msg, duration).await {
             Ok(_) => {}
@@ -54,7 +54,7 @@ pub async fn oper_log_add(ctx: ReqCtx, ctx_user: UserInfo, res: String, status: 
 }
 
 /// add 添加
-pub async fn oper_log_add_fn(ctx: ReqCtx, ctx_user: UserInfo, res: String, status: String, err_msg: String, duration: Duration) -> Result<()> {
+pub async fn oper_log_add_fn(ctx: ReqCtx, ctx_user: UserInfoCtx, res: String, status: String, err_msg: String, duration: Duration) -> Result<()> {
     if !CFG.log.enable_oper_log {
         return Ok(());
     }
@@ -104,7 +104,7 @@ pub async fn oper_log_add_fn(ctx: ReqCtx, ctx_user: UserInfo, res: String, statu
 }
 
 #[allow(clippy::too_many_arguments)]
-async fn db_log(duration: Duration, ctx: ReqCtx, ctx_user: UserInfo, now: chrono::NaiveDateTime, api_name: String, res: String, status: String, err_msg: String) -> Result<()> {
+async fn db_log(duration: Duration, ctx: ReqCtx, ctx_user: UserInfoCtx, now: chrono::NaiveDateTime, api_name: String, res: String, status: String, err_msg: String) -> Result<()> {
     let d = duration.as_micros() as i64;
     let db = DB.get_or_init(db_conn).await;
     let (_, m) = check_user_online(Some(db), ctx_user.token_id.clone()).await;

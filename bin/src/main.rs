@@ -54,7 +54,9 @@ fn main() {
         // 文件输出
         let file_appender = tracing_appender::rolling::hourly(&CFG.log.dir, &CFG.log.file);
         let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
-        // let json_layer = fmt::layer().event_format(fmt::format().json()).fmt_fields(JsonFields::new()).with_writer(non_blocking).pretty();
+        // let json_layer =
+        // fmt::layer().event_format(fmt::format().json()).
+        // fmt_fields(JsonFields::new()).with_writer(non_blocking).pretty();
 
         // 标准控制台输出
         let (std_non_blocking, _guard) = tracing_appender::non_blocking(std::io::stdout());
