@@ -1,6 +1,6 @@
 // use std::time::Duration;
 
-use std::{net::SocketAddr, str::FromStr, time::Duration};
+use std::{net::SocketAddr, str::FromStr};
 
 //
 use app::{
@@ -13,9 +13,9 @@ use axum::{
     routing::get_service,
     Router,
 };
-use axum_server::{tls_rustls::RustlsConfig, Handle};
+use axum_server::tls_rustls::RustlsConfig;
 use configs::CFG;
-use tokio::{signal, time::sleep};
+use tokio::signal;
 use tower_http::{
     compression::{predicate::NotForContentType, CompressionLayer, DefaultPredicate, Predicate},
     cors::{Any, CorsLayer},
