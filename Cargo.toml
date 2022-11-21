@@ -69,8 +69,8 @@ ahash = '0'
 # skyTable  可选依赖
 skytable = "0"
 # swagger openApi
-utoipa = "2"
-utoipa-swagger-ui = "2"
+# utoipa = "2"
+# utoipa-swagger-ui = "2"
 
 # sea-orm
 sea-orm = "0"

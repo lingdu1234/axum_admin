@@ -1,6 +1,6 @@
 // use std::time::Duration;
 
-use std::{net::SocketAddr, str::FromStr};
+use std::{net::SocketAddr, str::FromStr, time::Duration};
 
 //
 use app::{
@@ -13,8 +13,9 @@ use axum::{
     routing::get_service,
     Router,
 };
-use axum_server::tls_rustls::RustlsConfig;
+use axum_server::{tls_rustls::RustlsConfig, Handle};
 use configs::CFG;
+use tokio::{signal, time::sleep};
 use tower_http::{
     compression::{predicate::NotForContentType, CompressionLayer, DefaultPredicate, Predicate},
     cors::{Any, CorsLayer},
@@ -101,7 +102,35 @@ fn main() {
                 axum_server::bind_rustls(addr, config).serve(app.into_make_service()).await.unwrap()
             }
 
-            false => axum::Server::bind(&addr).serve(app.into_make_service()).await.unwrap(),
+            false => axum::Server::bind(&addr)
+                .serve(app.into_make_service())
+                .with_graceful_shutdown(shutdown_signal())
+                .await
+                .unwrap(),
         }
     })
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    println!("signal received, starting graceful shutdown");
 }

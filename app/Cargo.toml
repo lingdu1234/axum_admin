@@ -56,8 +56,8 @@ ahash = {workspace = true}
 skytable = {workspace = true, features = ["const-gen","aio"], default-features = false, optional = true}
 
 #  openApi
-utoipa = { workspace = true, features = ["axum_extras"] }
-utoipa-swagger-ui = {workspace = true, features = ["axum"] }
+# utoipa = { workspace = true, features = ["axum_extras"] }
+# utoipa-swagger-ui = {workspace = true, features = ["axum"] }
 
 # sea-orm
 sea-orm = {workspace = true, default-features = false,features = ["macros", "runtime-tokio-native-tls","debug-print"]}

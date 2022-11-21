@@ -21,7 +21,7 @@ tokio = {workspace = true, features = ["rt-multi-thread", "macros", "parking_lot
 tracing = {workspace = true }
 
 #  openApi
-utoipa = { workspace = true, features = ["axum_extras"] }
+# utoipa = { workspace = true, features = ["axum_extras"] }
 
 # sea-orm
 sea-orm = {workspace = true, default-features = false,features = ["macros", "runtime-tokio-native-tls","with-chrono"]}
