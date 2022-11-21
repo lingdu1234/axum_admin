@@ -4,21 +4,21 @@ use axum::{
 };
 pub mod common;
 pub mod sys_api_db;
-mod sys_dept;
-mod sys_dict_data;
-mod sys_dict_type;
-mod sys_job;
-mod sys_job_log;
-mod sys_login_log;
-mod sys_menu;
+pub mod sys_dept;
+pub mod sys_dict_data;
+pub mod sys_dict_type;
+pub mod sys_job;
+pub mod sys_job_log;
+pub mod sys_login_log;
+pub mod sys_menu;
 pub mod sys_oper_log;
-mod sys_post;
-mod sys_role; // 角色管理
-mod sys_update_log;
+pub mod sys_post;
+pub mod sys_role; // 角色管理
+pub mod sys_update_log;
 
 //
-mod sys_user; // 用户管理
-mod sys_user_online; // 操作日志
+pub mod sys_user; // 用户管理
+pub mod sys_user_online; // 操作日志
 
 pub use common::get_captcha;
 pub use sys_user::login;

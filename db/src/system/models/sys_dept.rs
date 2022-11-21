@@ -1,8 +1,9 @@
 use chrono::NaiveDateTime;
 use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug,ToSchema)]
 pub struct SearchReq {
     pub dept_id: Option<String>,
     pub dept_name: Option<String>,
@@ -11,7 +12,7 @@ pub struct SearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug,ToSchema)]
 pub struct AddReq {
     pub parent_id: String,
     pub dept_name: String,
@@ -22,12 +23,12 @@ pub struct AddReq {
     pub status: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize,ToSchema)]
 pub struct DeleteReq {
     pub dept_id: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug,ToSchema)]
 pub struct EditReq {
     pub dept_id: String,
     pub parent_id: String,
@@ -39,7 +40,7 @@ pub struct EditReq {
     pub status: String,
 }
 
-#[derive(Debug, Clone, Serialize, FromQueryResult, Default, Deserialize)]
+#[derive(Debug, Clone, Serialize, FromQueryResult, Default, Deserialize,ToSchema)]
 pub struct DeptResp {
     pub dept_id: String,
     pub parent_id: String,
@@ -52,7 +53,7 @@ pub struct DeptResp {
     pub status: String,
 }
 
-#[derive(Serialize, Clone, Debug, Default)]
+#[derive(Serialize, Clone,Default, Debug,ToSchema)]
 pub struct RespTree {
     #[serde(flatten)]
     pub data: DeptResp,

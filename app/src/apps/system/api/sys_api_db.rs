@@ -12,7 +12,7 @@ use db::{
 use super::super::service;
 
 #[utoipa::path(
-    get,
+    post,
     path = "/system/api_db/add",
     tag = "SysApiDb",
     security(("authorization" = [])),

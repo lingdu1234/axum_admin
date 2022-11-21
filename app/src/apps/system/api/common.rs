@@ -41,7 +41,16 @@ pub async fn get_server_info() -> Res<SysInfo> {
     Res::with_data(res)
 }
 
-//  这个暂时先不写
+#[utoipa::path(
+    get,
+    path = "/system/monitor/server-event",
+    tag = "SysMonitor",
+    responses(
+        (status = 200, description = "服务器信息", body = String)
+    ),
+    security(("authorization" = []))
+)]
+/// 获取服务器信息 SSE
 pub async fn get_server_info_sse() -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     let stream = stream::repeat_with(|| {
         let sys_info = get_oper_sys_info();
