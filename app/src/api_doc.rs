@@ -1,7 +1,7 @@
 use configs::CFG;
 use db::{
     common,
-    system::{entities, models},
+    system::{entities::{sys_api_db::Model as SysApiDbModel,sys_dept::Model as SysDeptModel}, models},
 };
 use utoipa::{
     openapi::{
@@ -58,8 +58,8 @@ use crate::apps::system::api;
             models::sys_dept::RespTree,
 
             // entities
-            entities::sys_dept::Model,
-            entities::sys_api_db::Model,
+            SysDeptModel,
+            SysApiDbModel,
         )
     ),
     modifiers(&SecurityAddon),
