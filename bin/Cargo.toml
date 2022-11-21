@@ -13,15 +13,18 @@ configs = {path = "../configs"}
 db = {path = "../db"}
 
 # axum
-axum = {version = "0", features = ["headers","http2"]}
-axum-server = { version = "0", features = ["tls-rustls"] }
-axum-extra = { version = "0",features = ["spa"]}
-hyper = { version = "0", features = ["full"] }
-tokio = {version = "1", features = ["rt-multi-thread", "macros", "parking_lot", "signal"]}
-tower-http = {version = "0", features = ["cors","fs","compression-gzip"]}  #compression-gzip
+axum = {workspace = true, features = ["headers","http2"]}
+axum-server = { workspace = true, features = ["tls-rustls"] }
+axum-extra = {workspace = true,features = ["spa"]}
+hyper = { workspace = true, features = ["full"] }
+tokio = {workspace = true, features = ["rt-multi-thread", "macros", "parking_lot", "signal"]}
+tower-http = {workspace = true, features = ["cors","fs","compression-gzip"]}  #compression-gzip
 
 #
-tracing = "0.1"
-tracing-appender = "0.2"
-# tracing-log = "0.1"
-tracing-subscriber = {version = "0.3", features = ["json", "env-filter", "local-time", "registry"]}
+tracing ={workspace = true}
+tracing-appender = {workspace = true}
+tracing-subscriber = {workspace = true, features = ["json", "env-filter", "local-time", "registry"]}
+
+#  openApi
+utoipa = { workspace = true, features = ["axum_extras"] }
+utoipa-swagger-ui = {workspace = true, features = ["axum"] }
