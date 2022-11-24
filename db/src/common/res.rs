@@ -7,7 +7,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-#[derive(Debug, Serialize,ToSchema)]
+#[derive(Debug, Serialize, ToSchema)]
 /// 查 数据返回
 pub struct ListData<T> {
     pub list: Vec<T>,
@@ -16,7 +16,7 @@ pub struct ListData<T> {
     pub page_num: u64,
 }
 /// 分页参数
-#[derive(Deserialize,Clone, Debug, Serialize, Default,ToSchema)]
+#[derive(Deserialize, Clone, Debug, Serialize, Default, ToSchema)]
 pub struct PageParams {
     #[schema(example = 1)]
     pub page_num: Option<u64>,

@@ -3,7 +3,7 @@ use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-#[derive(Deserialize, Debug,ToSchema)]
+#[derive(Deserialize, Debug, ToSchema)]
 pub struct SysDeptSearchReq {
     pub dept_id: Option<String>,
     pub dept_name: Option<String>,
@@ -12,7 +12,7 @@ pub struct SysDeptSearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Deserialize, Clone, Debug,ToSchema)]
+#[derive(Deserialize, Clone, Debug, ToSchema)]
 pub struct SysDeptAddReq {
     pub parent_id: String,
     pub dept_name: String,
@@ -23,12 +23,12 @@ pub struct SysDeptAddReq {
     pub status: String,
 }
 
-#[derive(Deserialize,ToSchema)]
+#[derive(Deserialize, ToSchema)]
 pub struct SysDeptDeleteReq {
     pub dept_id: String,
 }
 
-#[derive(Deserialize, Clone, Debug,ToSchema)]
+#[derive(Deserialize, Clone, Debug, ToSchema)]
 pub struct SysDeptEditReq {
     pub dept_id: String,
     pub parent_id: String,
@@ -40,7 +40,7 @@ pub struct SysDeptEditReq {
     pub status: String,
 }
 
-#[derive(Debug, Clone, Serialize, FromQueryResult, Default, Deserialize,ToSchema)]
+#[derive(Debug, Clone, Serialize, FromQueryResult, Default, Deserialize, ToSchema)]
 pub struct DeptResp {
     pub dept_id: String,
     pub parent_id: String,
@@ -53,7 +53,7 @@ pub struct DeptResp {
     pub status: String,
 }
 
-#[derive(Serialize, Clone,Default, Debug,ToSchema)]
+#[derive(Serialize, Clone, Default, Debug, ToSchema)]
 pub struct RespTree {
     #[serde(flatten)]
     pub data: DeptResp,

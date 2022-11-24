@@ -145,7 +145,7 @@ impl IntoResponse for AuthError {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone,ToSchema)]
+#[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct AuthBody {
     token: String,
     token_type: String,

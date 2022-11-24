@@ -1,3 +1,4 @@
+use app_service::system;
 use axum::{extract::Query, Json};
 use db::{
     common::res::{ListData, PageParams, Res},
@@ -8,8 +9,6 @@ use db::{
     },
     DB,
 };
-
-use super::super::service;
 
 #[utoipa::path(
     get,
@@ -27,7 +26,7 @@ use super::super::service;
 /// 获取登录日志
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysLoginLogSearchReq>) -> Res<ListData<SysLoginLogModel>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_login_log::get_sort_list(db, page_params, req).await;
+    let res = system::sys_login_log::get_sort_list(db, page_params, req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -47,7 +46,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 /// 删除登录日志
 pub async fn delete(Json(delete_req): Json<SysLoginLogDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_login_log::delete(db, delete_req).await;
+    let res = system::sys_login_log::delete(db, delete_req).await;
     println!("{:?}", res);
     match res {
         Ok(x) => Res::with_msg(&x),
@@ -67,7 +66,7 @@ pub async fn delete(Json(delete_req): Json<SysLoginLogDeleteReq>) -> Res<String>
 /// 清空登录日志
 pub async fn clean() -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_login_log::clean(db).await;
+    let res = system::sys_login_log::clean(db).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),

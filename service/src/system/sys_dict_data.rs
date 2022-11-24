@@ -185,8 +185,8 @@ pub async fn get_by_type(db: &DatabaseConnection, search_req: SysDictDataSearchR
 
 // /// get_all 获取全部
 // /// db 数据库连接 使用db.0
-// pub async fn get_all(db: &DatabaseConnection) -> Result<Vec<SysDictDataModel>> {
-//     let s = SysDictData::find()
+// pub async fn get_all(db: &DatabaseConnection) ->
+// Result<Vec<SysDictDataModel>> {     let s = SysDictData::find()
 //         .filter(sys_dict_data::Column::DeletedAt.is_null())
 //         .filter(sys_dict_data::Column::Status.eq("1"))
 //         .order_by(sys_dict_data::Column::DictDataId, Order::Asc)

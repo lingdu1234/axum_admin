@@ -4,7 +4,7 @@ use utoipa::ToSchema;
 
 use crate::system::entities::sys_menu;
 
-#[derive(Deserialize, Clone,ToSchema)]
+#[derive(Deserialize, Clone, ToSchema)]
 pub struct SysMenuSearchReq {
     pub id: Option<String>,
     pub menu_name: Option<String>,
@@ -16,14 +16,14 @@ pub struct SysMenuSearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Serialize, Clone, Debug,ToSchema)]
+#[derive(Serialize, Clone, Debug, ToSchema)]
 pub struct SysMenuTreeAll {
     #[serde(flatten)]
     pub menu: sys_menu::Model,
     pub children: Option<Vec<SysMenuTreeAll>>,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, FromQueryResult, Default,ToSchema)]
+#[derive(Deserialize, Serialize, Debug, Clone, FromQueryResult, Default, ToSchema)]
 pub struct MenuResp {
     pub id: String,
     pub pid: String,
@@ -47,7 +47,7 @@ pub struct MenuResp {
     pub remark: String,
 }
 
-#[derive(Serialize, Clone, Debug,ToSchema)]
+#[derive(Serialize, Clone, Debug, ToSchema)]
 pub struct MenuRelated {
     #[serde(flatten)]
     pub menu: sys_menu::Model,
@@ -55,7 +55,7 @@ pub struct MenuRelated {
     pub apis: Vec<String>,
 }
 
-#[derive(Serialize, Clone, Debug, Default,ToSchema)]
+#[derive(Serialize, Clone, Debug, Default, ToSchema)]
 pub struct UserMenu {
     pub id: String,
     pub pid: String,
@@ -69,7 +69,7 @@ pub struct UserMenu {
     pub meta: Meta,
 }
 
-#[derive(Serialize, Clone, Debug, Default,ToSchema)]
+#[derive(Serialize, Clone, Debug, Default, ToSchema)]
 pub struct Meta {
     pub icon: String,
     pub title: String,
@@ -79,14 +79,14 @@ pub struct Meta {
     pub i18n: Option<String>,
 }
 
-#[derive(Serialize, Clone, Debug, Default,ToSchema)]
+#[derive(Serialize, Clone, Debug, Default, ToSchema)]
 pub struct SysMenuTree {
     #[serde(flatten)]
     pub user_menu: UserMenu,
     pub children: Option<Vec<SysMenuTree>>,
 }
 
-#[derive(Deserialize, Clone, Debug,ToSchema)]
+#[derive(Deserialize, Clone, Debug, ToSchema)]
 pub struct SysMenuAddReq {
     pub pid: String,
     pub path: Option<String>,
@@ -109,12 +109,12 @@ pub struct SysMenuAddReq {
     pub remark: String,
 }
 
-#[derive(Debug, Deserialize,ToSchema)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct SysMenuDeleteReq {
     pub id: String,
 }
 
-#[derive(Debug, Clone, Deserialize,ToSchema)]
+#[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct SysMenuEditReq {
     pub id: String,
     pub pid: String,
@@ -138,7 +138,7 @@ pub struct SysMenuEditReq {
     pub remark: String,
 }
 
-#[derive(Debug, Clone, Deserialize,ToSchema)]
+#[derive(Debug, Clone, Deserialize, ToSchema)]
 pub struct LogCacheEditReq {
     pub id: String,
     pub log_method: String,

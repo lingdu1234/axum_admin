@@ -1,3 +1,4 @@
+use app_service::system;
 use axum::{extract::Query, Json};
 use db::{
     common::res::Res,
@@ -8,8 +9,6 @@ use db::{
     },
     DB,
 };
-
-use super::super::service;
 
 #[utoipa::path(
     post,
@@ -24,7 +23,7 @@ use super::super::service;
 /// 新增api与数据库表对应关系
 pub async fn add(Json(req): Json<SysApiDbAddEditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_api_db::add(db, req).await;
+    let res = system::sys_api_db::add(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -46,7 +45,7 @@ pub async fn add(Json(req): Json<SysApiDbAddEditReq>) -> Res<String> {
 /// 按id获取对应关系
 pub async fn get_by_id(Query(req): Query<SysApiDbSearchReq>) -> Res<Vec<SysApiDbModel>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_api_db::get_by_id(db, &req.api_id).await;
+    let res = system::sys_api_db::get_by_id(db, &req.api_id).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),

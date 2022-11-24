@@ -1,3 +1,4 @@
+use app_service::system;
 use axum::{extract::Query, Json};
 use db::{
     common::res::{ListData, PageParams, Res},
@@ -8,9 +9,6 @@ use db::{
     },
     DB,
 };
-
-use super::super::service;
-
 
 #[utoipa::path(
     get,
@@ -28,7 +26,7 @@ use super::super::service;
 /// 获取操作日志
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysOperLogSearchReq>) -> Res<ListData<SysOperLogModel>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_oper_log::get_sort_list(db, page_params, req).await;
+    let res = system::sys_oper_log::get_sort_list(db, page_params, req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -48,7 +46,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 /// 删除操作日志
 pub async fn delete(Json(req): Json<SysOperLogDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_oper_log::delete(db, req).await;
+    let res = system::sys_oper_log::delete(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -68,13 +66,12 @@ pub async fn delete(Json(req): Json<SysOperLogDeleteReq>) -> Res<String> {
 pub async fn clean() -> Res<String> {
     //  数据验证
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_oper_log::clean(db).await;
+    let res = system::sys_oper_log::clean(db).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
     }
 }
-
 
 #[utoipa::path(
     get,
@@ -95,7 +92,7 @@ pub async fn get_by_id(Query(req): Query<SysOperLogSearchReq>) -> Res<SysOperLog
         Some(x) => x,
     };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_oper_log::get_by_id(db, id).await;
+    let res = system::sys_oper_log::get_by_id(db, id).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),

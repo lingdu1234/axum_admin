@@ -1,3 +1,4 @@
+use app_service::{service_utils::jwt::Claims, system, tasks};
 use axum::{extract::Query, Json};
 use db::{
     common::res::{ListData, PageParams, Res},
@@ -8,9 +9,6 @@ use db::{
     },
     DB,
 };
-
-use super::super::service;
-use crate::{tasks, utils::jwt::Claims};
 
 #[utoipa::path(
     get,
@@ -28,13 +26,12 @@ use crate::{tasks, utils::jwt::Claims};
 /// 获取定时任务列表
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysJobSearchReq>) -> Res<ListData<SysJobModel>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_job::get_sort_list(db, page_params, req).await;
+    let res = system::sys_job::get_sort_list(db, page_params, req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
     }
 }
-
 
 #[utoipa::path(
     post,
@@ -49,7 +46,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 /// 新增定时任务
 pub async fn add(Json(req): Json<SysJobAddReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_job::add(db, req, user.id).await;
+    let res = system::sys_job::add(db, req, user.id).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -69,7 +66,7 @@ pub async fn add(Json(req): Json<SysJobAddReq>, user: Claims) -> Res<String> {
 /// 删除定时任务
 pub async fn delete(Json(req): Json<SysJobDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_job::delete(db, req).await;
+    let res = system::sys_job::delete(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -89,7 +86,7 @@ pub async fn delete(Json(req): Json<SysJobDeleteReq>) -> Res<String> {
 /// 更新定时任务
 pub async fn edit(Json(edit_req): Json<SysJobEditReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_job::edit(db, edit_req, user.id).await;
+    let res = system::sys_job::edit(db, edit_req, user.id).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -115,7 +112,7 @@ pub async fn get_by_id(Query(req): Query<SysJobSearchReq>) -> Res<SysJobModel> {
         Some(x) => x,
     };
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_job::get_by_id(db, id).await;
+    let res = system::sys_job::get_by_id(db, id).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -136,7 +133,7 @@ pub async fn get_by_id(Query(req): Query<SysJobSearchReq>) -> Res<SysJobModel> {
 pub async fn change_status(Json(req): Json<SysJobStatusReq>) -> Res<String> {
     //  数据验证
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_job::set_status(db, req).await;
+    let res = system::sys_job::set_status(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -171,7 +168,7 @@ pub async fn run_task_once(Json(req): Json<JobId>) -> Res<String> {
 )]
 /// 验证cron表达式
 pub async fn validate_cron_str(Json(req): Json<ValidateReq>) -> Res<ValidateRes> {
-    let res = service::sys_job::validate_cron_str(req.cron_str);
+    let res = system::sys_job::validate_cron_str(req.cron_str);
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),

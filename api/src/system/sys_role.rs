@@ -1,3 +1,4 @@
+use app_service::{service_utils::jwt::Claims, system};
 use axum::{extract::Query, Json};
 use db::{
     common::res::{ListData, PageParams, Res},
@@ -11,9 +12,6 @@ use db::{
     },
     DB,
 };
-
-use super::super::service;
-use crate::utils::jwt::Claims;
 
 #[utoipa::path(
     get,
@@ -31,7 +29,7 @@ use crate::utils::jwt::Claims;
 /// 获取角色列表
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysRoleSearchReq>) -> Res<ListData<SysRoleModel>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::get_sort_list(db, page_params, req).await;
+    let res = system::sys_role::get_sort_list(db, page_params, req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -51,7 +49,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 /// 新增角色
 pub async fn add(Json(req): Json<SysRoleAddReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::add(db, req, &user.id).await;
+    let res = system::sys_role::add(db, req, &user.id).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -71,7 +69,7 @@ pub async fn add(Json(req): Json<SysRoleAddReq>, user: Claims) -> Res<String> {
 /// 删除角色
 pub async fn delete(Json(delete_req): Json<SysRoleDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::delete(db, delete_req).await;
+    let res = system::sys_role::delete(db, delete_req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -91,7 +89,7 @@ pub async fn delete(Json(delete_req): Json<SysRoleDeleteReq>) -> Res<String> {
 /// 修改角色
 pub async fn edit(Json(edit_req): Json<SysRoleEditReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::edit(db, edit_req, &user.id).await;
+    let res = system::sys_role::edit(db, edit_req, &user.id).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -111,13 +109,12 @@ pub async fn edit(Json(edit_req): Json<SysRoleEditReq>, user: Claims) -> Res<Str
 /// 修改角色状态
 pub async fn change_status(Json(req): Json<SysRoleStatusReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::set_status(db, req).await;
+    let res = system::sys_role::set_status(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
     }
 }
-
 
 #[utoipa::path(
     put,
@@ -132,7 +129,7 @@ pub async fn change_status(Json(req): Json<SysRoleStatusReq>) -> Res<String> {
 /// 修改角色数据权限
 pub async fn set_data_scope(Json(req): Json<DataScopeReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::set_data_scope(db, req).await;
+    let res = system::sys_role::set_data_scope(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -154,7 +151,7 @@ pub async fn set_data_scope(Json(req): Json<DataScopeReq>) -> Res<String> {
 /// 按id获取角色
 pub async fn get_by_id(Query(req): Query<SysRoleSearchReq>) -> Res<SysRoleResp> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::get_by_id(db, req).await;
+    let res = system::sys_role::get_by_id(db, req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -173,7 +170,7 @@ pub async fn get_by_id(Query(req): Query<SysRoleSearchReq>) -> Res<SysRoleResp> 
 /// 获取全部角色
 pub async fn get_all() -> Res<Vec<SysRoleResp>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::get_all(db).await;
+    let res = system::sys_role::get_all(db).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -198,7 +195,7 @@ pub async fn get_role_menu(Query(req): Query<SysRoleSearchReq>) -> Res<Vec<Strin
     match req.role_id {
         None => Res::with_msg("role_id不能为空"),
         Some(id) => {
-            let api_ids = match service::sys_menu::get_role_permissions(db, &id).await {
+            let api_ids = match system::sys_menu::get_role_permissions(db, &id).await {
                 Ok((_, x)) => x,
                 Err(e) => return Res::with_err(&e.to_string()),
             };
@@ -225,7 +222,7 @@ pub async fn get_role_dept(Query(req): Query<SysRoleSearchReq>) -> Res<Vec<Strin
         None => Res::with_msg("role_id不能为空"),
         Some(id) => {
             let db = DB.get_or_init(db_conn).await;
-            let res = service::sys_dept::get_dept_by_role_id(db, id).await;
+            let res = system::sys_dept::get_dept_by_role_id(db, id).await;
             match res {
                 Ok(x) => Res::with_data(x),
                 Err(e) => Res::with_err(&e.to_string()),
@@ -234,7 +231,6 @@ pub async fn get_role_dept(Query(req): Query<SysRoleSearchReq>) -> Res<Vec<Strin
     }
 }
 
-
 /// 获取角色对应的部门id (弃用)
 pub async fn get_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, Query(page_params): Query<PageParams>) -> Res<ListData<UserWithDept>> {
     let db = DB.get_or_init(db_conn).await;
@@ -242,12 +238,12 @@ pub async fn get_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, Que
         None => return Res::with_err("角色Id不能为空"),
         Some(id) => id,
     };
-    let user_ids = match service::sys_role::get_auth_users_by_role_id(db, &role_id).await {
+    let user_ids = match system::sys_role::get_auth_users_by_role_id(db, &role_id).await {
         Ok(x) => x,
         Err(e) => return Res::with_err(&e.to_string()),
     };
     req.user_ids = Some(user_ids.join(","));
-    let res = service::sys_user::get_sort_list(db, page_params, req).await;
+    let res = system::sys_user::get_sort_list(db, page_params, req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -261,12 +257,12 @@ pub async fn get_un_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, 
         None => return Res::with_err("角色Id不能为空"),
         Some(id) => id,
     };
-    let user_ids = match service::sys_role::get_auth_users_by_role_id(db, &role_id).await {
+    let user_ids = match system::sys_role::get_auth_users_by_role_id(db, &role_id).await {
         Ok(x) => x,
         Err(e) => return Res::with_err(&e.to_string()),
     };
     req.user_ids = Some(user_ids.join(","));
-    let res = service::sys_user::get_un_auth_user(db, page_params, req).await;
+    let res = system::sys_user::get_un_auth_user(db, page_params, req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -276,7 +272,7 @@ pub async fn get_un_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, 
 // (弃用)
 pub async fn update_auth_role(Json(req): Json<UpdateAuthRoleReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    match service::sys_role::add_role_by_user_id(db, &req.user_id, req.role_ids, user.id).await {
+    match system::sys_role::add_role_by_user_id(db, &req.user_id, req.role_ids, user.id).await {
         Ok(_) => Res::with_msg("角色授权更新成功"),
         Err(e) => Res::with_err(&e.to_string()),
     }
@@ -285,7 +281,7 @@ pub async fn update_auth_role(Json(req): Json<UpdateAuthRoleReq>, user: Claims) 
 // (弃用)
 pub async fn add_auth_user(Json(req): Json<AddOrCancelAuthRoleReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::add_role_with_user_ids(db, req.clone().user_ids, req.role_id, user.id).await;
+    let res = system::sys_role::add_role_with_user_ids(db, req.clone().user_ids, req.role_id, user.id).await;
     match res {
         Ok(_) => Res::with_msg("授权成功"),
         Err(e) => Res::with_err(&e.to_string()),
@@ -295,7 +291,7 @@ pub async fn add_auth_user(Json(req): Json<AddOrCancelAuthRoleReq>, user: Claims
 // (弃用)
 pub async fn cancel_auth_user(Json(req): Json<AddOrCancelAuthRoleReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_role::cancel_auth_user(db, req).await;
+    let res = system::sys_role::cancel_auth_user(db, req).await;
     match res {
         Ok(_) => Res::with_msg("取消授权成功"),
         Err(e) => Res::with_err(&e.to_string()),

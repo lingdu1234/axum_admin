@@ -51,6 +51,9 @@ rand = {workspace = true}
 sysinfo = {workspace = true}
 # 验证码
 captcha_rust ={workspace = true}
+#  openApi
+utoipa = { workspace = true, features = ["axum_extras"] }
+utoipa-swagger-ui = {workspace = true, features = ["axum"] }
 #  hashMap
 ahash = {workspace = true}
 # skyTable  可选依赖

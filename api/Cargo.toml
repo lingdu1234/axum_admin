@@ -26,3 +26,9 @@ headers = {workspace = true}
 tokio = {workspace = true, default-features =false}
 #
 anyhow = {workspace = true}
+# 
+reqwest = {workspace = true,  features = ["json"]}
+
+
+#  openApi
+utoipa = { workspace = true, features = ["axum_extras"] }

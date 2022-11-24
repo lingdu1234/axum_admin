@@ -9,9 +9,6 @@ use db::{
 use futures::stream::{self, Stream};
 use tokio_stream::StreamExt as _;
 
-use super::super::service::server_info::get_oper_sys_info;
-
-
 #[utoipa::path(
     get,
     path = "/comm/get_captcha",

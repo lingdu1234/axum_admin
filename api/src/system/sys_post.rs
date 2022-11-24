@@ -1,3 +1,4 @@
+use app_service::{service_utils::jwt::Claims, system};
 use axum::{extract::Query, Json};
 use db::{
     common::res::{ListData, PageParams, Res},
@@ -8,9 +9,6 @@ use db::{
     },
     DB,
 };
-
-use super::super::service;
-use crate::utils::jwt::Claims;
 
 #[utoipa::path(
     get,
@@ -28,7 +26,7 @@ use crate::utils::jwt::Claims;
 /// 获取岗位列表
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysPostSearchReq>) -> Res<ListData<SysPostModel>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_post::get_sort_list(db, page_params, req).await;
+    let res = system::sys_post::get_sort_list(db, page_params, req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -48,7 +46,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 /// 新增岗位
 pub async fn add(Json(req): Json<SysPostAddReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_post::add(db, req, user.id).await;
+    let res = system::sys_post::add(db, req, user.id).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -68,7 +66,7 @@ pub async fn add(Json(req): Json<SysPostAddReq>, user: Claims) -> Res<String> {
 /// 删除岗位
 pub async fn delete(Json(req): Json<SysPostDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_post::delete(db, req).await;
+    let res = system::sys_post::delete(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -88,7 +86,7 @@ pub async fn delete(Json(req): Json<SysPostDeleteReq>) -> Res<String> {
 /// 修改岗位
 pub async fn edit(Json(req): Json<SysPostEditReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_post::edit(db, req, user.id).await;
+    let res = system::sys_post::edit(db, req, user.id).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -110,7 +108,7 @@ pub async fn edit(Json(req): Json<SysPostEditReq>, user: Claims) -> Res<String> 
 /// 按id获取岗位
 pub async fn get_by_id(Query(req): Query<SysPostSearchReq>) -> Res<SysPostResp> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_post::get_by_id(db, req).await;
+    let res = system::sys_post::get_by_id(db, req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -129,7 +127,7 @@ pub async fn get_by_id(Query(req): Query<SysPostSearchReq>) -> Res<SysPostResp> 
 /// 获取全部岗位
 pub async fn get_all() -> Res<Vec<SysPostResp>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_post::get_all(db).await;
+    let res = system::sys_post::get_all(db).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),

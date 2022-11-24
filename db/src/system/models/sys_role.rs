@@ -2,7 +2,7 @@ use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-#[derive(Deserialize, Debug,ToSchema)]
+#[derive(Deserialize, Debug, ToSchema)]
 pub struct SysRoleSearchReq {
     pub role_id: Option<String>,
     pub role_ids: Option<String>,
@@ -13,7 +13,7 @@ pub struct SysRoleSearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Deserialize, Clone, Debug,ToSchema)]
+#[derive(Deserialize, Clone, Debug, ToSchema)]
 pub struct SysRoleAddReq {
     pub role_name: String,
     pub role_key: String,
@@ -24,18 +24,18 @@ pub struct SysRoleAddReq {
     pub menu_ids: Vec<String>,
 }
 
-#[derive(Deserialize,ToSchema)]
+#[derive(Deserialize, ToSchema)]
 pub struct SysRoleDeleteReq {
     pub role_ids: Vec<String>,
 }
-#[derive(Deserialize,ToSchema)]
+#[derive(Deserialize, ToSchema)]
 pub struct DataScopeReq {
     pub role_id: String,
     pub data_scope: String,
     pub dept_ids: Vec<String>,
 }
 
-#[derive(Deserialize, Clone, Debug,ToSchema)]
+#[derive(Deserialize, Clone, Debug, ToSchema)]
 pub struct SysRoleEditReq {
     pub role_id: String,
     pub role_name: String,
@@ -46,24 +46,24 @@ pub struct SysRoleEditReq {
     pub remark: Option<String>,
     pub menu_ids: Vec<String>,
 }
-#[derive(Deserialize, Clone,ToSchema)]
+#[derive(Deserialize, Clone, ToSchema)]
 pub struct SysRoleStatusReq {
     pub role_id: String,
     pub status: String,
 }
-#[derive(Deserialize, Clone,ToSchema)]
+#[derive(Deserialize, Clone, ToSchema)]
 pub struct UpdateAuthRoleReq {
     pub user_id: String,
     pub role_ids: Vec<String>,
 }
 
-#[derive(Deserialize, Clone,ToSchema)]
+#[derive(Deserialize, Clone, ToSchema)]
 pub struct AddOrCancelAuthRoleReq {
     pub user_ids: Vec<String>,
     pub role_id: String,
 }
 
-#[derive(Debug, Serialize, FromQueryResult, Clone,ToSchema)]
+#[derive(Debug, Serialize, FromQueryResult, Clone, ToSchema)]
 pub struct SysRoleResp {
     pub role_id: String,
     pub role_name: String,

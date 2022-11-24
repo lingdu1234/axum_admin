@@ -2,7 +2,7 @@ use sea_orm::{entity::prelude::DateTime, FromQueryResult};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-#[derive(Deserialize, Debug,ToSchema)]
+#[derive(Deserialize, Debug, ToSchema)]
 pub struct SysPostSearchReq {
     pub post_id: Option<String>,
     pub post_code: Option<String>,
@@ -12,7 +12,7 @@ pub struct SysPostSearchReq {
     pub end_time: Option<String>,
 }
 
-#[derive(Deserialize, Clone, Debug,ToSchema)]
+#[derive(Deserialize, Clone, Debug, ToSchema)]
 pub struct SysPostAddReq {
     pub post_code: String,
     pub post_name: String,
@@ -21,12 +21,12 @@ pub struct SysPostAddReq {
     pub remark: Option<String>,
 }
 
-#[derive(Deserialize,ToSchema)]
+#[derive(Deserialize, ToSchema)]
 pub struct SysPostDeleteReq {
     pub post_ids: Vec<String>,
 }
 
-#[derive(Deserialize, Clone, Debug,ToSchema)]
+#[derive(Deserialize, Clone, Debug, ToSchema)]
 pub struct SysPostEditReq {
     pub post_id: String,
     pub post_code: String,
@@ -36,7 +36,7 @@ pub struct SysPostEditReq {
     pub remark: Option<String>,
 }
 
-#[derive(Debug, Serialize, FromQueryResult,ToSchema)]
+#[derive(Debug, Serialize, FromQueryResult, ToSchema)]
 pub struct SysPostResp {
     pub post_id: String,
     pub post_code: String,

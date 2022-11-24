@@ -27,5 +27,5 @@ tracing-appender = {workspace = true}
 tracing-subscriber = {workspace = true, features = ["json", "env-filter", "local-time", "registry"]}
 
 #  openApi
-# utoipa = { workspace = true, features = ["axum_extras"] }
-# utoipa-swagger-ui = {workspace = true, features = ["axum"] }
+utoipa = { workspace = true, features = ["axum_extras"] }
+utoipa-swagger-ui = {workspace = true, features = ["axum"] }

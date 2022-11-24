@@ -1,3 +1,4 @@
+use app_service::{service_utils::jwt::Claims, system};
 use axum::{extract::Query, Json};
 use db::{
     common::res::{ListData, PageParams, Res},
@@ -8,9 +9,6 @@ use db::{
     },
     DB,
 };
-
-use super::super::service;
-use crate::utils::jwt::Claims;
 
 #[utoipa::path(
     get,
@@ -28,7 +26,7 @@ use crate::utils::jwt::Claims;
 /// 获取字典数据列表
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysDictDataSearchReq>) -> Res<ListData<SysDictDataModel>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_data::get_sort_list(db, page_params, req).await;
+    let res = system::sys_dict_data::get_sort_list(db, page_params, req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -48,7 +46,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 /// 新增字典数据
 pub async fn add(Json(req): Json<SysDictDataAddReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_data::add(db, req, user.id).await;
+    let res = system::sys_dict_data::add(db, req, user.id).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -68,7 +66,7 @@ pub async fn add(Json(req): Json<SysDictDataAddReq>, user: Claims) -> Res<String
 /// 删除字典数据
 pub async fn delete(Json(req): Json<SysDictDataDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_data::delete(db, req).await;
+    let res = system::sys_dict_data::delete(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -88,7 +86,7 @@ pub async fn delete(Json(req): Json<SysDictDataDeleteReq>) -> Res<String> {
 /// 编辑字典数据
 pub async fn edit(Json(req): Json<SysDictDataEditReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_data::edit(db, req, user.id).await;
+    let res = system::sys_dict_data::edit(db, req, user.id).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -110,7 +108,7 @@ pub async fn edit(Json(req): Json<SysDictDataEditReq>, user: Claims) -> Res<Stri
 /// 按id获取字典数据
 pub async fn get_by_id(Query(req): Query<SysDictDataSearchReq>) -> Res<SysDictDataModel> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_dict_data::get_by_id(db, req).await;
+    let res = system::sys_dict_data::get_by_id(db, req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -132,7 +130,7 @@ pub async fn get_by_id(Query(req): Query<SysDictDataSearchReq>) -> Res<SysDictDa
 /// 按type获取字典数据
 pub async fn get_by_type(Query(req): Query<SysDictDataSearchReq>) -> Res<Vec<SysDictDataModel>> {
     let db = DB.get_or_init(db_conn).await;
-    match service::sys_dict_data::get_by_type(db, req).await {
+    match system::sys_dict_data::get_by_type(db, req).await {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
     }
@@ -144,8 +142,8 @@ pub async fn get_by_type(Query(req): Query<SysDictDataSearchReq>) -> Res<Vec<Sys
 //     tag = "SysDictData",
 //     security(("authorization" = [])),
 //     responses(
-//         (status = 200, description = "按id获取字典数据", body = [SysDictDataModel])
-//     ),
+//         (status = 200, description = "按id获取字典数据", body =
+// [SysDictDataModel])     ),
 //     params(
 //         ("params" = SysDeptSearchReq, Query, description = "查询参数")
 //     ),
@@ -153,7 +151,7 @@ pub async fn get_by_type(Query(req): Query<SysDictDataSearchReq>) -> Res<Vec<Sys
 // 按获取全部字典数据
 // pub async fn get_all() -> impl IntoResponse {
 //     let db = DB.get_or_init(db_conn).await;
-//     let res = service::sys_dict_data::get_all(db).await;
+//     let res = system::sys_dict_data::get_all(db).await;
 //     match res {
 //         Ok(x) => Res::with_data(x),
 //         Err(e) => Res::with_err(&e.to_string()),

@@ -1,4 +1,8 @@
 use anyhow::Result;
+use app_service::{
+    service_utils::jwt::{AuthBody, Claims},
+    system,
+};
 use axum::{
     extract::{Multipart, Query},
     Json,
@@ -16,9 +20,6 @@ use db::{
 use headers::HeaderMap;
 use tokio::join;
 
-use super::super::service;
-use crate::utils::jwt::{AuthBody, Claims};
-
 #[utoipa::path(
     get,
     path = "/system/user/list",
@@ -35,7 +36,7 @@ use crate::utils::jwt::{AuthBody, Claims};
 /// 获取用户列表
 pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Query<SysUserSearchReq>) -> Res<ListData<UserWithDept>> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::get_sort_list(db, page_params, req).await;
+    let res = system::sys_user::get_sort_list(db, page_params, req).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -82,7 +83,6 @@ pub async fn get_profile(user: Claims) -> Res<UserInformation> {
     }
 }
 
-
 #[utoipa::path(
     post,
     path = "/system/user/add",
@@ -96,7 +96,7 @@ pub async fn get_profile(user: Claims) -> Res<UserInformation> {
 /// 新增用户
 pub async fn add(Json(add_req): Json<SysUserAddReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::add(db, add_req, user.id).await;
+    let res = system::sys_user::add(db, add_req, user.id).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -116,7 +116,7 @@ pub async fn add(Json(add_req): Json<SysUserAddReq>, user: Claims) -> Res<String
 /// 删除用户
 pub async fn delete(Json(delete_req): Json<SysUserDeleteReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::delete(db, delete_req).await;
+    let res = system::sys_user::delete(db, delete_req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -136,7 +136,7 @@ pub async fn delete(Json(delete_req): Json<SysUserDeleteReq>) -> Res<String> {
 /// 更新用户
 pub async fn edit(Json(edit_req): Json<SysUserEditReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::edit(db, edit_req, user.id).await;
+    let res = system::sys_user::edit(db, edit_req, user.id).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -156,7 +156,7 @@ pub async fn edit(Json(edit_req): Json<SysUserEditReq>, user: Claims) -> Res<Str
 /// 更新用户个人信息
 pub async fn update_profile(Json(req): Json<UpdateProfileReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::update_profile(db, req).await;
+    let res = system::sys_user::update_profile(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -175,12 +175,11 @@ pub async fn update_profile(Json(req): Json<UpdateProfileReq>) -> Res<String> {
 /// 更新用户个人信息
 pub async fn login(Json(login_req): Json<UserLoginReq>, header: HeaderMap) -> Res<AuthBody> {
     let db = DB.get_or_init(db_conn).await;
-    match service::sys_user::login(db, login_req, header).await {
+    match system::sys_user::login(db, login_req, header).await {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
     }
 }
-
 
 #[utoipa::path(
     get,
@@ -196,8 +195,8 @@ pub async fn get_info(user: Claims) -> Res<UserInfo> {
     let db = DB.get_or_init(db_conn).await;
 
     let (role_ids_r, dept_ids_r, user_r) = join!(
-        service::sys_user_role::get_role_ids_by_user_id(db, &user.id),
-        service::sys_user_dept::get_dept_ids_by_user_id(db, &user.id),
+        system::sys_user_role::get_role_ids_by_user_id(db, &user.id),
+        system::sys_user_dept::get_dept_ids_by_user_id(db, &user.id),
         self::get_user_info_permission(&user.id),
     );
 
@@ -219,8 +218,6 @@ pub async fn get_info(user: Claims) -> Res<UserInfo> {
     Res::with_data(res)
 }
 
-
-
 #[utoipa::path(
     put,
     path = "/system/user/reset_passwd",
@@ -234,7 +231,7 @@ pub async fn get_info(user: Claims) -> Res<UserInfo> {
 /// 重置密码
 pub async fn reset_passwd(Json(req): Json<ResetPwdReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::reset_passwd(db, req).await;
+    let res = system::sys_user::reset_passwd(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -254,7 +251,7 @@ pub async fn reset_passwd(Json(req): Json<ResetPwdReq>) -> Res<String> {
 /// 更新密码
 pub async fn update_passwd(Json(req): Json<UpdatePwdReq>, user: Claims) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::update_passwd(db, req, &user.id).await;
+    let res = system::sys_user::update_passwd(db, req, &user.id).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -274,13 +271,12 @@ pub async fn update_passwd(Json(req): Json<UpdatePwdReq>, user: Claims) -> Res<S
 /// 更新用户状态
 pub async fn change_status(Json(req): Json<ChangeStatusReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::change_status(db, req).await;
+    let res = system::sys_user::change_status(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
     }
 }
-
 
 #[utoipa::path(
     put,
@@ -293,7 +289,7 @@ pub async fn change_status(Json(req): Json<ChangeStatusReq>) -> Res<String> {
 )]
 /// 刷新token
 pub async fn fresh_token(user: Claims) -> Res<AuthBody> {
-    let res = service::sys_user::fresh_token(user).await;
+    let res = system::sys_user::fresh_token(user).await;
     match res {
         Ok(x) => Res::with_data(x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -313,7 +309,7 @@ pub async fn fresh_token(user: Claims) -> Res<AuthBody> {
 /// 改变用户角色
 pub async fn change_role(Json(req): Json<ChangeRoleReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::change_role(db, req).await;
+    let res = system::sys_user::change_role(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -333,7 +329,7 @@ pub async fn change_role(Json(req): Json<ChangeRoleReq>) -> Res<String> {
 /// 改变用户部门
 pub async fn change_dept(Json(req): Json<ChangeDeptReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
-    let res = service::sys_user::change_dept(db, req).await;
+    let res = system::sys_user::change_dept(db, req).await;
     match res {
         Ok(x) => Res::with_msg(&x),
         Err(e) => Res::with_err(&e.to_string()),
@@ -352,11 +348,11 @@ pub async fn change_dept(Json(req): Json<ChangeDeptReq>) -> Res<String> {
 )]
 /// 更新头像
 pub async fn update_avatar(multipart: Multipart, user: Claims) -> Res<String> {
-    let res = service::common::upload_file(multipart).await;
+    let res = system::common::upload_file(multipart).await;
     match res {
         Ok(x) => {
             let db = DB.get_or_init(db_conn).await;
-            let res = service::sys_user::update_avatar(db, &x, &user.id).await;
+            let res = system::sys_user::update_avatar(db, &x, &user.id).await;
             match res {
                 Ok(y) => Res::with_data_msg(x, &y),
                 Err(e) => Res::with_err(&e.to_string()),
@@ -366,16 +362,15 @@ pub async fn update_avatar(multipart: Multipart, user: Claims) -> Res<String> {
     }
 }
 
-
 /// 按id获取用户信息
 pub async fn get_user_info_by_id(id: &str) -> Result<UserInformation> {
     let db = DB.get_or_init(db_conn).await;
-    match service::sys_user::get_by_id(db, id).await {
+    match system::sys_user::get_by_id(db, id).await {
         Err(e) => Err(e),
         Ok(user) => {
-            let post_ids = service::sys_post::get_post_ids_by_user_id(db, &user.user.id).await.unwrap();
-            let role_ids = service::sys_user_role::get_role_ids_by_user_id(db, &user.user.id).await.expect("角色id获取失败");
-            let dept_ids = service::sys_user_dept::get_dept_ids_by_user_id(db, &user.user.id).await.expect("角色id获取失败");
+            let post_ids = system::sys_post::get_post_ids_by_user_id(db, &user.user.id).await.unwrap();
+            let role_ids = system::sys_user_role::get_role_ids_by_user_id(db, &user.user.id).await.expect("角色id获取失败");
+            let dept_ids = system::sys_user_dept::get_dept_ids_by_user_id(db, &user.user.id).await.expect("角色id获取失败");
             let res = UserInformation {
                 user_info: user.clone(),
                 dept_id: user.user.dept_id,
@@ -392,13 +387,13 @@ pub async fn get_user_info_by_id(id: &str) -> Result<UserInformation> {
 async fn get_user_info_permission(user_id: &str) -> Result<(UserWithDept, Vec<String>)> {
     let db = DB.get_or_init(db_conn).await;
     //  获取用户信息
-    let user_info = service::sys_user::get_by_id(db, user_id).await?;
+    let user_info = system::sys_user::get_by_id(db, user_id).await?;
 
     // 检查是否超管用户
     let permissions = if CFG.system.super_user.contains(&user_id.to_string()) {
         vec!["*:*:*".to_string()]
     } else {
-        let (apis, _) = service::sys_menu::get_role_permissions(db, &user_info.user.role_id).await?;
+        let (apis, _) = system::sys_menu::get_role_permissions(db, &user_info.user.role_id).await?;
         apis
     };
     Ok((user_info, permissions))

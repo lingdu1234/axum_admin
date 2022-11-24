@@ -6,7 +6,6 @@ use axum::{
     Router,
 };
 use configs::CFG;
-use reqwest::StatusCode;
 use tower_http::services::ServeDir;
 
 use super::{system, test};

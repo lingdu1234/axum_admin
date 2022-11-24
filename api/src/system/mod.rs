@@ -1,18 +1,18 @@
-mod common;
-mod sys_api_db;
-mod sys_dept;
-mod sys_dict_data;
-mod sys_dict_type;
-mod sys_job;
-mod sys_job_log;
-mod sys_login_log;
-mod sys_menu;
-mod sys_oper_log;
-mod sys_post;
-mod sys_role; // 角色管理
-mod sys_update_log;
-mod sys_user;
-mod sys_user_online;
+pub mod common;
+pub mod sys_api_db;
+pub mod sys_dept;
+pub mod sys_dict_data;
+pub mod sys_dict_type;
+pub mod sys_job;
+pub mod sys_job_log;
+pub mod sys_login_log;
+pub mod sys_menu;
+pub mod sys_oper_log;
+pub mod sys_post;
+pub mod sys_role; // 角色管理
+pub mod sys_update_log;
+pub mod sys_user;
+pub mod sys_user_online;
 
 //  重新导出部分api
 use axum::{
@@ -76,7 +76,7 @@ fn sys_dict_type_api() -> Router {
 fn sys_dict_data_api() -> Router {
     Router::new()
         .route("/list", get(sys_dict_data::get_sort_list)) // 获取筛选分页
-        .route("/get_all", get(sys_dict_data::get_all)) // 获取筛选分页
+        // .route("/get_all", get(sys_dict_data::get_all)) // 获取筛选分页
         .route("/get_by_id", get(sys_dict_data::get_by_id)) // 按id获取
         .route("/get_by_type", get(sys_dict_data::get_by_type)) // 按id获取
         .route("/add", post(sys_dict_data::add)) // 添加

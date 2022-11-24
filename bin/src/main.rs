@@ -2,13 +2,7 @@
 
 use std::{net::SocketAddr, str::FromStr};
 
-//
-use app::{
-    api_doc::OpenApiDoc,
-    apps,
-    my_env::{self, RT},
-    tasks, utils,
-};
+use api::OpenApiDoc;
 use app_service::{service_utils, tasks};
 use axum::{
     http::{Method, StatusCode},
@@ -24,9 +18,9 @@ use tower_http::{
     services::ServeDir,
 };
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
+use utils::my_env::{self, RT};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::{SwaggerUi, Url};
-use utils::my_env::{self, RT};
 // 路由日志追踪
 
 // #[tokio::main]
@@ -91,10 +85,9 @@ fn main() {
         let app = Router::new()
             //  "/" 与所有路由冲突
             .fallback(static_files_service)
-            .nest(&CFG.server.api_prefix, apps::api())
+            .nest(&CFG.server.api_prefix, api::api())
             .merge(SwaggerUi::new("/ui/*tail").url(Url::new("api", "/api-doc/openapi.json"), OpenApiDoc::openapi()));
-        tracing::info!("{}", OpenApiDoc::openapi().to_pretty_json().unwrap());
-
+        println!("{}", OpenApiDoc::openapi().to_pretty_json().unwrap());
         let app = match &CFG.server.content_gzip {
             true => {
                 //  开启压缩后 SSE 数据无法返回  text/event-stream 单独处理不压缩
