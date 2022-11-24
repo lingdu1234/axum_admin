@@ -1,0 +1,37 @@
+[package]
+name = "utils"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+#
+configs = {path = "../configs"}
+db = {path = "../db"}
+# 
+once_cell ={workspace = true}
+# 
+tokio = {workspace = true, features = ["rt-multi-thread", "macros", "parking_lot", "signal", "time"]}
+# tracing
+tracing = {workspace = true}
+#
+anyhow = {workspace = true}
+
+#  随机数
+md5 = {workspace = true}
+rand = {workspace = true}
+
+tracing-subscriber = {workspace = true, features = ["json", "env-filter", "local-time", "registry"]}
+time = {workspace = true}
+
+# sea-orm
+sea-orm = {workspace = true, default-features = false,features = ["macros", "runtime-tokio-native-tls","debug-print"]}
+
+
+[features]
+# default = ["postgres", "mysql"]
+default = ["postgres", "mysql", "sqlite"]
+mysql = ["sea-orm/sqlx-mysql"]
+postgres = ["sea-orm/sqlx-postgres"]
+sqlite = ["sea-orm/sqlx-sqlite"]

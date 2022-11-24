@@ -9,6 +9,7 @@ use app::{
     my_env::{self, RT},
     tasks, utils,
 };
+use app_service::{service_utils, tasks};
 use axum::{
     http::{Method, StatusCode},
     routing::get_service,
@@ -25,6 +26,7 @@ use tower_http::{
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::{SwaggerUi, Url};
+use utils::my_env::{self, RT};
 // 路由日志追踪
 
 // #[tokio::main]
@@ -72,7 +74,7 @@ fn main() {
         tracing::subscriber::set_global_default(logger).unwrap();
 
         // apis全局初始化
-        utils::ApiUtils::init_all_api().await;
+        service_utils::ApiUtils::init_all_api().await;
         // 定时任务初始化
         tasks::timer_task_init().await.expect("定时任务初始化失败");
 
@@ -92,6 +94,7 @@ fn main() {
             .nest(&CFG.server.api_prefix, apps::api())
             .merge(SwaggerUi::new("/ui/*tail").url(Url::new("api", "/api-doc/openapi.json"), OpenApiDoc::openapi()));
         tracing::info!("{}", OpenApiDoc::openapi().to_pretty_json().unwrap());
+
         let app = match &CFG.server.content_gzip {
             true => {
                 //  开启压缩后 SSE 数据无法返回  text/event-stream 单独处理不压缩
