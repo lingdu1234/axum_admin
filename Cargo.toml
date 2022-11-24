@@ -1,14 +1,22 @@
 [workspace]
-members = ["app", "bin", "configs", "db", "migration"]
+members = [
+  "bin",
+  "api",
+  "service",
+  "middleware-fn",
+  "utils",
+  "configs",
+  "db",
+  "migration",
+]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [profile.release]
-codegen-units = 1
-debug = false
-lto = true
+codegen-units = 1 
+debug = false 
+lto = true 
 opt-level = "z" # Optimize for size.
-panic = 'abort'
+panic = 'abort' 
 # strip = "symbols" # none(false) debuginfo symbols(true).
-
 
 [workspace.package]
 authors = ["lingdu <waong2005@126.com>"]
@@ -21,12 +29,12 @@ repository = ""
 [workspace.dependencies]
 # axum 
 axum = "0"
-hyper = "0"
-tower = "0"
-tower-http = "0"
-mime = "0"
 axum-extra = "0"
 axum-server = "0"
+hyper = "0"
+mime = "0"
+tower = "0"
+tower-http = "0"
 #
 anyhow = "1"
 bytes = "1"

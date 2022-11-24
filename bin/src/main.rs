@@ -3,11 +3,7 @@
 use std::{net::SocketAddr, str::FromStr};
 
 //
-use app::{
-    apps,
-    my_env::{self, RT},
-    tasks, utils,
-};
+use app_service::{service_utils, tasks};
 use axum::{
     http::{Method, StatusCode},
     routing::get_service,
@@ -22,6 +18,7 @@ use tower_http::{
     services::ServeDir,
 };
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
+use utils::my_env::{self, RT};
 // 路由日志追踪
 
 // #[tokio::main]
@@ -69,7 +66,7 @@ fn main() {
         tracing::subscriber::set_global_default(logger).unwrap();
 
         // apis全局初始化
-        utils::ApiUtils::init_all_api().await;
+        service_utils::ApiUtils::init_all_api().await;
         // 定时任务初始化
         tasks::timer_task_init().await.expect("定时任务初始化失败");
 
@@ -86,7 +83,7 @@ fn main() {
         let app = Router::new()
             //  "/" 与所有路由冲突
             .fallback(static_files_service)
-            .nest(&CFG.server.api_prefix, apps::api());
+            .nest(&CFG.server.api_prefix, api::api());
 
         let app = match &CFG.server.content_gzip {
             true => {
