@@ -1,35 +1,33 @@
 [package]
+edition = "2021"
 name = "api"
 version = "0.1.0"
-edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 #
+app-service = {path = "../service"}
 configs = {path = "../configs"}
 db = {path = "../db"}
-app-service = {path = "../service"}
-middleware-fn = {path="../middleware-fn"}
+middleware-fn = {path = "../middleware-fn"}
 #
-axum = {workspace = true, default-features =false, features = ["multipart"]}
-tower-http = {workspace = true,  default-features =false}
+axum = {workspace = true, default-features = false, features = ["multipart"]}
+tower-http = {workspace = true, default-features = false}
 #
-futures = {workspace = true}
+futures = {workspace = true, default-features = false}
 #
-tokio-stream = {workspace = true}
+tokio-stream = {workspace = true, default-features = false}
 #
-serde_json = {workspace = true}
+serde_json = {workspace = true, default-features = false}
 #
-headers = {workspace = true}
+headers = {workspace = true, default-features = false}
 #
-tokio = {workspace = true, default-features =false}
+tokio = {workspace = true, default-features = false}
 #
-anyhow = {workspace = true}
+anyhow = {workspace = true, default-features = false}
 #
-reqwest = {workspace = true, default-features =false,  features = ["json"]}
-
-
+reqwest = {workspace = true, default-features = false, features = ["json"]}
 
 #  openApi
-utoipa = { workspace = true, features = ["axum_extras"] }
+utoipa = {workspace = true, default-features = false, features = ["axum_extras"]}

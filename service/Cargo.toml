@@ -52,16 +52,9 @@ sysinfo = {workspace = true,  default-features =false}
 # 验证码
 captcha_rust ={workspace = true,  default-features =false}
 #  openApi
-utoipa = { workspace = true, features = ["axum_extras"] }
-utoipa-swagger-ui = {workspace = true, features = ["axum"] }
-#  hashMap
-ahash = {workspace = true}
+utoipa = { workspace = true,  default-features =false, features = ["axum_extras"] }
 # skyTable  可选依赖
 skytable = {workspace = true, features = ["const-gen","aio"], default-features = false, optional = true}
-
-#  openApi
-# utoipa = { workspace = true, features = ["axum_extras"] }
-# utoipa-swagger-ui = {workspace = true, features = ["axum"] }
 
 # sea-orm
 sea-orm = {workspace = true, default-features = false,features = ["macros", "runtime-tokio-native-tls","debug-print"]}
