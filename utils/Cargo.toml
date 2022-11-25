@@ -10,28 +10,20 @@ edition = "2021"
 configs = {path = "../configs"}
 db = {path = "../db"}
 # 
-once_cell ={workspace = true}
+once_cell ={workspace = true,  default-features =false}
 # 
-tokio = {workspace = true, features = ["rt-multi-thread", "macros", "parking_lot", "signal", "time"]}
+tokio = {workspace = true,  default-features =false}
 # tracing
-tracing = {workspace = true}
+tracing = {workspace = true,  default-features =false}
 #
-anyhow = {workspace = true}
+anyhow = {workspace = true,  default-features =false}
 
 #  随机数
-md5 = {workspace = true}
-rand = {workspace = true}
+md5 = {workspace = true,  default-features =false}
+rand = {workspace = true,  default-features =false}
 
-tracing-subscriber = {workspace = true, features = ["json", "env-filter", "local-time", "registry"]}
+tracing-subscriber = {workspace = true,   default-features =false}
 time = {workspace = true}
 
 # sea-orm
-sea-orm = {workspace = true, default-features = false,features = ["macros", "runtime-tokio-native-tls","debug-print"]}
-
-
-[features]
-# default = ["postgres", "mysql"]
-default = ["postgres", "mysql", "sqlite"]
-mysql = ["sea-orm/sqlx-mysql"]
-postgres = ["sea-orm/sqlx-postgres"]
-sqlite = ["sea-orm/sqlx-sqlite"]
+sea-orm = {workspace = true, default-features = false}

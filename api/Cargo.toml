@@ -12,8 +12,8 @@ db = {path = "../db"}
 app-service = {path = "../service"}
 middleware-fn = {path="../middleware-fn"}
 # 
-axum = {workspace = true, default-features =false, features = ["headers","multipart","original-uri"]}
-tower-http = {workspace = true,  features = ["cors","fs"]}
+axum = {workspace = true, default-features =false, features = ["multipart"]}
+tower-http = {workspace = true,  default-features =false}
 # 
 futures = {workspace = true}
 # 
@@ -26,3 +26,5 @@ headers = {workspace = true}
 tokio = {workspace = true, default-features =false}
 #
 anyhow = {workspace = true}
+# 
+reqwest = {workspace = true, default-features =false,  features = ["json"]}
