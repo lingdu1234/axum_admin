@@ -1,43 +1,43 @@
 [package]
+edition = "2021"
 name = "middleware-fn"
 version = "0.1.0"
-edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 #
+app-service = {path = "../service"}
 configs = {path = "../configs"}
 db = {path = "../db"}
-app-service = {path = "../service"}
 
 # poem 
-axum = {workspace = true, features = ["headers","multipart","original-uri"]}
-hyper = { workspace = true,  features = ["full"] }
+axum = {workspace = true, default-features = false, features = ["headers", "original-uri"]}
+hyper = {workspace = true, default-features = false}
 # 
 bytes = {workspace = true}
 # 
-tokio = {workspace = true, features = ["rt-multi-thread", "macros", "parking_lot", "signal", "time"]}
+tokio = {workspace = true, default-features = false}
 # 
-chrono = {workspace = true, features = ["serde"]}
+chrono = {workspace = true, default-features = false, features = ["serde"]}
 # 
-tracing = {workspace = true}
+tracing = {workspace = true, default-features = false}
 # 用于生成可排序的唯一id
-scru128 = {workspace = true}
+scru128 = {workspace = true, default-features = false}
 # 
-once_cell ={workspace = true}
+once_cell = {workspace = true, default-features = false}
 # 
-anyhow = {workspace = true}
+anyhow = {workspace = true, default-features = false}
 
 # sea-orm
-sea-orm = {workspace = true, default-features = false,features = ["macros", "runtime-tokio-native-tls","debug-print"]}
+sea-orm = {workspace = true, default-features = false, features = ["macros", "runtime-tokio-native-tls", "debug-print"]}
 
 # skyTable  可选依赖
-skytable = {workspace = true, features = ["const-gen","aio"], default-features = false, optional = true}
+skytable = {workspace = true, default-features = false, features = ["const-gen", "aio"], optional = true}
 
 [features]
 # default = ["postgres", "mysql"]
-default = ["postgres", "mysql", "sqlite","cache-mem", "cache-skytable"]
+default = ["postgres", "mysql", "sqlite", "cache-mem", "cache-skytable"]
 mysql = ["sea-orm/sqlx-mysql"]
 postgres = ["sea-orm/sqlx-postgres"]
 sqlite = ["sea-orm/sqlx-sqlite"]
