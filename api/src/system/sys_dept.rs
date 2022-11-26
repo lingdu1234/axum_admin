@@ -24,7 +24,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 }
 /// add 添加
 
-pub async fn add(user: Claims,Json(req): Json<SysDeptAddReq>) -> Res<String> {
+pub async fn add(user: Claims, Json(req): Json<SysDeptAddReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_dept::add(db, req, user.id).await;
     match res {
@@ -46,7 +46,7 @@ pub async fn delete(Json(req): Json<SysDeptDeleteReq>) -> Res<String> {
 
 // edit 修改
 
-pub async fn edit(user: Claims,Json(req): Json<SysDeptEditReq>) -> Res<String> {
+pub async fn edit(user: Claims, Json(req): Json<SysDeptEditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_dept::edit(db, req, user.id).await;
     match res {

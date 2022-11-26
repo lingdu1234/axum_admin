@@ -44,7 +44,7 @@ pub async fn delete(Json(req): Json<SysDictDataDeleteReq>) -> Res<String> {
 
 // edit 修改
 
-pub async fn edit(user: Claims,Json(req): Json<SysDictDataEditReq>) -> Res<String> {
+pub async fn edit(user: Claims, Json(req): Json<SysDictDataEditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_dict_data::edit(db, req, user.id).await;
     match res {

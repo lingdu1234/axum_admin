@@ -82,7 +82,7 @@ fn main() {
 
         let app = Router::new()
             //  "/" 与所有路由冲突
-            .nest_service("/",static_files_service)
+            .nest_service("/", static_files_service)
             .nest(&CFG.server.api_prefix, api::api());
 
         let app = match &CFG.server.content_gzip {
