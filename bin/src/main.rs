@@ -20,7 +20,7 @@ use tower_http::{
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 use utils::my_env::{self, RT};
 use utoipa::OpenApi;
-use utoipa_swagger_ui::{SwaggerUi, Url};
+use utoipa_swagger_ui::SwaggerUi;
 // 路由日志追踪
 
 // #[tokio::main]
@@ -84,10 +84,10 @@ fn main() {
 
         let app = Router::new()
             //  "/" 与所有路由冲突
-            .nest_service("/",static_files_service)
+            .nest_service("/", static_files_service)
             .nest(&CFG.server.api_prefix, api::api())
-            .merge(SwaggerUi::new("/ui/*tail").url(Url::new("api", "/api-doc/openapi.json"), OpenApiDoc::openapi()));
-        println!("{}", OpenApiDoc::openapi().to_pretty_json().unwrap());
+            .merge(SwaggerUi::new("/ui").url("/api-doc/openapi.json", OpenApiDoc::openapi()));
+        tracing::info!("{}", OpenApiDoc::openapi().to_pretty_json().unwrap());
         let app = match &CFG.server.content_gzip {
             true => {
                 //  开启压缩后 SSE 数据无法返回  text/event-stream 单独处理不压缩

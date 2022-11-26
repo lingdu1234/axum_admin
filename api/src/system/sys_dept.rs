@@ -44,7 +44,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
     request_body = SysDeptAddReq,
 )]
 /// 新增部门
-pub async fn add(Json(req): Json<SysDeptAddReq>, user: Claims) -> Res<String> {
+pub async fn add(user: Claims, Json(req): Json<SysDeptAddReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_dept::add(db, req, user.id).await;
     match res {
@@ -84,7 +84,7 @@ pub async fn delete(Json(req): Json<SysDeptDeleteReq>) -> Res<String> {
     request_body = SysDeptEditReq,
 )]
 /// 编辑部门
-pub async fn edit(Json(req): Json<SysDeptEditReq>, user: Claims) -> Res<String> {
+pub async fn edit(user: Claims, Json(req): Json<SysDeptEditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_dept::edit(db, req, user.id).await;
     match res {

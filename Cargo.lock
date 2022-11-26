@@ -4005,8 +4005,7 @@ dependencies = [
 [[package]]
 name = "utoipa"
 version = "2.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b626abb3bbbe41ce00df6dea3d109a83a034930245c3307026d82d71e7a06e43"
+source = "git+https://github.com/juhaku/utoipa.git#badb4751f5fc906779fb7863987cf6ad1f32f0f5"
 dependencies = [
  "indexmap",
  "serde",
@@ -4017,8 +4016,7 @@ dependencies = [
 [[package]]
 name = "utoipa-gen"
 version = "2.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "250e8cdb0461b6fbaa1c1acb7f08300d773713fab721776becf5f7386b41a791"
+source = "git+https://github.com/juhaku/utoipa.git#badb4751f5fc906779fb7863987cf6ad1f32f0f5"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -4029,8 +4027,7 @@ dependencies = [
 [[package]]
 name = "utoipa-swagger-ui"
 version = "2.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0820c88504465c32db74d3765f7a06cb85a89b29d080c4481abd86c01e73944d"
+source = "git+https://github.com/juhaku/utoipa.git#badb4751f5fc906779fb7863987cf6ad1f32f0f5"
 dependencies = [
  "axum",
  "mime_guess",

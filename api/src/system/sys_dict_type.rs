@@ -44,7 +44,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
     request_body = SysDictTypeAddReq,
 )]
 /// 新增字典数据
-pub async fn add(Json(req): Json<SysDictTypeAddReq>, user: Claims) -> Res<String> {
+pub async fn add(user: Claims, Json(req): Json<SysDictTypeAddReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_dict_type::add(db, req, user.id).await;
     match res {
@@ -84,7 +84,7 @@ pub async fn delete(Json(req): Json<SysDictTypeDeleteReq>) -> Res<String> {
     request_body = SysDictTypeEditReq,
 )]
 /// 编辑字典数据
-pub async fn edit(Json(edit_req): Json<SysDictTypeEditReq>, user: Claims) -> Res<String> {
+pub async fn edit(user: Claims, Json(edit_req): Json<SysDictTypeEditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_dict_type::edit(db, edit_req, user.id).await;
     match res {
