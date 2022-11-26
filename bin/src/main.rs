@@ -84,7 +84,7 @@ fn main() {
 
         let app = Router::new()
             //  "/" 与所有路由冲突
-            .fallback(static_files_service)
+            .nest_service("/",static_files_service)
             .nest(&CFG.server.api_prefix, api::api())
             .merge(SwaggerUi::new("/ui/*tail").url(Url::new("api", "/api-doc/openapi.json"), OpenApiDoc::openapi()));
         println!("{}", OpenApiDoc::openapi().to_pretty_json().unwrap());

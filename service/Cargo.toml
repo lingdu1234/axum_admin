@@ -62,12 +62,7 @@ sea-orm = {workspace = true, default-features = false,features = ["macros", "run
 
 [features]
 # default = ["postgres", "mysql"]
-default = ["postgres", "mysql", "sqlite", "cache-mem", "cache-skytable"]
+default = ["postgres", "mysql", "sqlite"]
 mysql = ["sea-orm/sqlx-mysql"]
 postgres = ["sea-orm/sqlx-postgres"]
 sqlite = ["sea-orm/sqlx-sqlite"]
-# app features
-#  使用内存做缓存中间件
-cache-mem = []
-# 使用skytable 做缓存中间件
-cache-skytable = ["skytable"]

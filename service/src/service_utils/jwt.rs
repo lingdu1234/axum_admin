@@ -1,9 +1,9 @@
 use axum::{
-    extract::{FromRequest, RequestParts, TypedHeader},
+    extract::{FromRequestParts, TypedHeader},
     headers::{authorization::Bearer, Authorization},
-    http::StatusCode,
+    http::{request::Parts, StatusCode},
     response::{IntoResponse, Response},
-    Json,
+    Json, RequestPartsExt,
 };
 use chrono::{Duration, Local};
 use db::common::ctx::UserInfoCtx;
@@ -50,14 +50,14 @@ pub struct Claims {
 }
 
 #[axum::async_trait]
-impl<B> FromRequest<B> for Claims
+impl<S> FromRequestParts<S> for Claims
 where
-    B: Send,
+    S: Send + Sync,
 {
     type Rejection = AuthError;
     /// 将用户信息注入request
-    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        let (_, token_v) = get_bear_token(req).await?;
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        let (_, token_v) = get_bear_token(parts).await?;
         // Decode the user data
 
         let token_data = match decode::<Claims>(&token_v, &KEYS.decoding, &Validation::default()) {
@@ -83,7 +83,7 @@ where
             },
         };
         let user = token_data.claims;
-        req.extensions_mut().insert(UserInfoCtx {
+        parts.extensions.insert(UserInfoCtx {
             id: user.id.clone(),
             token_id: user.token_id.clone(),
             name: user.name.clone(),
@@ -92,11 +92,9 @@ where
     }
 }
 
-pub async fn get_bear_token<B>(req: &mut RequestParts<B>) -> Result<(String, String), AuthError>
-where
-    B: Send,
-{
-    let TypedHeader(Authorization(bearer)) = TypedHeader::<Authorization<Bearer>>::from_request(req).await.map_err(|_| AuthError::InvalidToken)?;
+pub async fn get_bear_token(parts: &mut Parts) -> Result<(String, String), AuthError> {
+    // Extract the token from the authorization header
+    let TypedHeader(Authorization(bearer)) = parts.extract::<TypedHeader<Authorization<Bearer>>>().await.map_err(|_| AuthError::InvalidToken)?;
     // Decode the user data
     let bearer_data = bearer.token();
     let cut = bearer_data.len() - scru128::new_string().len();

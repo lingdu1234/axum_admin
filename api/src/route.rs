@@ -13,7 +13,7 @@ use super::{system, test};
 pub fn api() -> Router {
     Router::new()
         // 文件上传api
-        .nest(
+        .nest_service(
             &CFG.web.upload_url,
             get_service(ServeDir::new(&CFG.web.upload_dir))
                 .handle_error(|error: std::io::Error| async move { (StatusCode::INTERNAL_SERVER_ERROR, format!("Unhandled internal error: {}", error)) }),
