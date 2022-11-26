@@ -10,6 +10,9 @@
 
 An Admin panel build with [axum](https://github.com/tokio-rs/axum)/[poem](https://github.com/poem-web/poem),[sea-orm](https://github.com/SeaQL/sea-orm),[vue3](https://github.com/vuejs/core) etc.
 
+## open-api-version: [branch-openapi](https://github.com/lingdu1234/axum_admin/tree/axum-openapi)
+
+
 ## front-end:     
 https://github.com/lingdu1234/IUI314
 

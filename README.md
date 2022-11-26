@@ -10,9 +10,13 @@
 
 一个由 [axum](https://github.com/tokio-rs/axum)/[poem](https://github.com/poem-web/poem),[sea-orm](https://github.com/SeaQL/sea-orm),[vue3](https://github.com/vuejs/core) 编写的 admin 管理面板，
 
+## open-api-version: [branch-openapi](https://github.com/lingdu1234/axum_admin/tree/axum-openapi)
+
+
 ## 前端项目：   
 
 https://github.com/lingdu1234/IUI314
+
 
 ## 预览地址：
 [iui314.vercel.app](https://iui314.vercel.app/#/)
