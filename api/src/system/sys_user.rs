@@ -73,7 +73,7 @@ pub async fn get_user_info_by_id(id: &str) -> Result<UserInformation> {
 
 /// add 添加
 
-pub async fn add(Json(add_req): Json<SysUserAddReq>, user: Claims) -> Res<String> {
+pub async fn add(user: Claims,Json(add_req): Json<SysUserAddReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_user::add(db, add_req, user.id).await;
     match res {
@@ -95,7 +95,7 @@ pub async fn delete(Json(delete_req): Json<SysUserDeleteReq>) -> Res<String> {
 
 // edit 修改
 
-pub async fn edit(Json(edit_req): Json<SysUserEditReq>, user: Claims) -> Res<String> {
+pub async fn edit(user: Claims,Json(edit_req): Json<SysUserEditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_user::edit(db, edit_req, user.id).await;
     match res {
@@ -115,7 +115,7 @@ pub async fn update_profile(Json(req): Json<UpdateProfileReq>) -> Res<String> {
 
 /// 用户登录
 
-pub async fn login(Json(login_req): Json<UserLoginReq>, header: HeaderMap) -> Res<AuthBody> {
+pub async fn login( header: HeaderMap,Json(login_req): Json<UserLoginReq>) -> Res<AuthBody> {
     let db = DB.get_or_init(db_conn).await;
     match system::sys_user::login(db, login_req, header).await {
         Ok(x) => Res::with_data(x),
@@ -178,7 +178,7 @@ pub async fn reset_passwd(Json(req): Json<ResetPwdReq>) -> Res<String> {
     }
 }
 
-pub async fn update_passwd(Json(req): Json<UpdatePwdReq>, user: Claims) -> Res<String> {
+pub async fn update_passwd(user: Claims,Json(req): Json<UpdatePwdReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_user::update_passwd(db, req, &user.id).await;
     match res {
@@ -225,7 +225,7 @@ pub async fn change_dept(Json(req): Json<ChangeDeptReq>) -> Res<String> {
     }
 }
 
-pub async fn update_avatar(multipart: Multipart, user: Claims) -> Res<String> {
+pub async fn update_avatar(user: Claims,multipart: Multipart) -> Res<String> {
     let res = system::common::upload_file(multipart).await;
     match res {
         Ok(x) => {

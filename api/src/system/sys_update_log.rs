@@ -11,7 +11,7 @@ use db::{
 };
 
 /// add 添加
-pub async fn add(Json(req): Json<SysUpdateLogAddReq>, user: Claims) -> Res<String> {
+pub async fn add(user: Claims,Json(req): Json<SysUpdateLogAddReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_update_log::add(db, req, &user.id).await;
     match res {
@@ -31,7 +31,7 @@ pub async fn delete(Json(req): Json<SysUpdateLogDeleteReq>) -> Res<String> {
 }
 
 // edit 修改
-pub async fn edit(Json(req): Json<SysUpdateLogEditReq>, user: Claims) -> Res<String> {
+pub async fn edit(user: Claims,Json(req): Json<SysUpdateLogEditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_update_log::edit(db, req, &user.id).await;
     match res {

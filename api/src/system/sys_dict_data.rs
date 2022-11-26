@@ -23,7 +23,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 }
 
 /// add 添加
-pub async fn add(Json(req): Json<SysDictDataAddReq>, user: Claims) -> Res<String> {
+pub async fn add(user: Claims, Json(req): Json<SysDictDataAddReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_dict_data::add(db, req, user.id).await;
     match res {
@@ -44,7 +44,7 @@ pub async fn delete(Json(req): Json<SysDictDataDeleteReq>) -> Res<String> {
 
 // edit 修改
 
-pub async fn edit(Json(req): Json<SysDictDataEditReq>, user: Claims) -> Res<String> {
+pub async fn edit(user: Claims,Json(req): Json<SysDictDataEditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_dict_data::edit(db, req, user.id).await;
     match res {

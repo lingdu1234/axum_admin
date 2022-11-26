@@ -27,7 +27,7 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 
 /// add 添加
 
-pub async fn add(Json(req): Json<SysRoleAddReq>, user: Claims) -> Res<String> {
+pub async fn add(user: Claims,Json(req): Json<SysRoleAddReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_role::add(db, req, &user.id).await;
     match res {
@@ -49,7 +49,7 @@ pub async fn delete(Json(delete_req): Json<SysRoleDeleteReq>) -> Res<String> {
 
 // edit 修改
 
-pub async fn edit(Json(edit_req): Json<SysRoleEditReq>, user: Claims) -> Res<String> {
+pub async fn edit(user: Claims,Json(edit_req): Json<SysRoleEditReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_role::edit(db, edit_req, &user.id).await;
     match res {
@@ -171,7 +171,7 @@ pub async fn get_un_auth_users_by_role_id(Query(mut req): Query<UserSearchReq>, 
 
 // edit 修改
 
-pub async fn update_auth_role(Json(req): Json<UpdateAuthRoleReq>, user: Claims) -> Res<String> {
+pub async fn update_auth_role(user: Claims,Json(req): Json<UpdateAuthRoleReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     match system::sys_role::add_role_by_user_id(db, &req.user_id, req.role_ids, user.id).await {
         Ok(_) => Res::with_msg("角色授权更新成功"),
@@ -179,7 +179,7 @@ pub async fn update_auth_role(Json(req): Json<UpdateAuthRoleReq>, user: Claims) 
     }
 }
 
-pub async fn add_auth_user(Json(req): Json<AddOrCancelAuthRoleReq>, user: Claims) -> Res<String> {
+pub async fn add_auth_user(user: Claims,Json(req): Json<AddOrCancelAuthRoleReq>) -> Res<String> {
     let db = DB.get_or_init(db_conn).await;
     let res = system::sys_role::add_role_with_user_ids(db, req.clone().user_ids, req.role_id, user.id).await;
     match res {
