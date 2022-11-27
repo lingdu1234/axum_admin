@@ -21,7 +21,7 @@ pub fn api() -> Router {
         // 无需授权Api.通用模块
         .nest("/comm", no_auth_api())
         // 系统管理模块
-        .nest("/system", auth_api())
+        .nest("/system", set_auth_middleware(system::system_api()))
         //  测试模块
         .nest("/test", test_api())
 }
@@ -34,14 +34,12 @@ fn no_auth_api() -> Router {
         .route("/log_out", post(system::log_out)) // 退出登录
 }
 
-// 需要授权的api
-fn auth_api() -> Router {
-    let router = system::system_api();
+// 设置授权路由的中间件
+fn set_auth_middleware(router: Router) -> Router {
     let router = match &CFG.log.enable_oper_log {
         true => router.layer(middleware::from_fn(middleware_fn::OperLog)),
         false => router,
     };
-
     let router = match CFG.server.cache_time {
         0 => router,
         _ => {
