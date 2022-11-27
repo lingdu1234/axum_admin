@@ -172,7 +172,7 @@ pub async fn update_profile(Json(req): Json<UpdateProfileReq>) -> Res<String> {
     ),
     request_body = UserLoginReq,
 )]
-/// 更新用户个人信息
+/// 用户登录
 pub async fn login(header: HeaderMap, Json(login_req): Json<UserLoginReq>) -> Res<AuthBody> {
     let db = DB.get_or_init(db_conn).await;
     match system::sys_user::login(db, login_req, header).await {
