@@ -35,8 +35,9 @@ pub async fn get_sort_list(Query(page_params): Query<PageParams>, Query(req): Qu
 /// get_user_by_id 获取用户Id获取用户
 
 pub async fn get_by_id(Query(req): Query<SysUserSearchReq>) -> Res<UserInformation> {
+    let db = DB.get_or_init(db_conn).await;
     match req.user_id {
-        Some(user_id) => match self::get_user_info_by_id(&user_id).await {
+        Some(user_id) => match system::sys_user::get_user_info_by_id(db,&user_id).await {
             Err(e) => Res::with_err(&e.to_string()),
             Ok(res) => Res::with_data(res),
         },
@@ -45,31 +46,14 @@ pub async fn get_by_id(Query(req): Query<SysUserSearchReq>) -> Res<UserInformati
 }
 
 pub async fn get_profile(user: Claims) -> Res<UserInformation> {
-    match self::get_user_info_by_id(&user.id).await {
+    let db = DB.get_or_init(db_conn).await;
+    match system::sys_user::get_user_info_by_id(db,&user.id).await {
         Err(e) => Res::with_err(&e.to_string()),
         Ok(res) => Res::with_data(res),
     }
 }
 
-pub async fn get_user_info_by_id(id: &str) -> Result<UserInformation> {
-    let db = DB.get_or_init(db_conn).await;
-    match system::sys_user::get_by_id(db, id).await {
-        Err(e) => Err(e),
-        Ok(user) => {
-            let post_ids = system::sys_post::get_post_ids_by_user_id(db, &user.user.id).await.unwrap();
-            let role_ids = system::sys_user_role::get_role_ids_by_user_id(db, &user.user.id).await.expect("角色id获取失败");
-            let dept_ids = system::sys_user_dept::get_dept_ids_by_user_id(db, &user.user.id).await.expect("角色id获取失败");
-            let res = UserInformation {
-                user_info: user.clone(),
-                dept_id: user.user.dept_id,
-                post_ids,
-                role_ids,
-                dept_ids,
-            };
-            Ok(res)
-        }
-    }
-}
+
 
 /// add 添加
 
@@ -130,7 +114,7 @@ pub async fn get_info(user: Claims) -> Res<UserInfo> {
     let (role_ids_r, dept_ids_r, user_r) = join!(
         system::sys_user_role::get_role_ids_by_user_id(db, &user.id),
         system::sys_user_dept::get_dept_ids_by_user_id(db, &user.id),
-        self::get_user_info_permission(&user.id),
+        system::sys_user::get_user_info_permission(db,&user.id),
     );
 
     let roles = match role_ids_r {
@@ -151,21 +135,7 @@ pub async fn get_info(user: Claims) -> Res<UserInfo> {
     Res::with_data(res)
 }
 
-// 获取用户信息以及权限
-async fn get_user_info_permission(user_id: &str) -> Result<(UserWithDept, Vec<String>)> {
-    let db = DB.get_or_init(db_conn).await;
-    //  获取用户信息
-    let user_info = system::sys_user::get_by_id(db, user_id).await?;
 
-    // 检查是否超管用户
-    let permissions = if CFG.system.super_user.contains(&user_id.to_string()) {
-        vec!["*:*:*".to_string()]
-    } else {
-        let (apis, _) = system::sys_menu::get_role_permissions(db, &user_info.user.role_id).await?;
-        apis
-    };
-    Ok((user_info, permissions))
-}
 
 // edit 修改
 
