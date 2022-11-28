@@ -1,5 +1,8 @@
+use tokio::join;
+
 use anyhow::{anyhow, Result};
 use chrono::{Local, NaiveDateTime};
+use configs::CFG;
 use db::{
     common::res::{ListData, PageParams},
     system::{
@@ -8,7 +11,7 @@ use db::{
             sys_dept::DeptResp,
             sys_user::{
                 ChangeDeptReq, ChangeRoleReq, ChangeStatusReq, ResetPwdReq, SysUserAddReq, SysUserDeleteReq, SysUserEditReq, SysUserSearchReq, UpdateProfileReq, UpdatePwdReq,
-                UserLoginReq, UserResp, UserWithDept,
+                UserInformation, UserLoginReq, UserResp, UserWithDept,
             },
         },
     },
@@ -594,4 +597,53 @@ pub async fn set_login_info(header: HeaderMap, u_id: String, user: String, msg: 
     tokio::spawn(async move {
         super::sys_login_log::add(u2, user, msg, status2).await;
     });
+}
+
+/// 按id 获取用户信息
+pub async fn get_user_info_by_id(db: &DatabaseConnection, id: &str) -> Result<UserInformation> {
+    match self::get_by_id(db, id).await {
+        Err(e) => Err(e),
+        Ok(user) => {
+            let (post_ids_r,role_ids_r,dept_ids_r) = join!(
+                super::sys_post::get_post_ids_by_user_id(db, &user.user.id),
+                super::sys_user_role::get_role_ids_by_user_id(db, &user.user.id),
+                super::sys_user_dept::get_dept_ids_by_user_id(db, &user.user.id),
+            );
+            let post_ids = match post_ids_r {
+                Ok(x) => x,
+                Err(e) => return Err(anyhow!(e.to_string())),
+            };
+            let role_ids = match role_ids_r {
+                Ok(x) => x,
+                Err(e) => return Err(anyhow!(e.to_string())),
+            };
+            let dept_ids = match dept_ids_r {
+                Ok(x) => x,
+                Err(e) => return Err(anyhow!(e.to_string())),
+            };
+            let res = UserInformation {
+                user_info: user.clone(),
+                dept_id: user.user.dept_id,
+                post_ids,
+                role_ids,
+                dept_ids,
+            };
+            Ok(res)
+        }
+    }
+}
+
+/// 获取用户信息以及权限
+pub async fn get_user_info_permission(db: &DatabaseConnection, user_id: &str) -> Result<(UserWithDept, Vec<String>)> {
+    //  获取用户信息
+    let user_info = self::get_by_id(db, user_id).await?;
+
+    // 检查是否超管用户
+    let permissions = if CFG.system.super_user.contains(&user_id.to_string()) {
+        vec!["*:*:*".to_string()]
+    } else {
+        let (apis, _) = super::sys_menu::get_role_permissions(db, &user_info.user.role_id).await?;
+        apis
+    };
+    Ok((user_info, permissions))
 }
