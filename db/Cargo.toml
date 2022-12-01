@@ -17,7 +17,7 @@ once_cell = {workspace = true}
 # regex = {workspace = true}
 serde = {workspace = true,default-features =false, features = ["derive"]}
 serde_json = {workspace = true,default-features =false}
-tokio = {workspace = true,default-features =false}
+tokio = {workspace = true,default-features =false,features=["parking_lot"]}
 tracing = {workspace = true,default-features =false }
 
 #  openApi
