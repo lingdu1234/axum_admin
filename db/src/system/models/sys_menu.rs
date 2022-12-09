@@ -6,6 +6,7 @@ use crate::system::entities::sys_menu;
 #[derive(Deserialize, Clone)]
 pub struct SysMenuSearchReq {
     pub id: Option<String>,
+    pub pid: Option<String>,
     pub menu_name: Option<String>,
     pub menu_type: Option<String>,
     pub menu_types: Option<String>,

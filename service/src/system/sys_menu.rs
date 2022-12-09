@@ -27,6 +27,17 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
     //  生成查询条件
     let mut s = SysMenu::find();
 
+   if let Some(x) = req.id {
+        if !x.is_empty() {
+            s = s.filter(sys_menu::Column::Id.eq(x));
+        }
+    }
+    if let Some(x) = req.pid {
+        if !x.is_empty() {
+            s = s.filter(sys_menu::Column::Pid.eq(x));
+        }
+    }
+
     if let Some(x) = req.menu_name {
         if !x.is_empty() {
             s = s.filter(sys_menu::Column::MenuName.contains(&x));
@@ -263,12 +274,12 @@ pub async fn get_by_id(db: &DatabaseConnection, search_req: SysMenuSearchReq) ->
     Ok(res)
 }
 
-/// 获取全部菜单 或者 除开按键api级别的外的路由   
-/// is_router 是否是菜单路由，用于前端生成路由   
-/// is_only_api 仅获取按键，api级别的路由   
-/// 不能同时为true   
-/// 同时false 为获取全部路由   
-/// is_only_enabled 获取启用的路由，false 为全部路由  
+/// 获取全部菜单 或者 除开按键api级别的外的路由
+/// is_router 是否是菜单路由，用于前端生成路由
+/// is_only_api 仅获取按键，api级别的路由
+/// 不能同时为true
+/// 同时false 为获取全部路由
+/// is_only_enabled 获取启用的路由，false 为全部路由
 pub async fn get_menus<C>(db: &C, is_router: bool, is_only_api: bool, is_only_enabled: bool) -> Result<Vec<MenuResp>>
 where
     C: TransactionTrait + ConnectionTrait,
