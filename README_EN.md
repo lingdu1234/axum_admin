@@ -1,7 +1,7 @@
 <p align="center">
   <img src='data/logo.svg' />
   <br/>
-  <span size="30">Poem-Admin</span>
+  <span size="30">Axum-Admin</span>
   <br>
    <a href="./README.md"><span>中文</span></a>   |    <a href="./README_EN.md"><span>english</span></a>
 </p>
