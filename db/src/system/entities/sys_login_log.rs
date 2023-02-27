@@ -66,7 +66,7 @@ impl ColumnTrait for Column {
         match self {
             Self::InfoId => ColumnType::String(Some(32u32)).def(),
             Self::LoginName => ColumnType::String(Some(50u32)).def(),
-            Self::Net => ColumnType::String(Some(10u32)).def(),
+            Self::Net => ColumnType::String(Some(100u32)).def(),
             Self::Ipaddr => ColumnType::String(Some(50u32)).def(),
             Self::LoginLocation => ColumnType::String(Some(255u32)).def(),
             Self::Browser => ColumnType::String(Some(50u32)).def(),
