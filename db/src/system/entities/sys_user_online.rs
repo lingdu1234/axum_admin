@@ -72,12 +72,12 @@ impl ColumnTrait for Column {
             Self::LoginTime => ColumnType::DateTime.def(),
             Self::UserName => ColumnType::String(Some(255u32)).def(),
             Self::DeptName => ColumnType::String(Some(100u32)).def(),
-            Self::Net => ColumnType::String(Some(10u32)).def(),
+            Self::Net => ColumnType::String(Some(100u32)).def(),
             Self::Ipaddr => ColumnType::String(Some(120u32)).def(),
             Self::LoginLocation => ColumnType::String(Some(255u32)).def(),
-            Self::Device => ColumnType::String(Some(50u32)).def(),
-            Self::Browser => ColumnType::String(Some(30u32)).def(),
-            Self::Os => ColumnType::String(Some(30u32)).def(),
+            Self::Device => ColumnType::String(Some(100u32)).def(),
+            Self::Browser => ColumnType::String(Some(100u32)).def(),
+            Self::Os => ColumnType::String(Some(100u32)).def(),
         }
     }
 }

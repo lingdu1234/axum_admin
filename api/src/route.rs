@@ -1,6 +1,5 @@
 use app_service::service_utils::jwt::Claims;
 use axum::{
-    http::StatusCode,
     middleware,
     routing::{get, get_service, post},
     Router,
