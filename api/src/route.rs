@@ -16,7 +16,6 @@ pub fn api() -> Router {
         .nest_service(
             &CFG.web.upload_url,
             get_service(ServeDir::new(&CFG.web.upload_dir))
-                .handle_error(|error: std::io::Error| async move { (StatusCode::INTERNAL_SERVER_ERROR, format!("Unhandled internal error: {}", error)) }),
         )
         // 无需授权Api.通用模块
         .nest("/comm", no_auth_api())
