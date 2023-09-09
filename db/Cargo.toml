@@ -9,20 +9,20 @@ version = "0.1.0"
 #
 configs = {path = "../configs"}
 #
-axum = {workspace = true,default-features =false}
-mime = {workspace = true,default-features =false}
+axum = {workspace = true }
+mime = {workspace = true}
 #
-chrono = {workspace = true,default-features =false,  features = ["serde"]}
+chrono = {workspace = true, features = ["serde"]}
 once_cell = {workspace = true}
 # regex = {workspace = true}
-serde = {workspace = true,default-features =false, features = ["derive"]}
-serde_json = {workspace = true,default-features =false}
-tokio = {workspace = true,default-features =false,features=["parking_lot"]}
-tracing = {workspace = true,default-features =false }
+serde = {workspace = true,features = ["derive"]}
+serde_json = {workspace = true}
+tokio = {workspace = true,features=["parking_lot"]}
+tracing = {workspace = true }
 
 
 # sea-orm
-sea-orm = {workspace = true, default-features = false,features = ["macros", "runtime-tokio-native-tls","with-chrono"]}
+sea-orm = {workspace = true,features = ["macros", "runtime-tokio-native-tls","with-chrono"]}
 
 [features]
 default = ["postgres", "mysql", "sqlite"]

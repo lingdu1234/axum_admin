@@ -1,5 +1,3 @@
-use tokio::join;
-
 use anyhow::{anyhow, Result};
 use chrono::{Local, NaiveDateTime};
 use configs::CFG;
@@ -18,6 +16,7 @@ use db::{
 };
 use headers::HeaderMap;
 use sea_orm::{sea_query::Expr, ColumnTrait, DatabaseConnection, EntityTrait, JoinType, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect, Set, TransactionTrait};
+use tokio::join;
 
 use crate::service_utils::{
     self,
@@ -604,7 +603,7 @@ pub async fn get_user_info_by_id(db: &DatabaseConnection, id: &str) -> Result<Us
     match self::get_by_id(db, id).await {
         Err(e) => Err(e),
         Ok(user) => {
-            let (post_ids_r,role_ids_r,dept_ids_r) = join!(
+            let (post_ids_r, role_ids_r, dept_ids_r) = join!(
                 super::sys_post::get_post_ids_by_user_id(db, &user.user.id),
                 super::sys_user_role::get_role_ids_by_user_id(db, &user.user.id),
                 super::sys_user_dept::get_dept_ids_by_user_id(db, &user.user.id),

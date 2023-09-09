@@ -5,9 +5,10 @@ use std::{net::SocketAddr, str::FromStr};
 //
 use app_service::{service_utils, tasks};
 use axum::{
+    handler::HandlerWithoutStateExt,
     http::{Method, StatusCode},
     routing::get_service,
-    Router, handler::HandlerWithoutStateExt,
+    Router,
 };
 use axum_server::tls_rustls::RustlsConfig;
 use configs::CFG;
@@ -77,7 +78,11 @@ fn main() {
             .allow_origin(Any)
             .allow_headers(Any);
         // 顺序不对可能会导致数据丢失，无法在某些位置获取数据
-        let static_files_service = get_service(ServeDir::new(&CFG.web.dir).not_found_service(handle_404.into_service()).append_index_html_on_directories(true));
+        let static_files_service = get_service(
+            ServeDir::new(&CFG.web.dir)
+                .not_found_service(handle_404.into_service())
+                .append_index_html_on_directories(true),
+        );
 
         let app = Router::new()
             //  "/" 与所有路由冲突

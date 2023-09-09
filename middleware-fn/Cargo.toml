@@ -12,28 +12,28 @@ configs = {path = "../configs"}
 db = {path = "../db"}
 
 # poem 
-axum = {workspace = true, default-features = false, features = ["headers", "original-uri"]}
-hyper = {workspace = true, default-features = false}
+axum = {workspace = true,  features = ["headers", "original-uri"]}
+hyper = {workspace = true}
 # 
 bytes = {workspace = true}
 # 
-tokio = {workspace = true, default-features = false}
+tokio = {workspace = true}
 # 
-chrono = {workspace = true, default-features = false, features = ["serde"]}
+chrono = {workspace = true,  features = ["serde"]}
 # 
-tracing = {workspace = true, default-features = false}
+tracing = {workspace = true}
 # 用于生成可排序的唯一id
-scru128 = {workspace = true, default-features = false}
+scru128 = {workspace = true}
 # 
-once_cell = {workspace = true, default-features = false}
+once_cell = {workspace = true}
 # 
-anyhow = {workspace = true, default-features = false}
+anyhow = {workspace = true}
 
 # sea-orm
-sea-orm = {workspace = true, default-features = false, features = ["macros", "runtime-tokio-native-tls", "debug-print"]}
+sea-orm = {workspace = true,  features = ["macros", "runtime-tokio-native-tls", "debug-print"]}
 
 # skyTable  可选依赖
-skytable = {workspace = true, default-features = false, features = ["const-gen", "aio"], optional = true}
+skytable = {workspace = true,  features = ["const-gen", "aio"], optional = true}
 
 [features]
 # default = ["postgres", "mysql"]

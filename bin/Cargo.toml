@@ -14,16 +14,16 @@ utils = {path = "../utils"}
 app-service = {path = "../service"}
 
 # axum
-axum = {workspace = true, default-features =false, features = ["http2"]}
-axum-server = { workspace = true, default-features =false, features = ["tls-rustls"] }
-axum-extra = {workspace = true,default-features =false, features = ["spa"]}
-hyper = { workspace = true, default-features =false }
-tokio = {workspace = true,default-features =false,  features = ["rt-multi-thread", "macros", "parking_lot", "signal"]}
-tower-http = {workspace = true, default-features =false, features = ["cors","fs","compression-gzip"]}  #compression-gzip
+axum = {workspace = true, features = ["http2"]}
+axum-server = { workspace = true, features = ["tls-rustls"] }
+axum-extra = {workspace = true,features = ["spa"]}
+hyper = { workspace = true }
+tokio = {workspace = true, features = ["rt-multi-thread", "macros", "parking_lot", "signal"]}
+tower-http = {workspace = true, features = ["cors","fs","compression-gzip"]}  #compression-gzip
 
 #
-tracing ={workspace = true,default-features =false }
-tracing-appender = {workspace = true,default-features =false }
-tracing-subscriber = {workspace = true,default-features =false,  features = ["json", "env-filter", "local-time", "registry"]}
+tracing ={workspace = true }
+tracing-appender = {workspace = true }
+tracing-subscriber = {workspace = true, features = ["json", "env-filter", "local-time", "registry"]}
 
 

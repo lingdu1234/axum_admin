@@ -12,10 +12,7 @@ use super::{system, test};
 pub fn api() -> Router {
     Router::new()
         // 文件上传api
-        .nest_service(
-            &CFG.web.upload_url,
-            get_service(ServeDir::new(&CFG.web.upload_dir))
-        )
+        .nest_service(&CFG.web.upload_url, get_service(ServeDir::new(&CFG.web.upload_dir)))
         // 无需授权Api.通用模块
         .nest("/comm", no_auth_api())
         // 系统管理模块

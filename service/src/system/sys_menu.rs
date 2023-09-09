@@ -27,7 +27,7 @@ pub async fn get_sort_list(db: &DatabaseConnection, page_params: PageParams, req
     //  生成查询条件
     let mut s = SysMenu::find();
 
-   if let Some(x) = req.id {
+    if let Some(x) = req.id {
         if !x.is_empty() {
             s = s.filter(sys_menu::Column::Id.eq(x));
         }

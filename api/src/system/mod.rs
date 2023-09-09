@@ -118,12 +118,12 @@ fn sys_role_api() -> Router {
         .route("/delete", delete(sys_role::delete)) // 硬删除
         .route("/get_role_menu", get(sys_role::get_role_menu)) // 获取角色菜单
         .route("/get_role_dept", get(sys_role::get_role_dept)) // 获取角色部门
-        // .route("/update_auth_role", put(sys_role::update_auth_role)) // 更新角色授权
-        // .route("/cancel_auth_user", put(sys_role::cancel_auth_user)) // 批量用户取消角色授权
-        // .route("/add_auth_user", put(sys_role::add_auth_user)) // 批量用户角色授权
-        // .route("/get_auth_users_by_role_id", get(sys_role::get_auth_users_by_role_id)) // 获取角色对应用户
-        // .route("/get_un_auth_users_by_role_id", get(sys_role::get_un_auth_users_by_role_id))
-    // 获取角色对应未授权用户
+                                                               // .route("/update_auth_role", put(sys_role::update_auth_role)) // 更新角色授权
+                                                               // .route("/cancel_auth_user", put(sys_role::cancel_auth_user)) // 批量用户取消角色授权
+                                                               // .route("/add_auth_user", put(sys_role::add_auth_user)) // 批量用户角色授权
+                                                               // .route("/get_auth_users_by_role_id", get(sys_role::get_auth_users_by_role_id)) // 获取角色对应用户
+                                                               // .route("/get_un_auth_users_by_role_id", get(sys_role::get_un_auth_users_by_role_id))
+                                                               // 获取角色对应未授权用户
 }
 
 fn sys_menu_api() -> Router {

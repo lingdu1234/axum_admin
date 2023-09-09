@@ -10,20 +10,20 @@ edition = "2021"
 configs = {path = "../configs"}
 db = {path = "../db"}
 # 
-once_cell ={workspace = true,  default-features =false}
+once_cell ={workspace = true}
 # 
-tokio = {workspace = true,  default-features =false}
+tokio = {workspace = true}
 # tracing
-tracing = {workspace = true,  default-features =false}
+tracing = {workspace = true}
 #
-anyhow = {workspace = true,  default-features =false}
+anyhow = {workspace = true}
 
 #  随机数
-md5 = {workspace = true,  default-features =false}
-rand = {workspace = true,  default-features =false}
+md5 = {workspace = true}
+rand = {workspace = true}
 
-tracing-subscriber = {workspace = true,   default-features =false}
+tracing-subscriber = {workspace = true}
 time = {workspace = true}
 
 # sea-orm
-sea-orm = {workspace = true, default-features = false}
+sea-orm = {workspace = true}
