@@ -3,16 +3,15 @@ use std::{collections::BTreeMap, sync::Arc, time::Instant};
 
 use app_service::service_utils::api_utils::ALL_APIS;
 use axum::{
-    http::Request,
+    http::StatusCode,
     middleware::Next,
-    response::{IntoResponse, Response},
+    response::{IntoResponse, Response}, extract::Request,
 };
 use configs::CFG;
 use db::common::{
     ctx::{ApiInfo, ReqCtx, UserInfoCtx},
     res::ResJsonString,
 };
-use hyper::StatusCode;
 use once_cell::sync::Lazy;
 use skytable::{
     actions::AsyncActions,
@@ -157,7 +156,7 @@ pub async fn remove_cache_data(data_keys: Vec<String>) {
     }
 }
 //  缓存中间件
-pub async fn cache_fn_mid<B>(req: Request<B>, next: Next<B>) -> Result<Response, StatusCode> {
+pub async fn cache_fn_mid(req: Request, next: Next) -> Result<Response, StatusCode> {
     let apis = ALL_APIS.lock().await;
     let ctx = req.extensions().get::<ReqCtx>().expect("ReqCtx not found").clone();
     let ctx_user = match req.extensions().get::<UserInfoCtx>() {

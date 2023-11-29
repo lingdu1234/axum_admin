@@ -1,16 +1,16 @@
 use axum::{
-    body::Body,
-    extract::OriginalUri,
-    http::{Request, StatusCode},
+    body::{Body, Bytes},
+    extract::{OriginalUri, Request},
+    http::StatusCode,
     middleware::Next,
     response::IntoResponse,
 };
-use bytes::Bytes;
 use configs::CFG;
 use db::common::ctx::ReqCtx;
+use http_body_util::BodyExt;
 
 /// req上下文注入中间件 同时进行jwt授权验证
-pub async fn ctx_fn_mid(req: Request<Body>, next: Next<Body>) -> Result<impl IntoResponse, (StatusCode, String)> {
+pub async fn ctx_fn_mid(req: Request, next: Next) -> Result<impl IntoResponse, (StatusCode, String)> {
     // 请求信息ctx注入
 
     let ori_uri_path = if let Some(path) = req.extensions().get::<OriginalUri>() {
@@ -56,8 +56,8 @@ where
     B: axum::body::HttpBody<Data = Bytes>,
     B::Error: std::fmt::Display,
 {
-    let bytes = match hyper::body::to_bytes(body).await {
-        Ok(bytes) => bytes,
+    let bytes = match body.collect().await {
+        Ok(collected) => collected.to_bytes(),
         Err(err) => {
             return Err((StatusCode::BAD_REQUEST, format!("failed to read body: {}", err)));
         }

@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use axum::{
-    body::{self, Full},
+    body::Body,
     http::{header, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
 };
@@ -30,7 +30,7 @@ pub struct Res<T> {
 }
 
 /// 填入到extensions中的数据
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct ResJsonString(pub String);
 
 #[allow(unconditional_recursion)]
@@ -50,7 +50,7 @@ where
                 return Response::builder()
                     .status(StatusCode::INTERNAL_SERVER_ERROR)
                     .header(header::CONTENT_TYPE, HeaderValue::from_static(mime::TEXT_PLAIN_UTF_8.as_ref()))
-                    .body(body::boxed(Full::from(e.to_string())))
+                    .body(Body::from(e.to_string()))
                     .unwrap();
             }
         };

@@ -1,8 +1,8 @@
 [package]
-default-run = "axum-admin"
-edition = "2021"
 name = "axum-admin"
-version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+version.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -15,8 +15,8 @@ app-service = {path = "../service"}
 
 # axum
 axum = {workspace = true, features = ["http2"]}
-axum-server = { workspace = true, features = ["tls-rustls"] }
-axum-extra = {workspace = true,features = ["spa"]}
+# axum-server = { workspace = true, features = ["tls-rustls"] }
+axum-extra = {workspace = true}
 hyper = { workspace = true }
 tokio = {workspace = true, features = ["rt-multi-thread", "macros", "parking_lot", "signal"]}
 tower-http = {workspace = true, features = ["cors","fs","compression-gzip"]}  #compression-gzip

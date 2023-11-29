@@ -1,10 +1,14 @@
 use axum::{
-    extract::{FromRequestParts, TypedHeader},
-    headers::{authorization::Bearer, Authorization},
+    extract::FromRequestParts,
+    // headers::{authorization::Bearer, Authorization},
     http::{request::Parts, StatusCode},
     response::{IntoResponse, Response},
     Json, RequestPartsExt,
 };
+use axum_extra::TypedHeader;
+use headers::Authorization;
+use headers::authorization::Bearer;
+
 use chrono::{Duration, Local};
 use db::common::ctx::UserInfoCtx;
 use jsonwebtoken::{decode, encode, errors::ErrorKind, DecodingKey, EncodingKey, Header, Validation};

@@ -1,7 +1,5 @@
 // use std::time::Duration;
 
-use std::{net::SocketAddr, str::FromStr};
-
 //
 use app_service::{service_utils, tasks};
 use axum::{
@@ -10,7 +8,7 @@ use axum::{
     routing::get_service,
     Router,
 };
-use axum_server::tls_rustls::RustlsConfig;
+// use axum_server::tls_rustls::RustlsConfig;
 use configs::CFG;
 use tokio::signal;
 use tower_http::{
@@ -71,7 +69,6 @@ fn main() {
         // 定时任务初始化
         tasks::timer_task_init().await.expect("定时任务初始化失败");
 
-        let addr = SocketAddr::from_str(&CFG.server.address).unwrap();
         //  跨域
         let cors = CorsLayer::new()
             .allow_methods(vec![Method::GET, Method::POST, Method::PUT, Method::DELETE])
@@ -99,18 +96,21 @@ fn main() {
         };
         let app = app.layer(cors);
 
-        match CFG.server.ssl {
-            true => {
-                let config = RustlsConfig::from_pem_file(&CFG.cert.cert, &CFG.cert.key).await.unwrap();
-                axum_server::bind_rustls(addr, config).serve(app.into_make_service()).await.unwrap()
-            }
+        // let addr = SocketAddr::from_str(&CFG.server.address).unwrap();
+        let listener = tokio::net::TcpListener::bind(&CFG.server.address).await.unwrap();
+        axum::serve(listener, app).await.unwrap();
+        // match CFG.server.ssl {
+        //     true => {
+        //         let config = RustlsConfig::from_pem_file(&CFG.cert.cert, &CFG.cert.key).await.unwrap();
+        //         axum_server::bind_rustls(addr, config).serve(app.into_make_service()).await.unwrap()
+        //     }
 
-            false => axum::Server::bind(&addr)
-                .serve(app.into_make_service())
-                .with_graceful_shutdown(shutdown_signal())
-                .await
-                .unwrap(),
-        }
+        //     false => axum::Server::bind(&addr)
+        //         .serve(app.into_make_service())
+        //         .with_graceful_shutdown(shutdown_signal())
+        //         .await
+        //         .unwrap(),
+        // }
     })
 }
 

@@ -1,13 +1,9 @@
 use app_service::service_utils::ApiUtils;
-use axum::{
-    http::{Request, StatusCode},
-    middleware::Next,
-    response::Response,
-};
+use axum::{http::StatusCode, middleware::Next, response::Response, extract::Request};
 use configs::CFG;
 use db::common::ctx::{ReqCtx, UserInfoCtx};
 
-pub async fn auth_fn_mid<B>(req: Request<B>, next: Next<B>) -> Result<Response, StatusCode> {
+pub async fn auth_fn_mid(req: Request, next: Next) -> Result<Response, StatusCode> {
     let ctx = req.extensions().get::<ReqCtx>().expect("ReqCtx not found");
     let user = req.extensions().get::<UserInfoCtx>().expect("user not found");
     // 如果是超级用户，则不需要验证权限，直接放行

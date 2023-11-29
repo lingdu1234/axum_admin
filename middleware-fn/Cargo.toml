@@ -1,7 +1,8 @@
 [package]
-edition = "2021"
 name = "middleware-fn"
-version = "0.1.0"
+edition.workspace = true
+publish.workspace = true
+version.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,14 +13,16 @@ configs = {path = "../configs"}
 db = {path = "../db"}
 
 # poem 
-axum = {workspace = true,  features = ["headers", "original-uri"]}
+axum = {workspace = true, features = ["original-uri"]}
+http-body-util = {workspace = true}
 hyper = {workspace = true}
+tower = {workspace = true, features = ["util", "filter"]}
 # 
-bytes = {workspace = true}
+# bytes = {workspace = true}
 # 
 tokio = {workspace = true}
 # 
-chrono = {workspace = true,  features = ["serde"]}
+chrono = {workspace = true, features = ["serde"]}
 # 
 tracing = {workspace = true}
 # 用于生成可排序的唯一id
@@ -30,10 +33,10 @@ once_cell = {workspace = true}
 anyhow = {workspace = true}
 
 # sea-orm
-sea-orm = {workspace = true,  features = ["macros", "runtime-tokio-native-tls", "debug-print"]}
+sea-orm = {workspace = true, features = ["macros", "runtime-tokio-native-tls", "debug-print"]}
 
 # skyTable  可选依赖
-skytable = {workspace = true,  features = ["const-gen", "aio"], optional = true}
+skytable = {workspace = true, features = ["const-gen", "aio"], optional = true}
 
 [features]
 # default = ["postgres", "mysql"]

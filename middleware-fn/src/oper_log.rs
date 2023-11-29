@@ -3,7 +3,7 @@ use std::time::Instant;
 
 use anyhow::Result;
 use app_service::{service_utils::api_utils::ALL_APIS, system::check_user_online};
-use axum::{body::Body, http::Request, middleware::Next, response::IntoResponse};
+use axum::{extract::Request, middleware::Next, response::IntoResponse};
 use chrono::Local;
 use configs::CFG;
 use db::{
@@ -18,7 +18,7 @@ use db::{
 use hyper::StatusCode;
 use sea_orm::{EntityTrait, Set};
 
-pub async fn oper_log_fn_mid(req: Request<Body>, next: Next<Body>) -> Result<impl IntoResponse, (StatusCode, String)> {
+pub async fn oper_log_fn_mid(req: Request, next: Next) -> Result<impl IntoResponse, (StatusCode, String)> {
     // 查询ctx
     let req_ctx = match req.extensions().get::<ReqCtx>() {
         Some(x) => x.clone(),
