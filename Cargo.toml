@@ -28,9 +28,12 @@ axum = "0"
 axum-extra = "0"
 # axum-server = "0"
 hyper = "1"
+hyper-util = "0"
 http-body-util = "0"
+rustls-pemfile = "1"
 mime = "0"
 tower = "0"
+tower-service = "0"
 tower-http = "0"
 #
 anyhow = "1"
@@ -46,8 +49,10 @@ once_cell = "1"
 scru128 = "3"
 serde = "1"
 serde_json = "1"
+# tokio
 tokio = "1"
 tokio-stream = '0'
+tokio-rustls  = "0"
 #  "tracing"
 toml = "0"
 # tracing
@@ -74,6 +79,8 @@ skytable = "0"
 # swagger openApi
 # utoipa = "2"
 # utoipa-swagger-ui = "2"
+
+futures-util = "0"
 
 # sea-orm
 sea-orm = "0"

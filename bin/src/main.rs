@@ -1,8 +1,11 @@
 // use std::time::Duration;
 
+use std::{fs::File, io::BufReader, sync::Arc};
+
 //
 use app_service::{service_utils, tasks};
 use axum::{
+    extract::Request,
     handler::HandlerWithoutStateExt,
     http::{Method, StatusCode},
     routing::get_service,
@@ -10,12 +13,21 @@ use axum::{
 };
 // use axum_server::tls_rustls::RustlsConfig;
 use configs::CFG;
-use tokio::signal;
+use futures_util::pin_mut;
+use hyper::body::Incoming;
+use hyper_util::rt::TokioExecutor;
+use rustls_pemfile::{certs, pkcs8_private_keys};
+use tokio_rustls::{
+    rustls::{Certificate, PrivateKey, ServerConfig},
+    TlsAcceptor,
+};
 use tower_http::{
     compression::{predicate::NotForContentType, CompressionLayer, DefaultPredicate, Predicate},
     cors::{Any, CorsLayer},
     services::ServeDir,
 };
+use tower_service::Service;
+use tracing::{error, warn};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 use utils::my_env::{self, RT};
 // 路由日志追踪
@@ -27,19 +39,6 @@ fn main() {
             std::env::set_var("RUST_LOG", &CFG.log.log_level);
         }
         my_env::setup();
-        // let console_layer = console_subscriber::ConsoleLayer::builder()
-        //     .retention(Duration::from_secs(60))
-        //     .server_addr(([127, 0, 0, 1], 5555))
-        //     .spawn();
-        // let console_layer = console_subscriber::spawn();
-
-        //  设置日志追踪
-        // if &CFG.log.log_level == "TRACE" {
-        //     LogTracer::builder()
-        //         .with_max_level(log::LevelFilter::Trace)
-        //         .init()
-        //         .unwrap();
-        // }
 
         // 系统变量设置
         let log_env = my_env::get_log_level();
@@ -50,9 +49,6 @@ fn main() {
         // 文件输出
         let file_appender = tracing_appender::rolling::hourly(&CFG.log.dir, &CFG.log.file);
         let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
-        // let json_layer =
-        // fmt::layer().event_format(fmt::format().json()).
-        // fmt_fields(JsonFields::new()).with_writer(non_blocking).pretty();
 
         // 标准控制台输出
         let (std_non_blocking, _guard) = tracing_appender::non_blocking(std::io::stdout());
@@ -95,49 +91,79 @@ fn main() {
             false => app,
         };
         let app = app.layer(cors);
+        match CFG.server.ssl {
+            true => {
+                let rustls_config = rustls_server_config();
+                let tls_acceptor = TlsAcceptor::from(rustls_config);
+                let tcp_listener = tokio::net::TcpListener::bind(&CFG.server.address).await.unwrap();
 
-        // let addr = SocketAddr::from_str(&CFG.server.address).unwrap();
-        let listener = tokio::net::TcpListener::bind(&CFG.server.address).await.unwrap();
-        axum::serve(listener, app).await.unwrap();
-        // match CFG.server.ssl {
-        //     true => {
-        //         let config = RustlsConfig::from_pem_file(&CFG.cert.cert, &CFG.cert.key).await.unwrap();
-        //         axum_server::bind_rustls(addr, config).serve(app.into_make_service()).await.unwrap()
-        //     }
+                pin_mut!(tcp_listener);
+                loop {
+                    let tower_service = app.clone();
+                    let tls_acceptor = tls_acceptor.clone();
 
-        //     false => axum::Server::bind(&addr)
-        //         .serve(app.into_make_service())
-        //         .with_graceful_shutdown(shutdown_signal())
-        //         .await
-        //         .unwrap(),
-        // }
+                    // Wait for new tcp connection
+                    let (cnx, addr) = tcp_listener.accept().await.unwrap();
+
+                    tokio::spawn(async move {
+                        // Wait for tls handshake to happen
+                        let Ok(stream) = tls_acceptor.accept(cnx).await else {
+                            error!("error during tls handshake connection from {}", addr);
+                            return;
+                        };
+
+                        // Hyper has its own `AsyncRead` and `AsyncWrite` traits and doesn't use tokio.
+                        // `TokioIo` converts between them.
+                        let stream = hyper_util::rt::TokioIo::new(stream);
+
+                        // Hyper has also its own `Service` trait and doesn't use tower. We can use
+                        // `hyper::service::service_fn` to create a hyper `Service` that calls our app through
+                        // `tower::Service::call`.
+                        let hyper_service = hyper::service::service_fn(move |request: Request<Incoming>| {
+                            // We have to clone `tower_service` because hyper's `Service` uses `&self` whereas
+                            // tower's `Service` requires `&mut self`.
+                            //
+                            // We don't need to call `poll_ready` since `Router` is always ready.
+                            tower_service.clone().call(request)
+                        });
+
+                        let ret = hyper_util::server::conn::auto::Builder::new(TokioExecutor::new())
+                            .serve_connection_with_upgrades(stream, hyper_service)
+                            .await;
+
+                        if let Err(err) = ret {
+                            warn!("error serving connection from {}: {}", addr, err);
+                        }
+                    });
+                }
+            }
+
+            false => {
+                let listener = tokio::net::TcpListener::bind(&CFG.server.address).await.unwrap();
+                axum::serve(listener, app).await.unwrap();
+            }
+        }
     })
-}
-
-async fn shutdown_signal() {
-    let ctrl_c = async {
-        signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
-    };
-
-    #[cfg(unix)]
-    let terminate = async {
-        signal::unix::signal(signal::unix::SignalKind::terminate())
-            .expect("failed to install signal handler")
-            .recv()
-            .await;
-    };
-
-    #[cfg(not(unix))]
-    let terminate = std::future::pending::<()>();
-
-    tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
-    }
-
-    println!("signal received, starting graceful shutdown");
 }
 
 async fn handle_404() -> (StatusCode, &'static str) {
     (StatusCode::NOT_FOUND, "Not found")
+}
+
+fn rustls_server_config() -> Arc<ServerConfig> {
+    let mut key_reader = BufReader::new(File::open(&CFG.cert.key).unwrap());
+    let mut cert_reader = BufReader::new(File::open(&CFG.cert.cert).unwrap());
+
+    let key = PrivateKey(pkcs8_private_keys(&mut key_reader).unwrap().remove(0));
+    let certs = certs(&mut cert_reader).unwrap().into_iter().map(Certificate).collect();
+
+    let mut config = ServerConfig::builder()
+        .with_safe_defaults()
+        .with_no_client_auth()
+        .with_single_cert(certs, key)
+        .expect("bad certificate/key");
+
+    config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
+
+    Arc::new(config)
 }
