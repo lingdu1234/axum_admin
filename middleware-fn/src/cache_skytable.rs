@@ -3,9 +3,10 @@ use std::{collections::BTreeMap, sync::Arc, time::Instant};
 
 use app_service::service_utils::api_utils::ALL_APIS;
 use axum::{
+    extract::Request,
     http::StatusCode,
     middleware::Next,
-    response::{IntoResponse, Response}, extract::Request,
+    response::{IntoResponse, Response},
 };
 use configs::CFG;
 use db::common::{

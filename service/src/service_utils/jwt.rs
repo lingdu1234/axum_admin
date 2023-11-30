@@ -3,14 +3,13 @@ use axum::{
     // headers::{authorization::Bearer, Authorization},
     http::{request::Parts, StatusCode},
     response::{IntoResponse, Response},
-    Json, RequestPartsExt,
+    Json,
+    RequestPartsExt,
 };
 use axum_extra::TypedHeader;
-use headers::Authorization;
-use headers::authorization::Bearer;
-
 use chrono::{Duration, Local};
 use db::common::ctx::UserInfoCtx;
+use headers::{authorization::Bearer, Authorization};
 use jsonwebtoken::{decode, encode, errors::ErrorKind, DecodingKey, EncodingKey, Header, Validation};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};

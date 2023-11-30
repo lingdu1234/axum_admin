@@ -1,5 +1,5 @@
 use app_service::service_utils::ApiUtils;
-use axum::{http::StatusCode, middleware::Next, response::Response, extract::Request};
+use axum::{extract::Request, http::StatusCode, middleware::Next, response::Response};
 use configs::CFG;
 use db::common::ctx::{ReqCtx, UserInfoCtx};
 

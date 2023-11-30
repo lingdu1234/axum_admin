@@ -117,11 +117,11 @@ fn main() {
                         let stream = hyper_util::rt::TokioIo::new(stream);
 
                         // Hyper has also its own `Service` trait and doesn't use tower. We can use
-                        // `hyper::service::service_fn` to create a hyper `Service` that calls our app through
-                        // `tower::Service::call`.
+                        // `hyper::service::service_fn` to create a hyper `Service` that calls our app
+                        // through `tower::Service::call`.
                         let hyper_service = hyper::service::service_fn(move |request: Request<Incoming>| {
-                            // We have to clone `tower_service` because hyper's `Service` uses `&self` whereas
-                            // tower's `Service` requires `&mut self`.
+                            // We have to clone `tower_service` because hyper's `Service` uses `&self`
+                            // whereas tower's `Service` requires `&mut self`.
                             //
                             // We don't need to call `poll_ready` since `Router` is always ready.
                             tower_service.clone().call(request)

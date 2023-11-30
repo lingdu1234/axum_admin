@@ -30,7 +30,7 @@ pub struct Res<T> {
 }
 
 /// 填入到extensions中的数据
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct ResJsonString(pub String);
 
 #[allow(unconditional_recursion)]
