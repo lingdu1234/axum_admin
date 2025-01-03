@@ -51,7 +51,6 @@ pub struct Claims {
     pub exp: i64,
 }
 
-#[axum::async_trait]
 impl<S> FromRequestParts<S> for Claims
 where
     S: Send + Sync,

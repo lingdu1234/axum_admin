@@ -1,33 +1,21 @@
-// use std::time::Duration;
-
-use std::{fs::File, io::BufReader, sync::Arc};
+use std::{net::SocketAddr, path::PathBuf, time::Duration};
 
 //
 use app_service::{service_utils, tasks};
 use axum::{
-    extract::Request,
     handler::HandlerWithoutStateExt,
     http::{Method, StatusCode},
     routing::get_service,
     Router,
 };
-// use axum_server::tls_rustls::RustlsConfig;
+use axum_server::tls_rustls::RustlsConfig;
 use configs::CFG;
-use futures_util::pin_mut;
-use hyper::body::Incoming;
-use hyper_util::rt::TokioExecutor;
-use rustls_pemfile::{certs, pkcs8_private_keys};
-use tokio_rustls::{
-    rustls::{Certificate, PrivateKey, ServerConfig},
-    TlsAcceptor,
-};
+use tokio::signal;
 use tower_http::{
     compression::{predicate::NotForContentType, CompressionLayer, DefaultPredicate, Predicate},
     cors::{Any, CorsLayer},
     services::ServeDir,
 };
-use tower_service::Service;
-use tracing::{error, warn};
 use tracing_subscriber::{fmt, layer::SubscriberExt, EnvFilter, Registry};
 use utils::my_env::{self, RT};
 // 路由日志追踪
@@ -76,11 +64,11 @@ fn main() {
                 .not_found_service(handle_404.into_service())
                 .append_index_html_on_directories(true),
         );
+        let handle = axum_server::Handle::new();
 
-        let app = Router::new()
-            //  "/" 与所有路由冲突
-            .nest_service("/", static_files_service)
-            .nest(&CFG.server.api_prefix, api::api());
+        let shutdown_future = shutdown_signal(handle.clone());
+        tokio::spawn(shutdown_future);
+        let app = Router::new().nest_service(&CFG.server.api_prefix, api::api()).fallback_service(static_files_service);
 
         let app = match &CFG.server.content_gzip {
             true => {
@@ -91,57 +79,16 @@ fn main() {
             false => app,
         };
         let app = app.layer(cors);
+        let addr: SocketAddr = CFG.server.address.clone().parse().unwrap();
         match CFG.server.ssl {
             true => {
-                let rustls_config = rustls_server_config();
-                let tls_acceptor = TlsAcceptor::from(rustls_config);
-                let tcp_listener = tokio::net::TcpListener::bind(&CFG.server.address).await.unwrap();
+                let config = RustlsConfig::from_pem_file(PathBuf::from(&CFG.cert.cert), PathBuf::from(&CFG.cert.key)).await.unwrap();
 
-                pin_mut!(tcp_listener);
-                loop {
-                    let tower_service = app.clone();
-                    let tls_acceptor = tls_acceptor.clone();
-
-                    // Wait for new tcp connection
-                    let (cnx, addr) = tcp_listener.accept().await.unwrap();
-
-                    tokio::spawn(async move {
-                        // Wait for tls handshake to happen
-                        let Ok(stream) = tls_acceptor.accept(cnx).await else {
-                            error!("error during tls handshake connection from {}", addr);
-                            return;
-                        };
-
-                        // Hyper has its own `AsyncRead` and `AsyncWrite` traits and doesn't use tokio.
-                        // `TokioIo` converts between them.
-                        let stream = hyper_util::rt::TokioIo::new(stream);
-
-                        // Hyper has also its own `Service` trait and doesn't use tower. We can use
-                        // `hyper::service::service_fn` to create a hyper `Service` that calls our app
-                        // through `tower::Service::call`.
-                        let hyper_service = hyper::service::service_fn(move |request: Request<Incoming>| {
-                            // We have to clone `tower_service` because hyper's `Service` uses `&self`
-                            // whereas tower's `Service` requires `&mut self`.
-                            //
-                            // We don't need to call `poll_ready` since `Router` is always ready.
-                            tower_service.clone().call(request)
-                        });
-
-                        let ret = hyper_util::server::conn::auto::Builder::new(TokioExecutor::new())
-                            .serve_connection_with_upgrades(stream, hyper_service)
-                            .await;
-
-                        if let Err(err) = ret {
-                            warn!("error serving connection from {}: {}", addr, err);
-                        }
-                    });
-                }
+                tracing::debug!("listening on {addr}");
+                axum_server::bind_rustls(addr, config).handle(handle).serve(app.into_make_service()).await.unwrap()
             }
 
-            false => {
-                let listener = tokio::net::TcpListener::bind(&CFG.server.address).await.unwrap();
-                axum::serve(listener, app).await.unwrap();
-            }
+            false => axum_server::bind(addr).serve(app.into_make_service()).await.unwrap(),
         }
     })
 }
@@ -150,20 +97,30 @@ async fn handle_404() -> (StatusCode, &'static str) {
     (StatusCode::NOT_FOUND, "Not found")
 }
 
-fn rustls_server_config() -> Arc<ServerConfig> {
-    let mut key_reader = BufReader::new(File::open(&CFG.cert.key).unwrap());
-    let mut cert_reader = BufReader::new(File::open(&CFG.cert.cert).unwrap());
+async fn shutdown_signal(handle: axum_server::Handle) {
+    let ctrl_c = async {
+        signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
+    };
 
-    let key = PrivateKey(pkcs8_private_keys(&mut key_reader).unwrap().remove(0));
-    let certs = certs(&mut cert_reader).unwrap().into_iter().map(Certificate).collect();
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
 
-    let mut config = ServerConfig::builder()
-        .with_safe_defaults()
-        .with_no_client_auth()
-        .with_single_cert(certs, key)
-        .expect("bad certificate/key");
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
 
-    config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
 
-    Arc::new(config)
+    tracing::info!("Received termination signal shutting down");
+    handle.graceful_shutdown(Some(Duration::from_secs(10))); // 10 secs is how
+                                                             // long docker will
+                                                             // wait
+                                                             // to force shutdown
 }

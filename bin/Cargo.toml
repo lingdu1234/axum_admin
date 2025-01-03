@@ -16,17 +16,11 @@ app-service = {path = "../service"}
 
 # axum
 axum = {workspace = true, features = ["http2"]}
-# axum-server = { workspace = true, features = ["tls-rustls"] }
-axum-extra = {workspace = true}
-hyper = { workspace = true }
-rustls-pemfile = { workspace = true }
-hyper-util = { workspace = true }
-tokio-rustls = { workspace = true }
+axum-server = { workspace = true, features = ["tls-rustls"] }
+
 tokio = {workspace = true, features = ["rt-multi-thread", "macros", "parking_lot", "signal"]}
 tower-http = {workspace = true, features = ["cors","fs","compression-gzip"]}  #compression-gzip
 tower = { workspace = true,features = ["make"] }
-tower-service = { workspace = true }
-futures-util = { workspace = true, default-features = false }
 
 #
 tracing ={workspace = true }

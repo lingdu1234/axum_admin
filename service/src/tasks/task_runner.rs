@@ -154,7 +154,7 @@ pub async fn update_circles_task(t: SysJobModel) -> Result<()> {
 
 async fn init_task_model(m: SysJobModel, task_count: i64) {
     let now = Local::now().naive_local();
-    let run_lot = now.timestamp();
+    let run_lot = now.and_utc().timestamp();
     let job_end_time = get_task_end_time(m.cron_expression.clone(), m.task_count.try_into().unwrap()).unwrap();
     let next_time = match get_next_task_run_time(m.cron_expression.clone()) {
         Ok(v) => match v {

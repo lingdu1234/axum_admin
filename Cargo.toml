@@ -20,13 +20,12 @@ license = "Apache-2.0"
 publish = false
 repository = ""
 version = "0.1.0"
-default-run = "axum-admin"
 
 [workspace.dependencies]
 # axum 
 axum = "0"
 axum-extra = "0"
-# axum-server = "0"
+axum-server = "0"
 hyper = "1"
 hyper-util = "0"
 http-body-util = "0"
@@ -40,7 +39,6 @@ anyhow = "1"
 bytes = "1"
 futures = "0.3"
 
-async-stream = "0.3"
 chrono = "0"
 headers = "0"
 jsonwebtoken = "9"
@@ -83,7 +81,7 @@ skytable = "0"
 futures-util = "0"
 
 # sea-orm
-sea-orm = "0"
+sea-orm = "1"
 
 
 

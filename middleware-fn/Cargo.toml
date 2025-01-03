@@ -16,7 +16,6 @@ db = {path = "../db"}
 axum = {workspace = true, features = ["original-uri"]}
 http-body-util = {workspace = true}
 hyper = {workspace = true}
-tower = {workspace = true, features = ["util", "filter"]}
 # 
 # bytes = {workspace = true}
 # 

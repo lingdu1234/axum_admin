@@ -25,6 +25,4 @@ headers = {workspace = true}
 # 
 tokio = {workspace = true}
 #
-anyhow = {workspace = true}
 # 
-reqwest = {workspace = true,  features = ["json"]}

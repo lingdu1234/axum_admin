@@ -120,7 +120,7 @@ async fn db_log(duration: Duration, ctx: ReqCtx, ctx_user: UserInfoCtx, now: chr
     };
     let add_data = sys_oper_log::ActiveModel {
         oper_id: Set(scru128::new_string()),
-        time_id: Set(now.timestamp()),
+        time_id: Set(now.and_utc().timestamp_millis()),
         title: Set(api_name),
         business_type: Set("".to_string()),
         method: Set(ctx.path),

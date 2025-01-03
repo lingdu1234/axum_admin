@@ -154,7 +154,6 @@ pub async fn edit(db: &DatabaseConnection, req: SysDictDataEditReq, user_id: Str
 
 /// get_user_by_id 获取用户Id获取用户
 /// db 数据库连接 使用db.0
-
 pub async fn get_by_id(db: &DatabaseConnection, search_req: SysDictDataSearchReq) -> Result<SysDictDataModel> {
     let mut s = SysDictData::find();
     if let Some(x) = search_req.dict_data_id {
