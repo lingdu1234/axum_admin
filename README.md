@@ -13,7 +13,7 @@
 ## open-api-version: [branch-openapi](https://github.com/lingdu1234/axum_admin/tree/axum-openapi)
 
 
-## 前端项目：   
+## 前端项目：
 
 https://github.com/lingdu1234/IUI314
 
@@ -71,3 +71,8 @@ https://github.com/lingdu1234/IUI314
 * 数据库迁移重置：`sea-orm-cli migrate fresh`
 * 数据库降级：`sea-orm-cli migrate down`
 * 更多数据库迁移操作详见：[https://www.sea-ql.org/SeaORM/docs/migration/running-migration](https://www.sea-ql.org/SeaORM/docs/migration/running-migration)
+
+---
+[官网链接：亚洲最佳CDN、边缘和安全解决方案 - Tencent EdgeOne](https://edgeone.ai/zh?from=github)
+
+[![Tencent EdgeOne](https://edgeone.ai/media/34fe3a45-492d-4ea4-ae5d-ea1087ca7b4b.png)](https://edgeone.ai/zh?from=github)
