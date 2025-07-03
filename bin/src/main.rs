@@ -119,7 +119,7 @@ async fn shutdown_signal(handle: axum_server::Handle) {
     }
 
     tracing::info!("Received termination signal shutting down");
-    handle.graceful_shutdown(Some(Duration::from_secs(10))); // 10 secs is how
+    handle.graceful_shutdown(Some(Duration::from_secs(5))); // 10 secs is how
                                                              // long docker will
                                                              // wait
                                                              // to force shutdown

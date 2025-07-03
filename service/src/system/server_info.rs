@@ -2,7 +2,7 @@ use db::system::models::server_info::{Cpu, CpuLoad, DiskUsage, Memory, Network, 
 use sysinfo::{Networks, System};
 
 pub fn get_oper_sys_info() -> SysInfo {
-    let mut sys = System::new_all();
+    let mut sys = System::new();
     sys.refresh_all();
     let pid = sysinfo::get_current_pid().expect("failed to get PID");
     let server = Server {
@@ -44,10 +44,10 @@ pub fn get_oper_sys_info() -> SysInfo {
     let cpu = Cpu {
         name: sys.cpus().first().unwrap().name().to_string(),
         arch: std::env::consts::ARCH.to_string(),
-        cores: sys.physical_core_count().map(|c| c.to_string()).unwrap_or_else(|| "Unknown".to_owned()),
+        cores: System::physical_core_count().map(|c| c.to_string()).unwrap_or_else(|| "Unknown".to_owned()),
         total_use: sys.global_cpu_usage(),
         frequency: sys.cpus().first().unwrap().frequency(),
-        processors: sys.physical_core_count().unwrap() as usize,
+        processors: System::physical_core_count().unwrap() as usize,
     };
     let load_avg = System::load_average();
     let cpu_load = CpuLoad {
