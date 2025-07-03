@@ -73,6 +73,7 @@ https://github.com/lingdu1234/IUI314
 * 更多数据库迁移操作详见：[https://www.sea-ql.org/SeaORM/docs/migration/running-migration](https://www.sea-ql.org/SeaORM/docs/migration/running-migration)
 
 ---
+本项目 CDN 加速及安全防护由 Tencent EdgeOne 赞助
 [官网链接：亚洲最佳CDN、边缘和安全解决方案 - Tencent EdgeOne](https://edgeone.ai/zh?from=github)
 
 [![Tencent EdgeOne](https://edgeone.ai/media/34fe3a45-492d-4ea4-ae5d-ea1087ca7b4b.png)](https://edgeone.ai/zh?from=github)
