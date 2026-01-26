@@ -10,6 +10,7 @@ use axum::{
 };
 use axum_server::tls_rustls::RustlsConfig;
 use configs::CFG;
+use rustls::crypto::ring::default_provider;
 use tokio::signal;
 use tower_http::{
     compression::{predicate::NotForContentType, CompressionLayer, DefaultPredicate, Predicate},
@@ -23,6 +24,7 @@ use utils::my_env::{self, RT};
 // #[tokio::main]
 fn main() {
     RT.block_on(async {
+        default_provider().install_default().unwrap();
         if std::env::var_os("RUST_LOG").is_none() {
             std::env::set_var("RUST_LOG", &CFG.log.log_level);
         }
@@ -120,7 +122,7 @@ async fn shutdown_signal(handle: axum_server::Handle<SocketAddr>) {
 
     tracing::info!("Received termination signal shutting down");
     handle.graceful_shutdown(Some(Duration::from_secs(5))); // 10 secs is how
-                                                             // long docker will
-                                                             // wait
-                                                             // to force shutdown
+                                                            // long docker will
+                                                            // wait
+                                                            // to force shutdown
 }

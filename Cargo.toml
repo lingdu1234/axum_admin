@@ -29,6 +29,7 @@ axum-server = { version = "0", features = ["tls-rustls"] }
 hyper = "1"
 http-body-util = "0"
 mime = "0"
+rustls = { version = "0", features = ["aws-lc-rs"] }
 tower = { version = "0", features = ["make"] }
 tower-http = { version = "0", features = ["cors", "fs", "compression-gzip"] }
 #
@@ -61,7 +62,7 @@ tracing-subscriber = { version = "0", features = [
 ] }
 
 delay_timer = "0"
-reqwest = { version = "0", features = ["json"] }
+reqwest = { version = "0", features = ["json", "rustls"] }
 user-agent-parser = "0.3"
 
 md5 = "0"
