@@ -97,7 +97,7 @@ async fn handle_404() -> (StatusCode, &'static str) {
     (StatusCode::NOT_FOUND, "Not found")
 }
 
-async fn shutdown_signal(handle: axum_server::Handle) {
+async fn shutdown_signal(handle: axum_server::Handle<SocketAddr>) {
     let ctrl_c = async {
         signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
     };

@@ -10,21 +10,13 @@ version.workspace = true
 #
 configs = {path = "../configs"}
 db = {path = "../db"}
-# 
-once_cell ={workspace = true}
-# 
-tokio = {workspace = true}
-# tracing
-tracing = {workspace = true}
-#
-anyhow = {workspace = true}
 
-#  随机数
+once_cell = {workspace = true}
+tokio = {workspace = true}
+tracing = {workspace = true}
+anyhow = {workspace = true}
 md5 = {workspace = true}
 rand = {workspace = true}
-
 tracing-subscriber = {workspace = true}
 time = {workspace = true}
-
-# sea-orm
 sea-orm = {workspace = true}
