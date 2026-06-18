@@ -27,7 +27,7 @@ pub async fn get_server_info_sse() -> Sse<impl Stream<Item = Result<Event, Infal
         Event::default().data(serde_json::to_string(&sys_info).unwrap_or_else(|_| "0".to_string()))
     })
     .map(Ok)
-    .throttle(Duration::from_secs(1));
+    .throttle(Duration::from_secs(2));
 
-    Sse::new(stream).keep_alive(axum::response::sse::KeepAlive::new().interval(Duration::from_secs(1)).text("keep-alive-text"))
+    Sse::new(stream).keep_alive(axum::response::sse::KeepAlive::new().interval(Duration::from_secs(2)).text("keep-alive-text"))
 }

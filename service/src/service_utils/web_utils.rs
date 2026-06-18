@@ -2,27 +2,39 @@ use std::{borrow::Cow, collections::HashMap};
 
 use configs::CFG;
 use db::common::client::{ClientInfo, ClientNetInfo, UserAgentInfo};
+use std::default::Default;
 use headers::HeaderMap;
 use user_agent_parser::UserAgentParser;
 
 pub async fn get_client_info(header: HeaderMap) -> ClientInfo {
     // 改为 header 中获取
-
-    let user_agent = header.get("user-agent").unwrap().to_str().unwrap();
-    let ua = get_user_agent_info(user_agent);
-    let ip = get_remote_ip(header);
-    let net = get_city_by_ip(&ip).await.unwrap();
+    let ua = match header.get("user-agent") {
+        Some(ua) => match ua.to_str() {
+            Ok(s) => get_user_agent_info(s),
+            Err(_) => UserAgentInfo::default(),
+        },
+        None => UserAgentInfo::default(),
+    };
+    let ip = get_remote_ip(&header);
+    let net = match get_city_by_ip(&ip).await {
+        Ok(net) => net,
+        Err(_) => ClientNetInfo {
+            ip: ip.clone(),
+            location: "未知".to_string(),
+            net_work: "未知".to_string(),
+        },
+    };
     ClientInfo { net, ua }
 }
 
-pub fn get_remote_ip(header: HeaderMap) -> String {
+pub fn get_remote_ip(header: &HeaderMap) -> String {
     let ip = match header.get("X-Forwarded-For") {
-        Some(x) => {
-            let mut ips = x.to_str().unwrap().split(',');
-            ips.next().unwrap().trim().to_string()
-        }
+        Some(x) => match x.to_str() {
+            Ok(s) => s.split(',').next().unwrap_or("").trim().to_string(),
+            Err(_) => "".to_string(),
+        },
         None => match header.get("X-Real-IP") {
-            Some(x) => x.to_str().unwrap().to_string(),
+            Some(x) => x.to_str().unwrap_or("").to_string(),
             None => "".to_string(),
         },
     };

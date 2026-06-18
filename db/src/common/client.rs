@@ -8,6 +8,7 @@ pub struct ClientNetInfo {
 }
 
 #[derive(Deserialize, Clone, Debug, Serialize)]
+#[derive(Default)]
 pub struct UserAgentInfo {
     pub browser: String,
     pub os: String,
