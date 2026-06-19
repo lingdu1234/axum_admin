@@ -511,7 +511,7 @@ pub async fn login(db: &DatabaseConnection, login_req: UserLoginReq, header: Hea
     let mut msg = "登录成功".to_string();
     let mut status = "1".to_string();
     // 验证验证码
-    if utils::encrypt_password(&login_req.code, "") != login_req.uuid {
+    if CFG.system.captcha_on_off && utils::encrypt_password(&login_req.code, "") != login_req.uuid {
         msg = "验证码错误".to_string();
         status = "0".to_string();
         set_login_info(header, "".to_string(), login_req.user_name.clone(), msg.clone(), status.clone(), None, None).await;

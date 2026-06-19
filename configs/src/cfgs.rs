@@ -69,6 +69,8 @@ pub struct System {
     pub super_user: Vec<String>,
     /// user agent 解析
     pub user_agent_parser: String,
+    /// 验证码开关
+    pub captcha_on_off: bool,
 }
 
 /// jwt 配置文件
