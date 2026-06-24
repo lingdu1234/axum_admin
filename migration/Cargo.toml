@@ -12,4 +12,4 @@ path = "src/lib.rs"
 db = {path = "../db"}
 anyhow = {workspace = true}
 async-std = {workspace = true}
-sea-orm-migration = {version = "1", features = []}
+sea-orm-migration = {version = "1", features = ["sqlx-postgres","sqlx-sqlite","sqlx-mysql"]}

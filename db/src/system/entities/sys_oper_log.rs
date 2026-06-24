@@ -91,7 +91,7 @@ impl ColumnTrait for Column {
             Self::OperLocation => ColumnType::String(StringLen::N(255u32)).def(),
             Self::OperParam => ColumnType::Text.def(),
             Self::PathParam => ColumnType::Text.def(),
-            Self::JsonResult => ColumnType::custom("LONGTEXT").def(),
+            Self::JsonResult => ColumnType::Text.def(),
             Self::Status => ColumnType::Char(Some(1u32)).def(),
             Self::ErrorMsg => ColumnType::String(StringLen::N(2000u32)).def(),
             Self::Duration => ColumnType::BigInteger.def(),

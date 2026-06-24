@@ -1,8 +1,14 @@
+use std::sync::Mutex;
+
 use db::system::models::server_info::{Cpu, CpuLoad, DiskUsage, Memory, Network, Process, Server, SysInfo};
+use once_cell::sync::Lazy;
 use sysinfo::{Networks, System};
 
+/// 持久化 System 实例，CPU 使用率需要两次 refresh 之间的差值才能正确计算
+static SYS: Lazy<Mutex<System>> = Lazy::new(|| Mutex::new(System::new()));
+
 pub fn get_oper_sys_info() -> SysInfo {
-    let mut sys = System::new();
+    let mut sys = SYS.lock().unwrap();
     sys.refresh_all();
     let pid = sysinfo::get_current_pid().expect("failed to get PID");
     let server = Server {
