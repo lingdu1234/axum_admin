@@ -1,0 +1,15 @@
+# Migration config - read by build.rs to auto-generate Rust migration structs
+#
+# To add a new standard migration:
+#   1. Place SQL files in migration/data/<name>/
+#   2. Add a [[migration]] entry here
+#   3. Recompile - no .rs file needed
+#
+# Supported types:
+#   sql_dir - up: read SQL files from data/<name>/ dir; down: execute down[] SQL list
+#   raw     - up and down both execute raw SQL strings (no files)
+#   module  - use a hand-written .rs module (for migrations with custom logic)
+
+[[migration]]
+name = "m20220101_000001_create_table"
+type = "module"

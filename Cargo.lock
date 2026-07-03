@@ -2378,7 +2378,9 @@ dependencies = [
  "anyhow",
  "async-std",
  "db",
+ "sea-orm",
  "sea-orm-migration",
+ "toml",
 ]
 
 [[package]]
